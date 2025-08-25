@@ -14,6 +14,72 @@ export type Database = {
   }
   public: {
     Tables: {
+      aides: {
+        Row: {
+          beneficiaire_id: string
+          created_at: string
+          date_allocation: string
+          id: string
+          justificatif_url: string | null
+          montant: number
+          notes: string | null
+          statut: string
+          type_aide_id: string
+        }
+        Insert: {
+          beneficiaire_id: string
+          created_at?: string
+          date_allocation?: string
+          id?: string
+          justificatif_url?: string | null
+          montant: number
+          notes?: string | null
+          statut?: string
+          type_aide_id: string
+        }
+        Update: {
+          beneficiaire_id?: string
+          created_at?: string
+          date_allocation?: string
+          id?: string
+          justificatif_url?: string | null
+          montant?: number
+          notes?: string | null
+          statut?: string
+          type_aide_id?: string
+        }
+        Relationships: []
+      }
+      aides_types: {
+        Row: {
+          created_at: string
+          delai_remboursement: number | null
+          description: string | null
+          id: string
+          mode_repartition: string
+          montant_defaut: number | null
+          nom: string
+        }
+        Insert: {
+          created_at?: string
+          delai_remboursement?: number | null
+          description?: string | null
+          id?: string
+          mode_repartition?: string
+          montant_defaut?: number | null
+          nom: string
+        }
+        Update: {
+          created_at?: string
+          delai_remboursement?: number | null
+          description?: string | null
+          id?: string
+          mode_repartition?: string
+          montant_defaut?: number | null
+          nom?: string
+        }
+        Relationships: []
+      }
       cotisations: {
         Row: {
           created_at: string | null
@@ -89,6 +155,132 @@ export type Database = {
           montant_defaut?: number | null
           nom?: string
           obligatoire?: boolean | null
+        }
+        Relationships: []
+      }
+      epargnes: {
+        Row: {
+          created_at: string
+          date_depot: string
+          exercice_id: string | null
+          id: string
+          membre_id: string
+          montant: number
+          notes: string | null
+          statut: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          date_depot?: string
+          exercice_id?: string | null
+          id?: string
+          membre_id: string
+          montant: number
+          notes?: string | null
+          statut?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          date_depot?: string
+          exercice_id?: string | null
+          id?: string
+          membre_id?: string
+          montant?: number
+          notes?: string | null
+          statut?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      exercices: {
+        Row: {
+          created_at: string
+          date_debut: string
+          date_fin: string
+          id: string
+          nom: string
+          statut: string
+        }
+        Insert: {
+          created_at?: string
+          date_debut: string
+          date_fin: string
+          id?: string
+          nom: string
+          statut?: string
+        }
+        Update: {
+          created_at?: string
+          date_debut?: string
+          date_fin?: string
+          id?: string
+          nom?: string
+          statut?: string
+        }
+        Relationships: []
+      }
+      fichiers_joint: {
+        Row: {
+          created_at: string
+          entite_id: string
+          entite_type: string
+          id: string
+          nom_fichier: string
+          taille_fichier: number | null
+          type_mime: string | null
+          uploaded_by: string | null
+          url_fichier: string
+        }
+        Insert: {
+          created_at?: string
+          entite_id: string
+          entite_type: string
+          id?: string
+          nom_fichier: string
+          taille_fichier?: number | null
+          type_mime?: string | null
+          uploaded_by?: string | null
+          url_fichier: string
+        }
+        Update: {
+          created_at?: string
+          entite_id?: string
+          entite_type?: string
+          id?: string
+          nom_fichier?: string
+          taille_fichier?: number | null
+          type_mime?: string | null
+          uploaded_by?: string | null
+          url_fichier?: string
+        }
+        Relationships: []
+      }
+      historique_connexion: {
+        Row: {
+          date_connexion: string
+          id: string
+          ip_address: unknown | null
+          statut: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          date_connexion?: string
+          id?: string
+          ip_address?: unknown | null
+          statut?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          date_connexion?: string
+          id?: string
+          ip_address?: unknown | null
+          statut?: string
+          user_agent?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -246,6 +438,108 @@ export type Database = {
           },
         ]
       }
+      prets: {
+        Row: {
+          created_at: string
+          date_pret: string
+          echeance: string
+          id: string
+          justificatif_url: string | null
+          membre_id: string
+          montant: number
+          notes: string | null
+          reconductions: number | null
+          statut: string
+          taux_interet: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          date_pret?: string
+          echeance: string
+          id?: string
+          justificatif_url?: string | null
+          membre_id: string
+          montant: number
+          notes?: string | null
+          reconductions?: number | null
+          statut?: string
+          taux_interet?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          date_pret?: string
+          echeance?: string
+          id?: string
+          justificatif_url?: string | null
+          membre_id?: string
+          montant?: number
+          notes?: string | null
+          reconductions?: number | null
+          statut?: string
+          taux_interet?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      rapports_seances: {
+        Row: {
+          created_at: string
+          id: string
+          resolution: string | null
+          reunion_id: string
+          sujet: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          resolution?: string | null
+          reunion_id: string
+          sujet: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          resolution?: string | null
+          reunion_id?: string
+          sujet?: string
+        }
+        Relationships: []
+      }
+      reunions: {
+        Row: {
+          compte_rendu_url: string | null
+          created_at: string
+          date_reunion: string
+          id: string
+          lieu_description: string | null
+          lieu_membre_id: string | null
+          ordre_du_jour: string | null
+          statut: string
+        }
+        Insert: {
+          compte_rendu_url?: string | null
+          created_at?: string
+          date_reunion: string
+          id?: string
+          lieu_description?: string | null
+          lieu_membre_id?: string | null
+          ordre_du_jour?: string | null
+          statut?: string
+        }
+        Update: {
+          compte_rendu_url?: string | null
+          created_at?: string
+          date_reunion?: string
+          id?: string
+          lieu_description?: string | null
+          lieu_membre_id?: string | null
+          ordre_du_jour?: string | null
+          statut?: string
+        }
+        Relationships: []
+      }
       roles: {
         Row: {
           created_at: string | null
@@ -264,6 +558,147 @@ export type Database = {
           description?: string | null
           id?: string
           name?: string
+        }
+        Relationships: []
+      }
+      sanctions: {
+        Row: {
+          created_at: string
+          date_sanction: string
+          id: string
+          membre_id: string
+          montant: number
+          motif: string | null
+          statut: string
+          type_sanction_id: string
+        }
+        Insert: {
+          created_at?: string
+          date_sanction?: string
+          id?: string
+          membre_id: string
+          montant: number
+          motif?: string | null
+          statut?: string
+          type_sanction_id: string
+        }
+        Update: {
+          created_at?: string
+          date_sanction?: string
+          id?: string
+          membre_id?: string
+          montant?: number
+          motif?: string | null
+          statut?: string
+          type_sanction_id?: string
+        }
+        Relationships: []
+      }
+      sanctions_types: {
+        Row: {
+          categorie: string
+          created_at: string
+          description: string | null
+          id: string
+          montant: number
+          nom: string
+        }
+        Insert: {
+          categorie: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          montant: number
+          nom: string
+        }
+        Update: {
+          categorie?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          montant?: number
+          nom?: string
+        }
+        Relationships: []
+      }
+      sport_e2d_activites: {
+        Row: {
+          created_at: string
+          date_activite: string
+          id: string
+          lieu: string | null
+          notes: string | null
+          participants_count: number | null
+        }
+        Insert: {
+          created_at?: string
+          date_activite: string
+          id?: string
+          lieu?: string | null
+          notes?: string | null
+          participants_count?: number | null
+        }
+        Update: {
+          created_at?: string
+          date_activite?: string
+          id?: string
+          lieu?: string | null
+          notes?: string | null
+          participants_count?: number | null
+        }
+        Relationships: []
+      }
+      sport_e2d_depenses: {
+        Row: {
+          created_at: string
+          date_depense: string
+          id: string
+          justificatif_url: string | null
+          libelle: string
+          montant: number
+        }
+        Insert: {
+          created_at?: string
+          date_depense?: string
+          id?: string
+          justificatif_url?: string | null
+          libelle: string
+          montant: number
+        }
+        Update: {
+          created_at?: string
+          date_depense?: string
+          id?: string
+          justificatif_url?: string | null
+          libelle?: string
+          montant?: number
+        }
+        Relationships: []
+      }
+      sport_e2d_recettes: {
+        Row: {
+          created_at: string
+          date_recette: string
+          id: string
+          libelle: string
+          montant: number
+          notes: string | null
+        }
+        Insert: {
+          created_at?: string
+          date_recette?: string
+          id?: string
+          libelle: string
+          montant: number
+          notes?: string | null
+        }
+        Update: {
+          created_at?: string
+          date_recette?: string
+          id?: string
+          libelle?: string
+          montant?: number
+          notes?: string | null
         }
         Relationships: []
       }
