@@ -25,7 +25,7 @@ interface Reunion {
   membres?: {
     nom: string;
     prenom: string;
-  };
+  } | null;
 }
 
 interface RapportSeance {

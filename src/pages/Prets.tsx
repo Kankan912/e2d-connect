@@ -27,7 +27,7 @@ interface Pret {
   membres?: {
     nom: string;
     prenom: string;
-  };
+  } | null;
 }
 
 interface Membre {

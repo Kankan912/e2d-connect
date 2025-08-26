@@ -26,11 +26,11 @@ interface Aide {
   aides_types?: {
     nom: string;
     mode_repartition: string;
-  };
+  } | null;
   membres?: {
     nom: string;
     prenom: string;
-  };
+  } | null;
 }
 
 interface TypeAide {

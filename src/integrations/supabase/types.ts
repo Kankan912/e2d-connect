@@ -48,7 +48,22 @@ export type Database = {
           statut?: string
           type_aide_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_aides_beneficiaire"
+            columns: ["beneficiaire_id"]
+            isOneToOne: false
+            referencedRelation: "membres"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_aides_type_aide"
+            columns: ["type_aide_id"]
+            isOneToOne: false
+            referencedRelation: "aides_types"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       aides_types: {
         Row: {
@@ -192,7 +207,15 @@ export type Database = {
           statut?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_epargnes_membre"
+            columns: ["membre_id"]
+            isOneToOne: false
+            referencedRelation: "membres"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       exercices: {
         Row: {
@@ -481,7 +504,15 @@ export type Database = {
           taux_interet?: number | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_prets_membre"
+            columns: ["membre_id"]
+            isOneToOne: false
+            referencedRelation: "membres"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       rapports_seances: {
         Row: {
@@ -538,7 +569,15 @@ export type Database = {
           ordre_du_jour?: string | null
           statut?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_reunions_lieu_membre"
+            columns: ["lieu_membre_id"]
+            isOneToOne: false
+            referencedRelation: "membres"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       roles: {
         Row: {
@@ -592,7 +631,22 @@ export type Database = {
           statut?: string
           type_sanction_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_sanctions_membre"
+            columns: ["membre_id"]
+            isOneToOne: false
+            referencedRelation: "membres"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_sanctions_type"
+            columns: ["type_sanction_id"]
+            isOneToOne: false
+            referencedRelation: "sanctions_types"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       sanctions_types: {
         Row: {

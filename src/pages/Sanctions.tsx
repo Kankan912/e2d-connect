@@ -25,11 +25,11 @@ interface Sanction {
   sanctions_types?: {
     nom: string;
     categorie: string;
-  };
+  } | null;
   membres?: {
     nom: string;
     prenom: string;
-  };
+  } | null;
 }
 
 interface TypeSanction {
