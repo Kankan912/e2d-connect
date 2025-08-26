@@ -12,7 +12,13 @@ import {
   LogOut,
   Home,
   Menu,
-  X
+  X,
+  Banknote,
+  PiggyBank,
+  HandHeart,
+  AlertTriangle,
+  Calendar,
+  Activity
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -26,7 +32,13 @@ const menuItems = [
   { id: "dashboard", label: "Tableau de bord", icon: Home, path: "/" },
   { id: "membres", label: "Membres E2D", icon: Users, path: "/membres" },
   { id: "cotisations", label: "Cotisations", icon: CreditCard, path: "/cotisations" },
+  { id: "prets", label: "Prêts", icon: Banknote, path: "/prets" },
+  { id: "epargnes", label: "Épargnes", icon: PiggyBank, path: "/epargnes" },
+  { id: "aides", label: "Aides", icon: HandHeart, path: "/aides" },
+  { id: "sanctions", label: "Sanctions", icon: AlertTriangle, path: "/sanctions" },
+  { id: "reunions", label: "Réunions", icon: Calendar, path: "/reunions" },
   { id: "sport-phoenix", label: "Sport Phoenix", icon: Trophy, path: "/sport-phoenix" },
+  { id: "sport-e2d", label: "Sport E2D", icon: Activity, path: "/sport-e2d" },
   { id: "rapports", label: "Rapports", icon: FileText, path: "/rapports" },
 ];
 

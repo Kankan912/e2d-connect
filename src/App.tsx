@@ -12,6 +12,12 @@ import Membres from "./pages/Membres";
 import Cotisations from "./pages/Cotisations";
 import SportPhoenix from "./pages/SportPhoenix";
 import Rapports from "./pages/Rapports";
+import Prets from "./pages/Prets";
+import Epargnes from "./pages/Epargnes";
+import Aides from "./pages/Aides";
+import Sanctions from "./pages/Sanctions";
+import Reunions from "./pages/Reunions";
+import SportE2D from "./pages/SportE2D";
 import NotFound from "./pages/NotFound";
 import Layout from "@/components/Layout";
 
@@ -78,6 +84,36 @@ const App = () => {
                 <Route path="/rapports" element={
                   <Layout user={user}>
                     <Rapports />
+                  </Layout>
+                } />
+                <Route path="/prets" element={
+                  <Layout user={user}>
+                    <Prets />
+                  </Layout>
+                } />
+                <Route path="/epargnes" element={
+                  <Layout user={user}>
+                    <Epargnes />
+                  </Layout>
+                } />
+                <Route path="/aides" element={
+                  <Layout user={user}>
+                    <Aides />
+                  </Layout>
+                } />
+                <Route path="/sanctions" element={
+                  <Layout user={user}>
+                    <Sanctions />
+                  </Layout>
+                } />
+                <Route path="/reunions" element={
+                  <Layout user={user}>
+                    <Reunions />
+                  </Layout>
+                } />
+                <Route path="/sport-e2d" element={
+                  <Layout user={user}>
+                    <SportE2D />
                   </Layout>
                 } />
               </>
