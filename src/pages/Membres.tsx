@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import MembreForm from "@/components/forms/MembreForm";
 
 interface Membre {
   id: string;
@@ -41,6 +42,8 @@ export default function Membres() {
   const [membres, setMembres] = useState<Membre[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [showForm, setShowForm] = useState(false);
+  const [selectedMembre, setSelectedMembre] = useState<Membre | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -131,7 +134,13 @@ export default function Membres() {
             Gérez les membres de l'association E2D
           </p>
         </div>
-        <Button className="bg-gradient-to-r from-primary to-primary-light">
+        <Button 
+          className="bg-gradient-to-r from-primary to-primary-light"
+          onClick={() => {
+            setSelectedMembre(null);
+            setShowForm(true);
+          }}
+        >
           <Plus className="w-4 h-4 mr-2" />
           Nouveau membre
         </Button>
@@ -267,7 +276,14 @@ export default function Membres() {
                     
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <Button variant="ghost" size="sm">
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => {
+                            setSelectedMembre(membre);
+                            setShowForm(true);
+                          }}
+                        >
                           <Edit className="h-4 w-4" />
                         </Button>
                         <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
@@ -290,6 +306,13 @@ export default function Membres() {
           </div>
         </CardContent>
       </Card>
+
+      <MembreForm
+        open={showForm}
+        onOpenChange={setShowForm}
+        membre={selectedMembre}
+        onSuccess={loadMembres}
+      />
     </div>
   );
 }

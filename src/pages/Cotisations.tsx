@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import CotisationForm from "@/components/forms/CotisationForm";
 
 interface Cotisation {
   id: string;
@@ -53,6 +54,7 @@ export default function Cotisations() {
   const [typesCotisations, setTypesCotisations] = useState<TypeCotisation[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [showForm, setShowForm] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -195,7 +197,10 @@ export default function Cotisations() {
             Suivi des cotisations et contributions
           </p>
         </div>
-        <Button className="bg-gradient-to-r from-primary to-primary-light">
+        <Button 
+          className="bg-gradient-to-r from-primary to-primary-light"
+          onClick={() => setShowForm(true)}
+        >
           <Plus className="w-4 h-4 mr-2" />
           Nouvelle cotisation
         </Button>
@@ -340,6 +345,15 @@ export default function Cotisations() {
           </div>
         </CardContent>
       </Card>
+
+      <CotisationForm
+        open={showForm}
+        onOpenChange={setShowForm}
+        onSuccess={() => {
+          loadCotisations();
+          loadTypesCotisations();
+        }}
+      />
     </div>
   );
 }
