@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,10 +10,255 @@ import {
   Calendar,
   TrendingUp,
   Users,
-  DollarSign
+  DollarSign,
+  Upload,
+  FileSpreadsheet
 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { 
+  exportMembersToPDF, 
+  exportCotisationsToPDF, 
+  exportPretsToPDF, 
+  exportAidesToPDF 
+} from "@/lib/pdfExport";
+import { 
+  exportMembresExcel, 
+  exportCotisationsExcel, 
+  exportPretsExcel, 
+  exportAidesExcel,
+  importFromExcel,
+  validateImportedMembers
+} from "@/lib/excelUtils";
+import FileUpload from "@/components/ui/file-upload";
+import BackupManager from "@/components/BackupManager";
 
 export default function Rapports() {
+  const [loading, setLoading] = useState(false);
+  const [showImport, setShowImport] = useState(false);
+  const [importFiles, setImportFiles] = useState<File[]>([]);
+  const { toast } = useToast();
+
+  const handleExportPDF = async (type: string) => {
+    setLoading(true);
+    try {
+      let data: any[] = [];
+      
+      switch (type) {
+        case 'membres':
+          const { data: membres } = await supabase
+            .from('membres')
+            .select('*')
+            .order('nom');
+          data = membres || [];
+          exportMembersToPDF(data);
+          break;
+          
+        case 'cotisations':
+          const { data: cotisations } = await supabase
+            .from('cotisations')
+            .select(`
+              *,
+              membres(nom, prenom),
+              cotisations_types(nom)
+            `)
+            .order('date_paiement', { ascending: false });
+          
+          data = (cotisations || []).map(c => ({
+            ...c,
+            membre_nom: `${c.membres?.prenom} ${c.membres?.nom}`,
+            type_nom: c.cotisations_types?.nom
+          }));
+          exportCotisationsToPDF(data);
+          break;
+          
+        case 'prets':
+          const { data: prets } = await supabase
+            .from('prets')
+            .select(`
+              *,
+              membres(nom, prenom)
+            `)
+            .order('date_pret', { ascending: false });
+          
+          data = (prets || []).map(p => ({
+            ...p,
+            membre_nom: `${p.membres?.prenom} ${p.membres?.nom}`
+          }));
+          exportPretsToPDF(data);
+          break;
+          
+        case 'aides':
+          const { data: aides } = await supabase
+            .from('aides')
+            .select(`
+              *,
+              membres(nom, prenom),
+              aides_types(nom)
+            `)
+            .order('date_allocation', { ascending: false });
+          
+          data = (aides || []).map(a => ({
+            ...a,
+            beneficiaire_nom: `${a.membres?.prenom} ${a.membres?.nom}`,
+            type_nom: a.aides_types?.nom
+          }));
+          exportAidesToPDF(data);
+          break;
+      }
+      
+      toast({
+        title: "Export réussi",
+        description: "Le rapport PDF a été téléchargé avec succès"
+      });
+    } catch (error) {
+      toast({
+        title: "Erreur d'export",
+        description: "Impossible de générer le rapport PDF",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleExportExcel = async (type: string) => {
+    setLoading(true);
+    try {
+      let data: any[] = [];
+      
+      switch (type) {
+        case 'membres':
+          const { data: membres } = await supabase
+            .from('membres')
+            .select('*')
+            .order('nom');
+          data = membres || [];
+          exportMembresExcel(data);
+          break;
+          
+        case 'cotisations':
+          const { data: cotisations } = await supabase
+            .from('cotisations')
+            .select(`
+              *,
+              membres(nom, prenom),
+              cotisations_types(nom)
+            `)
+            .order('date_paiement', { ascending: false });
+          
+          data = (cotisations || []).map(c => ({
+            ...c,
+            membre_nom: `${c.membres?.prenom} ${c.membres?.nom}`,
+            type_nom: c.cotisations_types?.nom
+          }));
+          exportCotisationsExcel(data);
+          break;
+          
+        case 'prets':
+          const { data: prets } = await supabase
+            .from('prets')
+            .select(`
+              *,
+              membres(nom, prenom)
+            `)
+            .order('date_pret', { ascending: false });
+          
+          data = (prets || []).map(p => ({
+            ...p,
+            membre_nom: `${p.membres?.prenom} ${p.membres?.nom}`
+          }));
+          exportPretsExcel(data);
+          break;
+          
+        case 'aides':
+          const { data: aides } = await supabase
+            .from('aides')
+            .select(`
+              *,
+              membres(nom, prenom),
+              aides_types(nom)
+            `)
+            .order('date_allocation', { ascending: false });
+          
+          data = (aides || []).map(a => ({
+            ...a,
+            beneficiaire_nom: `${a.membres?.prenom} ${a.membres?.nom}`,
+            type_nom: a.aides_types?.nom
+          }));
+          exportAidesExcel(data);
+          break;
+      }
+      
+      toast({
+        title: "Export réussi",
+        description: "Le fichier Excel a été téléchargé avec succès"
+      });
+    } catch (error) {
+      toast({
+        title: "Erreur d'export",
+        description: "Impossible de générer le fichier Excel",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleImportExcel = async () => {
+    if (importFiles.length === 0) return;
+    
+    setLoading(true);
+    try {
+      const file = importFiles[0];
+      const data = await importFromExcel(file);
+      
+      if (file.name.toLowerCase().includes('membre')) {
+        const { valid, errors } = validateImportedMembers(data);
+        
+        if (errors.length > 0) {
+          toast({
+            title: "Erreurs de validation",
+            description: `${errors.length} erreur(s) détectée(s). Veuillez corriger le fichier.`,
+            variant: "destructive"
+          });
+          console.error('Erreurs de validation:', errors);
+          return;
+        }
+        
+        if (valid.length > 0) {
+          const { error } = await supabase
+            .from('membres')
+            .insert(valid);
+          
+          if (error) throw error;
+          
+          toast({
+            title: "Import réussi",
+            description: `${valid.length} membre(s) importé(s) avec succès`
+          });
+          
+          setImportFiles([]);
+          setShowImport(false);
+        }
+      } else {
+        toast({
+          title: "Type de fichier non supporté",
+          description: "Actuellement, seul l'import de membres est supporté",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Erreur d'import",
+        description: "Impossible d'importer le fichier Excel",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const rapportsDisponibles = [
     {
       title: "Rapport des Cotisations",
@@ -67,11 +313,77 @@ export default function Rapports() {
             Consultez et exportez les rapports de l'association
           </p>
         </div>
-        <Button className="bg-gradient-to-r from-primary to-primary-light">
-          <Download className="w-4 h-4 mr-2" />
-          Exporter tout
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline"
+            onClick={() => setShowImport(!showImport)}
+          >
+            <Upload className="w-4 h-4 mr-2" />
+            Importer
+          </Button>
+          <Button 
+            className="bg-gradient-to-r from-primary to-primary-light"
+            onClick={() => {
+              handleExportPDF('membres');
+              handleExportPDF('cotisations');
+              handleExportPDF('prets');
+              handleExportPDF('aides');
+            }}
+            disabled={loading}
+          >
+            <Download className="w-4 h-4 mr-2" />
+            {loading ? "Export..." : "Exporter tout"}
+          </Button>
+        </div>
       </div>
+
+      {/* Section Import */}
+      {showImport && (
+        <Card className="border-info/20 bg-info/5">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-primary">
+              <Upload className="h-5 w-5" />
+              Import de données
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Importez des données depuis un fichier Excel. Actuellement supporté: membres uniquement.
+            </p>
+            
+            <FileUpload
+              onFilesSelected={setImportFiles}
+              onFileRemove={(index) => {
+                const newFiles = [...importFiles];
+                newFiles.splice(index, 1);
+                setImportFiles(newFiles);
+              }}
+              selectedFiles={importFiles}
+              maxFiles={1}
+              accept={{
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
+                'application/vnd.ms-excel': ['.xls']
+              }}
+              disabled={loading}
+            />
+            
+            {importFiles.length > 0 && (
+              <div className="flex gap-2">
+                <Button onClick={handleImportExcel} disabled={loading}>
+                  {loading ? "Import en cours..." : "Importer les données"}
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setImportFiles([])}
+                  disabled={loading}
+                >
+                  Annuler
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Statistiques rapides */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
@@ -203,12 +515,32 @@ export default function Rapports() {
                       </div>
                       
                       <div className="flex gap-2">
-                        <Button variant="outline" size="sm">
-                          Voir
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => {
+                            const type = rapport.title.toLowerCase().includes('membre') ? 'membres' :
+                                        rapport.title.toLowerCase().includes('cotisation') ? 'cotisations' :
+                                        rapport.title.toLowerCase().includes('prêt') ? 'prets' : 'aides';
+                            handleExportPDF(type);
+                          }}
+                          disabled={loading}
+                        >
+                          <FileText className="h-3 w-3 mr-1" />
+                          PDF
                         </Button>
-                        <Button size="sm">
-                          <Download className="h-3 w-3 mr-1" />
-                          Export
+                        <Button 
+                          size="sm"
+                          onClick={() => {
+                            const type = rapport.title.toLowerCase().includes('membre') ? 'membres' :
+                                        rapport.title.toLowerCase().includes('cotisation') ? 'cotisations' :
+                                        rapport.title.toLowerCase().includes('prêt') ? 'prets' : 'aides';
+                            handleExportExcel(type);
+                          }}
+                          disabled={loading}
+                        >
+                          <FileSpreadsheet className="h-3 w-3 mr-1" />
+                          Excel
                         </Button>
                       </div>
                     </div>
@@ -230,23 +562,52 @@ export default function Rapports() {
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-3">
-            <Button variant="outline">
+            <Button 
+              variant="outline"
+              onClick={() => handleExportPDF('membres')}
+              disabled={loading}
+            >
               <FileText className="w-4 h-4 mr-2" />
               Rapport mensuel
             </Button>
-            <Button variant="outline">
+            <Button 
+              variant="outline"
+              onClick={() => handleExportExcel('membres')}
+              disabled={loading}
+            >
               <Users className="w-4 h-4 mr-2" />
               État des membres
             </Button>
-            <Button variant="outline">
+            <Button 
+              variant="outline"
+              onClick={() => handleExportPDF('cotisations')}
+              disabled={loading}
+            >
               <DollarSign className="w-4 h-4 mr-2" />
               Bilan financier
             </Button>
-            <Button variant="outline">
+            <Button 
+              variant="outline"
+              onClick={() => handleExportExcel('cotisations')}
+              disabled={loading}
+            >
               <Calendar className="w-4 h-4 mr-2" />
               Planning activités
             </Button>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Gestionnaire de sauvegardes */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Download className="h-5 w-5" />
+            Sauvegarde et Restauration
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <BackupManager />
         </CardContent>
       </Card>
     </div>
