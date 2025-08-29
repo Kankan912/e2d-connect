@@ -18,6 +18,7 @@ import Aides from "./pages/Aides";
 import Sanctions from "./pages/Sanctions";
 import Reunions from "./pages/Reunions";
 import SportE2D from "./pages/SportE2D";
+import Configuration from "./pages/Configuration";
 import NotFound from "./pages/NotFound";
 import Layout from "@/components/Layout";
 
@@ -114,6 +115,11 @@ const App = () => {
                 <Route path="/sport-e2d" element={
                   <Layout user={user}>
                     <SportE2D />
+                  </Layout>
+                } />
+                <Route path="/configuration" element={
+                  <Layout user={user}>
+                    <Configuration />
                   </Layout>
                 } />
               </>

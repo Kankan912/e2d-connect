@@ -24,6 +24,8 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import PhoenixAdherentForm from "@/components/forms/PhoenixAdherentForm";
+import PhoenixMatchForm from "@/components/forms/PhoenixMatchForm";
 
 interface Adherent {
   id: string;
@@ -43,6 +45,8 @@ export default function SportPhoenix() {
   const [adherents, setAdherents] = useState<Adherent[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [showAdherentDialog, setShowAdherentDialog] = useState(false);
+  const [showMatchDialog, setShowMatchDialog] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -144,11 +148,17 @@ export default function SportPhoenix() {
           </p>
         </div>
         <div className="flex gap-3">
-          <Button variant="outline">
+          <Button 
+            variant="outline"
+            onClick={() => setShowMatchDialog(true)}
+          >
             <Calendar className="w-4 h-4 mr-2" />
             Nouveau match
           </Button>
-          <Button className="bg-gradient-to-r from-accent to-accent-light">
+          <Button 
+            className="bg-gradient-to-r from-accent to-accent-light"
+            onClick={() => setShowAdherentDialog(true)}
+          >
             <Plus className="w-4 h-4 mr-2" />
             Nouvel adhérent
           </Button>
@@ -374,6 +384,25 @@ export default function SportPhoenix() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Formulaires */}
+      <PhoenixAdherentForm
+        open={showAdherentDialog}
+        onOpenChange={setShowAdherentDialog}
+        onSuccess={loadAdherents}
+      />
+      
+      <PhoenixMatchForm
+        open={showMatchDialog}
+        onOpenChange={setShowMatchDialog}
+        onSuccess={() => {
+          // Refresh data or update UI as needed
+          toast({
+            title: "Match programmé",
+            description: "Le match a été ajouté avec succès",
+          });
+        }}
+      />
     </div>
   );
 }

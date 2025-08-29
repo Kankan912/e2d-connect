@@ -1,12 +1,19 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+
+interface Role {
+  id: string;
+  name: string;
+  description: string;
+}
 
 interface Membre {
   id?: string;
@@ -37,8 +44,47 @@ export default function MembreForm({ open, onOpenChange, membre, onSuccess }: Me
     est_adherent_phoenix: false,
     ...membre
   });
+  const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
+  const [roles, setRoles] = useState<Role[]>([]);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (open) {
+      fetchRoles();
+      if (membre?.id) {
+        fetchMembreRoles(membre.id);
+      }
+    }
+  }, [open, membre?.id]);
+
+  const fetchRoles = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('roles')
+        .select('*')
+        .order('name');
+
+      if (error) throw error;
+      setRoles(data || []);
+    } catch (error) {
+      console.error('Erreur lors du chargement des rôles:', error);
+    }
+  };
+
+  const fetchMembreRoles = async (membreId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('membres_roles')
+        .select('role_id')
+        .eq('membre_id', membreId);
+
+      if (error) throw error;
+      setSelectedRoles(data?.map(mr => mr.role_id) || []);
+    } catch (error) {
+      console.error('Erreur lors du chargement des rôles du membre:', error);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,32 +113,65 @@ export default function MembreForm({ open, onOpenChange, membre, onSuccess }: Me
     setLoading(true);
 
     try {
-      const { error } = membre?.id
-        ? await supabase
-            .from('membres')
-            .update({
-              nom: formData.nom.trim(),
-              prenom: formData.prenom.trim(),
-              email: formData.email.trim().toLowerCase(),
-              telephone: formData.telephone.trim(),
-              statut: formData.statut,
-              est_membre_e2d: formData.est_membre_e2d,
-              est_adherent_phoenix: formData.est_adherent_phoenix,
-            })
-            .eq('id', membre.id)
-        : await supabase
-            .from('membres')
-            .insert([{
-              nom: formData.nom.trim(),
-              prenom: formData.prenom.trim(),
-              email: formData.email.trim().toLowerCase(),
-              telephone: formData.telephone.trim(),
-              statut: formData.statut,
-              est_membre_e2d: formData.est_membre_e2d,
-              est_adherent_phoenix: formData.est_adherent_phoenix,
-            }]);
+      let membreId = membre?.id;
+      
+      // Insérer ou mettre à jour le membre
+      if (membre?.id) {
+        const { error } = await supabase
+          .from('membres')
+          .update({
+            nom: formData.nom.trim(),
+            prenom: formData.prenom.trim(),
+            email: formData.email.trim().toLowerCase(),
+            telephone: formData.telephone.trim(),
+            statut: formData.statut,
+            est_membre_e2d: formData.est_membre_e2d,
+            est_adherent_phoenix: formData.est_adherent_phoenix,
+          })
+          .eq('id', membre.id);
+        
+        if (error) throw error;
+      } else {
+        const { data, error } = await supabase
+          .from('membres')
+          .insert([{
+            nom: formData.nom.trim(),
+            prenom: formData.prenom.trim(),
+            email: formData.email.trim().toLowerCase(),
+            telephone: formData.telephone.trim(),
+            statut: formData.statut,
+            est_membre_e2d: formData.est_membre_e2d,
+            est_adherent_phoenix: formData.est_adherent_phoenix,
+          }])
+          .select()
+          .single();
+        
+        if (error) throw error;
+        membreId = data.id;
+      }
 
-      if (error) throw error;
+      // Gérer les rôles si un membre ID est disponible
+      if (membreId && selectedRoles.length > 0) {
+        // Supprimer les anciens rôles
+        await supabase
+          .from('membres_roles')
+          .delete()
+          .eq('membre_id', membreId);
+
+        // Ajouter les nouveaux rôles
+        const rolesData = selectedRoles.map(roleId => ({
+          membre_id: membreId,
+          role_id: roleId
+        }));
+
+        const { error: rolesError } = await supabase
+          .from('membres_roles')
+          .insert(rolesData);
+
+        if (rolesError) {
+          console.error('Erreur lors de l\'attribution des rôles:', rolesError);
+        }
+      }
 
       toast({
         title: "Succès",
@@ -112,6 +191,7 @@ export default function MembreForm({ open, onOpenChange, membre, onSuccess }: Me
         est_membre_e2d: true,
         est_adherent_phoenix: false,
       });
+      setSelectedRoles([]);
     } catch (error: any) {
       toast({
         title: "Erreur",
@@ -200,6 +280,31 @@ export default function MembreForm({ open, onOpenChange, membre, onSuccess }: Me
           </div>
           
           <div className="space-y-4">
+            {/* Rôles du membre */}
+            <div className="space-y-3">
+              <Label>Rôles du membre</Label>
+              <div className="grid grid-cols-2 gap-2">
+                {roles.map((role) => (
+                  <div key={role.id} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`role_${role.id}`}
+                      checked={selectedRoles.includes(role.id)}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setSelectedRoles(prev => [...prev, role.id]);
+                        } else {
+                          setSelectedRoles(prev => prev.filter(id => id !== role.id));
+                        }
+                      }}
+                    />
+                    <Label htmlFor={`role_${role.id}`} className="text-sm">
+                      {role.name}
+                    </Label>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label htmlFor="est_membre_e2d">Membre E2D</Label>
