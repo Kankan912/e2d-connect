@@ -40,6 +40,7 @@ const menuItems = [
   { id: "sport-phoenix", label: "Sport Phoenix", icon: Trophy, path: "/sport-phoenix" },
   { id: "sport-e2d", label: "Sport E2D", icon: Activity, path: "/sport-e2d" },
   { id: "rapports", label: "Rapports", icon: FileText, path: "/rapports" },
+  { id: "configuration", label: "Configuration", icon: Settings, path: "/configuration" },
 ];
 
 export default function Layout({ children, user }: LayoutProps) {

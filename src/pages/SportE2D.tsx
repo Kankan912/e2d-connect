@@ -382,82 +382,95 @@ export default function SportE2D() {
         <TabsContent value="activites" className="space-y-6">
           <div className="flex justify-between items-center">
             <p className="text-muted-foreground">
-              Enregistrez les séances de football hebdomadaires
+              Enregistrez les séances de football hebdomadaires et les matchs
             </p>
             
-            <Dialog open={showActiviteDialog} onOpenChange={setShowActiviteDialog}>
-              <DialogTrigger asChild>
-                <Button onClick={() => {
-                  setSelectedActivite(null);
-                  setActiviteFormData({ date_activite: "", lieu: "", participants_count: "", notes: "" });
-                }}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Nouvelle Activité
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                  <DialogTitle>
-                    {selectedActivite ? "Modifier l'activité" : "Ajouter une activité"}
-                  </DialogTitle>
-                  <DialogDescription>
-                    Enregistrez une séance de football
-                  </DialogDescription>
-                </DialogHeader>
-                <form onSubmit={handleSubmitActivite} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="date_activite">Date d'activité *</Label>
-                    <Input
-                      id="date_activite"
-                      type="date"
-                      value={activiteFormData.date_activite}
-                      onChange={(e) => setActiviteFormData(prev => ({ ...prev, date_activite: e.target.value }))}
-                      required
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="lieu">Lieu</Label>
-                    <Input
-                      id="lieu"
-                      placeholder="Ex: Terrain municipal, Stade..."
-                      value={activiteFormData.lieu}
-                      onChange={(e) => setActiviteFormData(prev => ({ ...prev, lieu: e.target.value }))}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="participants">Nombre de participants</Label>
-                    <Input
-                      id="participants"
-                      type="number"
-                      placeholder="Ex: 15"
-                      value={activiteFormData.participants_count}
-                      onChange={(e) => setActiviteFormData(prev => ({ ...prev, participants_count: e.target.value }))}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="notes">Notes</Label>
-                    <Textarea
-                      id="notes"
-                      placeholder="Notes sur la séance..."
-                      value={activiteFormData.notes}
-                      onChange={(e) => setActiviteFormData(prev => ({ ...prev, notes: e.target.value }))}
-                    />
-                  </div>
-                  
-                  <div className="flex justify-end space-x-2">
-                    <Button type="button" variant="outline" onClick={() => setShowActiviteDialog(false)}>
-                      Annuler
-                    </Button>
-                    <Button type="submit">
-                      {selectedActivite ? "Modifier" : "Ajouter"}
-                    </Button>
-                  </div>
-                </form>
-              </DialogContent>
-            </Dialog>
+            <div className="flex gap-2">
+              <Dialog open={showActiviteDialog} onOpenChange={setShowActiviteDialog}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" onClick={() => {
+                    setSelectedActivite(null);
+                    setActiviteFormData({ date_activite: "", lieu: "", participants_count: "", notes: "" });
+                  }}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Nouvelle Activité
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[425px]">
+                  <DialogHeader>
+                    <DialogTitle>
+                      {selectedActivite ? "Modifier l'activité" : "Ajouter une activité"}
+                    </DialogTitle>
+                    <DialogDescription>
+                      Enregistrez une séance de football
+                    </DialogDescription>
+                  </DialogHeader>
+                  <form onSubmit={handleSubmitActivite} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="date_activite">Date d'activité *</Label>
+                      <Input
+                        id="date_activite"
+                        type="date"
+                        value={activiteFormData.date_activite}
+                        onChange={(e) => setActiviteFormData(prev => ({ ...prev, date_activite: e.target.value }))}
+                        required
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="lieu">Lieu</Label>
+                      <Input
+                        id="lieu"
+                        placeholder="Ex: Terrain municipal, Stade..."
+                        value={activiteFormData.lieu}
+                        onChange={(e) => setActiviteFormData(prev => ({ ...prev, lieu: e.target.value }))}
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="participants">Nombre de participants</Label>
+                      <Input
+                        id="participants"
+                        type="number"
+                        placeholder="Ex: 15"
+                        value={activiteFormData.participants_count}
+                        onChange={(e) => setActiviteFormData(prev => ({ ...prev, participants_count: e.target.value }))}
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="notes">Notes</Label>
+                      <Textarea
+                        id="notes"
+                        placeholder="Notes sur la séance..."
+                        value={activiteFormData.notes}
+                        onChange={(e) => setActiviteFormData(prev => ({ ...prev, notes: e.target.value }))}
+                      />
+                    </div>
+                    
+                    <div className="flex justify-end space-x-2">
+                      <Button type="button" variant="outline" onClick={() => setShowActiviteDialog(false)}>
+                        Annuler
+                      </Button>
+                      <Button type="submit">
+                        {selectedActivite ? "Modifier" : "Ajouter"}
+                      </Button>
+                    </div>
+                  </form>
+                </DialogContent>
+              </Dialog>
+
+              <Button onClick={() => {
+                // TODO: Ouvrir dialogue de match E2D
+                toast({
+                  title: "À venir",
+                  description: "Fonctionnalité de gestion des matchs E2D en cours de développement",
+                });
+              }}>
+                <Plus className="w-4 h-4 mr-2" />
+                Nouveau Match
+              </Button>
+            </div>
           </div>
 
           {/* Liste des activités */}
