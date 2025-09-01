@@ -11,6 +11,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import LogoHeader from "@/components/LogoHeader";
+import SportConfigForm from "@/components/forms/SportConfigForm";
 
 interface SportActivite {
   id: string;
@@ -319,14 +321,11 @@ export default function SportE2D() {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Sport E2D</h1>
-          <p className="text-muted-foreground mt-2">
-            Gestion des activités sportives hebdomadaires (Football le dimanche)
-          </p>
-        </div>
-      </div>
+      {/* Header */}
+      <LogoHeader 
+        title="Sport E2D"
+        subtitle="Gestion des activités sportives hebdomadaires (Football le dimanche)"
+      />
 
       {/* Statistiques générales */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -377,6 +376,7 @@ export default function SportE2D() {
         <TabsList>
           <TabsTrigger value="activites">Activités</TabsTrigger>
           <TabsTrigger value="finances">Finances</TabsTrigger>
+          <TabsTrigger value="configuration">Configuration</TabsTrigger>
         </TabsList>
 
         <TabsContent value="activites" className="space-y-6">
@@ -756,6 +756,10 @@ export default function SportE2D() {
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
+
+        <TabsContent value="configuration" className="space-y-6">
+          <SportConfigForm />
         </TabsContent>
       </Tabs>
     </div>

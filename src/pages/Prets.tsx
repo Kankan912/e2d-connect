@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import PretForm from "@/components/forms/PretForm";
+import LogoHeader from "@/components/LogoHeader";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
@@ -188,13 +189,12 @@ export default function Prets() {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Gestion des Prêts</h1>
-          <p className="text-muted-foreground mt-2">
-            Gérez les prêts accordés aux membres (Taux: 5%, Remboursement: 2 mois)
-          </p>
-        </div>
+      {/* Header */}
+      <LogoHeader 
+        title="Gestion des Prêts"
+        subtitle="Gérez les prêts accordés aux membres (Taux: 5%, Remboursement: 2 mois)"
+      />
+      <div className="flex justify-end">
         <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
           <DialogTrigger asChild>
             <Button onClick={() => {

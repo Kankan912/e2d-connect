@@ -20,11 +20,15 @@ import {
   Calendar,
   CheckCircle,
   Clock,
-  AlertTriangle
+  AlertTriangle,
+  Edit,
+  Settings
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import CotisationForm from "@/components/forms/CotisationForm";
+import CotisationTypeForm from "@/components/forms/CotisationTypeForm";
+import MembreCotisationConfigForm from "@/components/forms/MembreCotisationConfigForm";
 import LogoHeader from "@/components/LogoHeader";
 
 interface Cotisation {
@@ -57,6 +61,9 @@ export default function Cotisations() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [showForm, setShowForm] = useState(false);
+  const [showTypeForm, setShowTypeForm] = useState(false);
+  const [showConfigForm, setShowConfigForm] = useState(false);
+  const [typeToEdit, setTypeToEdit] = useState<TypeCotisation | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -244,10 +251,22 @@ export default function Cotisations() {
       {/* Types de cotisations */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <CreditCard className="h-5 w-5" />
-            Types de Cotisations
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <CreditCard className="h-5 w-5" />
+              Types de Cotisations
+            </CardTitle>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setShowTypeForm(true)}>
+                <Plus className="w-4 h-4 mr-2" />
+                Nouveau type
+              </Button>
+              <Button variant="outline" onClick={() => setShowConfigForm(true)}>
+                <Settings className="w-4 h-4 mr-2" />
+                Montants personnalisés
+              </Button>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -256,11 +275,23 @@ export default function Cotisations() {
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between mb-2">
                     <h4 className="font-semibold">{type.nom}</h4>
-                    {type.obligatoire && (
-                      <Badge variant="outline" className="text-xs">
-                        Obligatoire
-                      </Badge>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {type.obligatoire && (
+                        <Badge variant="outline" className="text-xs">
+                          Obligatoire
+                        </Badge>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setTypeToEdit(type);
+                          setShowTypeForm(true);
+                        }}
+                      >
+                        <Edit className="w-3 h-3" />
+                      </Button>
+                    </div>
                   </div>
                   <p className="text-sm text-muted-foreground mb-2">{type.description}</p>
                   <p className="text-lg font-bold text-primary">
@@ -359,6 +390,27 @@ export default function Cotisations() {
         onSuccess={() => {
           loadCotisations();
           loadTypesCotisations();
+        }}
+      />
+
+      <CotisationTypeForm
+        open={showTypeForm}
+        onOpenChange={(open) => {
+          setShowTypeForm(open);
+          if (!open) setTypeToEdit(null);
+        }}
+        onSuccess={loadTypesCotisations}
+        typeToEdit={typeToEdit}
+      />
+
+      <MembreCotisationConfigForm
+        open={showConfigForm}
+        onOpenChange={setShowConfigForm}
+        onSuccess={() => {
+          toast({
+            title: "Succès",
+            description: "Configuration mise à jour",
+          });
         }}
       />
     </div>

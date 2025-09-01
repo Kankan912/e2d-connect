@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import LogoHeader from "@/components/LogoHeader";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
@@ -281,14 +282,11 @@ export default function Aides() {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Gestion des Aides</h1>
-          <p className="text-muted-foreground mt-2">
-            Gérez les aides allouées aux membres (maladie, mariage, décès, etc.)
-          </p>
-        </div>
-      </div>
+      {/* Header */}
+      <LogoHeader 
+        title="Gestion des Aides"
+        subtitle="Gérez les aides allouées aux membres (maladie, mariage, décès, etc.)"
+      />
 
       <Tabs defaultValue="aides" className="space-y-6">
         <TabsList>

@@ -26,6 +26,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import PhoenixAdherentForm from "@/components/forms/PhoenixAdherentForm";
 import PhoenixMatchForm from "@/components/forms/PhoenixMatchForm";
+import LogoHeader from "@/components/LogoHeader";
+import SportConfigForm from "@/components/forms/SportConfigForm";
 
 interface Adherent {
   id: string;
@@ -138,15 +140,11 @@ export default function SportPhoenix() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-accent to-secondary bg-clip-text text-transparent">
-            Sport E2D-Phoenix
-          </h1>
-          <p className="text-muted-foreground">
-            Gestion de l'équipe de football
-          </p>
-        </div>
+      <LogoHeader 
+        title="Sport E2D-Phoenix"
+        subtitle="Gestion de l'équipe de football"
+      />
+      <div className="flex justify-end">
         <div className="flex gap-3">
           <Button 
             variant="outline"
@@ -272,6 +270,9 @@ export default function SportPhoenix() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Configuration */}
+      <SportConfigForm />
 
       {/* Liste des adhérents */}
       <Card>

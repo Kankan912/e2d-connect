@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import LogoHeader from "@/components/LogoHeader";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
@@ -190,13 +191,12 @@ export default function Epargnes() {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Banque E2D - Épargnes</h1>
-          <p className="text-muted-foreground mt-2">
-            Gérez les épargnes des membres avec intérêts en fin d'exercice
-          </p>
-        </div>
+      {/* Header */}
+      <LogoHeader 
+        title="Banque E2D - Épargnes"
+        subtitle="Gérez les épargnes des membres avec intérêts en fin d'exercice"
+      />
+      <div className="flex justify-end">
         <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
           <DialogTrigger asChild>
             <Button onClick={() => {
