@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import PretForm from "@/components/forms/PretForm";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
@@ -204,77 +205,12 @@ export default function Prets() {
               Nouveau Prêt
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>
-                {selectedPret ? "Modifier le prêt" : "Ajouter un prêt"}
-              </DialogTitle>
-              <DialogDescription>
-                Remplissez les informations du prêt. Taux d'intérêt: 5%
-              </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="membre">Membre *</Label>
-                <Select value={formData.membre_id} onValueChange={(value) => 
-                  setFormData(prev => ({ ...prev, membre_id: value }))
-                }>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner un membre" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {membres.map((membre) => (
-                      <SelectItem key={membre.id} value={membre.id}>
-                        {membre.prenom} {membre.nom}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="montant">Montant (FCFA) *</Label>
-                <Input
-                  id="montant"
-                  type="number"
-                  placeholder="Ex: 50000"
-                  value={formData.montant}
-                  onChange={(e) => setFormData(prev => ({ ...prev, montant: e.target.value }))}
-                  required
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="echeance">Date d'échéance *</Label>
-                <Input
-                  id="echeance"
-                  type="date"
-                  value={formData.echeance}
-                  onChange={(e) => setFormData(prev => ({ ...prev, echeance: e.target.value }))}
-                  required
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="notes">Notes</Label>
-                <Textarea
-                  id="notes"
-                  placeholder="Notes additionnelles..."
-                  value={formData.notes}
-                  onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-                />
-              </div>
-              
-              <div className="flex justify-end space-x-2">
-                <Button type="button" variant="outline" onClick={() => setShowAddDialog(false)}>
-                  Annuler
-                </Button>
-                <Button type="submit">
-                  {selectedPret ? "Modifier" : "Ajouter"}
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
+          <PretForm 
+            open={showAddDialog}
+            onOpenChange={setShowAddDialog}
+            pret={selectedPret}
+            onSuccess={fetchPrets}
+          />
         </Dialog>
       </div>
 
@@ -381,7 +317,10 @@ export default function Prets() {
                 )}
                 
                 <div className="flex justify-end space-x-2 mt-4">
-                  <Button variant="outline" size="sm" onClick={() => openEditDialog(pret)}>
+                  <Button variant="outline" size="sm" onClick={() => {
+                    setSelectedPret(pret);
+                    setShowAddDialog(true);
+                  }}>
                     <Edit className="w-4 h-4 mr-1" />
                     Modifier
                   </Button>

@@ -5,6 +5,7 @@ import { Settings, Users, Shield, Database, Download, Upload } from "lucide-reac
 import AdminCreateAccount from "@/components/AdminCreateAccount";
 import BackupManager from "@/components/BackupManager";
 import RolePermissionsManager from "@/components/RolePermissionsManager";
+import RoleManager from "@/components/RoleManager";
 import LogoHeader from "@/components/LogoHeader";
 
 export default function Configuration() {
@@ -51,7 +52,10 @@ export default function Configuration() {
         </TabsContent>
 
         <TabsContent value="permissions" className="space-y-6">
-          <RolePermissionsManager />
+          <div className="grid gap-6 md:grid-cols-2">
+            <RoleManager />
+            <RolePermissionsManager />
+          </div>
         </TabsContent>
 
         <TabsContent value="backup" className="space-y-6">

@@ -147,165 +147,61 @@ export default function AuthForm() {
           </CardHeader>
           
           <CardContent>
-            <Tabs defaultValue="signin" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-6">
-                <TabsTrigger value="signin">Connexion</TabsTrigger>
-                <TabsTrigger value="signup">Inscription</TabsTrigger>
-              </TabsList>
+            {/* Connexion uniquement */}
+            <form onSubmit={handleSignIn} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="signin-email">Email</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="signin-email"
+                    type="email"
+                    placeholder="votre@email.com"
+                    className="pl-10"
+                    value={formData.email}
+                    onChange={(e) => handleInputChange("email", e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
               
-              {/* Connexion */}
-              <TabsContent value="signin">
-                <form onSubmit={handleSignIn} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="signin-email">Email</Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="signin-email"
-                        type="email"
-                        placeholder="votre@email.com"
-                        className="pl-10"
-                        value={formData.email}
-                        onChange={(e) => handleInputChange("email", e.target.value)}
-                        required
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="signin-password">Mot de passe</Label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="signin-password"
-                        type="password"
-                        placeholder="Votre mot de passe"
-                        className="pl-10"
-                        value={formData.password}
-                        onChange={(e) => handleInputChange("password", e.target.value)}
-                        required
-                      />
-                    </div>
-                  </div>
-                  
-                  <Button 
-                    type="submit" 
-                    className="w-full bg-gradient-to-r from-primary to-primary-light hover:from-primary-dark hover:to-primary" 
-                    disabled={loading}
-                  >
-                    {loading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Connexion...
-                      </>
-                    ) : (
-                      "Se connecter"
-                    )}
-                  </Button>
-                </form>
-              </TabsContent>
+              <div className="space-y-2">
+                <Label htmlFor="signin-password">Mot de passe</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="signin-password"
+                    type="password"
+                    placeholder="Votre mot de passe"
+                    className="pl-10"
+                    value={formData.password}
+                    onChange={(e) => handleInputChange("password", e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
               
-              {/* Inscription */}
-              <TabsContent value="signup">
-                <form onSubmit={handleSignUp} className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="signup-nom">Nom</Label>
-                      <div className="relative">
-                        <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          id="signup-nom"
-                          type="text"
-                          placeholder="Nom"
-                          className="pl-10"
-                          value={formData.nom}
-                          onChange={(e) => handleInputChange("nom", e.target.value)}
-                          required
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="signup-prenom">Prénom</Label>
-                      <div className="relative">
-                        <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          id="signup-prenom"
-                          type="text"
-                          placeholder="Prénom"
-                          className="pl-10"
-                          value={formData.prenom}
-                          onChange={(e) => handleInputChange("prenom", e.target.value)}
-                          required
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-email">Email</Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="signup-email"
-                        type="email"
-                        placeholder="votre@email.com"
-                        className="pl-10"
-                        value={formData.email}
-                        onChange={(e) => handleInputChange("email", e.target.value)}
-                        required
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-telephone">Téléphone</Label>
-                    <div className="relative">
-                      <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="signup-telephone"
-                        type="tel"
-                        placeholder="+237 XXX XXX XXX"
-                        className="pl-10"
-                        value={formData.telephone}
-                        onChange={(e) => handleInputChange("telephone", e.target.value)}
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-password">Mot de passe</Label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="signup-password"
-                        type="password"
-                        placeholder="Minimum 6 caractères"
-                        className="pl-10"
-                        value={formData.password}
-                        onChange={(e) => handleInputChange("password", e.target.value)}
-                        required
-                      />
-                    </div>
-                  </div>
-                  
-                  <Button 
-                    type="submit" 
-                    className="w-full bg-gradient-to-r from-secondary to-secondary-light hover:from-secondary hover:to-secondary-light" 
-                    disabled={loading}
-                  >
-                    {loading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Inscription...
-                      </>
-                    ) : (
-                      "Créer mon compte"
-                    )}
-                  </Button>
-                </form>
-              </TabsContent>
-            </Tabs>
+              <Button 
+                type="submit" 
+                className="w-full bg-gradient-to-r from-primary to-primary-light hover:from-primary-dark hover:to-primary" 
+                disabled={loading}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Connexion...
+                  </>
+                ) : (
+                  "Se connecter"
+                )}
+              </Button>
+              
+              <div className="text-center mt-4">
+                <p className="text-sm text-muted-foreground">
+                  Pas de compte ? Contactez l'administrateur pour en créer un.
+                </p>
+              </div>
+            </form>
           </CardContent>
         </Card>
 

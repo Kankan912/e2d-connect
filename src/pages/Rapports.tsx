@@ -77,7 +77,10 @@ export default function Rapports() {
             .from('prets')
             .select(`
               *,
-              membres(nom, prenom)
+              membres!membre_id (
+                nom,
+                prenom
+              )
             `)
             .order('date_pret', { ascending: false });
           
@@ -160,7 +163,10 @@ export default function Rapports() {
             .from('prets')
             .select(`
               *,
-              membres(nom, prenom)
+              membres!membre_id (
+                nom,
+                prenom
+              )
             `)
             .order('date_pret', { ascending: false });
           

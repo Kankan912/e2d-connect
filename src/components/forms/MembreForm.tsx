@@ -89,14 +89,27 @@ export default function MembreForm({ open, onOpenChange, membre, onSuccess }: Me
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validation
-    if (!formData.nom || !formData.prenom || !formData.email) {
-      toast({
-        title: "Erreur",
-        description: "Veuillez remplir tous les champs obligatoires",
-        variant: "destructive",
-      });
-      return;
+    // Validation - Seul l'email est obligatoire lors de l'édition pour l'admin
+    if (membre?.id) {
+      // Mode édition - seul l'email est obligatoire
+      if (!formData.email) {
+        toast({
+          title: "Erreur",
+          description: "L'email est obligatoire",
+          variant: "destructive",
+        });
+        return;
+      }
+    } else {
+      // Mode création - nom, prénom et email sont obligatoires
+      if (!formData.nom || !formData.prenom || !formData.email) {
+        toast({
+          title: "Erreur",
+          description: "Veuillez remplir tous les champs obligatoires",
+          variant: "destructive",
+        });
+        return;
+      }
     }
 
     // Validation email
@@ -220,24 +233,24 @@ export default function MembreForm({ open, onOpenChange, membre, onSuccess }: Me
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="nom">Nom *</Label>
+              <Label htmlFor="nom">Nom {!membre?.id && '*'}</Label>
               <Input
                 id="nom"
                 placeholder="Nom de famille"
                 value={formData.nom}
                 onChange={(e) => setFormData(prev => ({ ...prev, nom: e.target.value }))}
-                required
+                required={!membre?.id}
               />
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="prenom">Prénom *</Label>
+              <Label htmlFor="prenom">Prénom {!membre?.id && '*'}</Label>
               <Input
                 id="prenom"
                 placeholder="Prénoms"
                 value={formData.prenom}
                 onChange={(e) => setFormData(prev => ({ ...prev, prenom: e.target.value }))}
-                required
+                required={!membre?.id}
               />
             </div>
           </div>
@@ -255,12 +268,13 @@ export default function MembreForm({ open, onOpenChange, membre, onSuccess }: Me
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="telephone">Téléphone</Label>
+            <Label htmlFor="telephone">Téléphone {!membre?.id && '*'}</Label>
             <Input
               id="telephone"
               placeholder="+225 XX XX XX XX XX"
               value={formData.telephone}
               onChange={(e) => setFormData(prev => ({ ...prev, telephone: e.target.value }))}
+              required={!membre?.id}
             />
           </div>
           
