@@ -319,7 +319,7 @@ export type Database = {
           photo_url: string | null
           prenom: string
           statut: string | null
-          telephone: string | null
+          telephone: string
           updated_at: string | null
           user_id: string | null
         }
@@ -334,7 +334,7 @@ export type Database = {
           photo_url?: string | null
           prenom: string
           statut?: string | null
-          telephone?: string | null
+          telephone: string
           updated_at?: string | null
           user_id?: string | null
         }
@@ -349,11 +349,53 @@ export type Database = {
           photo_url?: string | null
           prenom?: string
           statut?: string | null
-          telephone?: string | null
+          telephone?: string
           updated_at?: string | null
           user_id?: string | null
         }
         Relationships: []
+      }
+      membres_cotisations_config: {
+        Row: {
+          created_at: string
+          id: string
+          membre_id: string
+          montant_personnalise: number
+          type_cotisation_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          membre_id: string
+          montant_personnalise: number
+          type_cotisation_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          membre_id?: string
+          montant_personnalise?: number
+          type_cotisation_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "membres_cotisations_config_membre_id_fkey"
+            columns: ["membre_id"]
+            isOneToOne: false
+            referencedRelation: "membres"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "membres_cotisations_config_type_cotisation_id_fkey"
+            columns: ["type_cotisation_id"]
+            isOneToOne: false
+            referencedRelation: "cotisations_types"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       membres_roles: {
         Row: {
@@ -463,6 +505,7 @@ export type Database = {
       }
       prets: {
         Row: {
+          avaliste_id: string | null
           created_at: string
           date_pret: string
           echeance: string
@@ -477,6 +520,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          avaliste_id?: string | null
           created_at?: string
           date_pret?: string
           echeance: string
@@ -491,6 +535,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          avaliste_id?: string | null
           created_at?: string
           date_pret?: string
           echeance?: string
@@ -508,6 +553,13 @@ export type Database = {
           {
             foreignKeyName: "fk_prets_membre"
             columns: ["membre_id"]
+            isOneToOne: false
+            referencedRelation: "membres"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prets_avaliste_id_fkey"
+            columns: ["avaliste_id"]
             isOneToOne: false
             referencedRelation: "membres"
             referencedColumns: ["id"]
@@ -729,6 +781,39 @@ export type Database = {
         }
         Relationships: []
       }
+      sport_e2d_config: {
+        Row: {
+          couleur_maillot: string | null
+          created_at: string
+          entraineur: string | null
+          horaire_entrainement: string | null
+          id: string
+          lieu_entrainement: string | null
+          nom_equipe: string
+          updated_at: string
+        }
+        Insert: {
+          couleur_maillot?: string | null
+          created_at?: string
+          entraineur?: string | null
+          horaire_entrainement?: string | null
+          id?: string
+          lieu_entrainement?: string | null
+          nom_equipe?: string
+          updated_at?: string
+        }
+        Update: {
+          couleur_maillot?: string | null
+          created_at?: string
+          entraineur?: string | null
+          horaire_entrainement?: string | null
+          id?: string
+          lieu_entrainement?: string | null
+          nom_equipe?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       sport_e2d_depenses: {
         Row: {
           created_at: string
@@ -825,6 +910,33 @@ export type Database = {
         }
         Relationships: []
       }
+      sport_phoenix_config: {
+        Row: {
+          created_at: string
+          duree_adhesion_mois: number | null
+          id: string
+          montant_adhesion: number | null
+          nom_club: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          duree_adhesion_mois?: number | null
+          id?: string
+          montant_adhesion?: number | null
+          nom_club?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          duree_adhesion_mois?: number | null
+          id?: string
+          montant_adhesion?: number | null
+          nom_club?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -833,6 +945,10 @@ export type Database = {
       get_current_user_role: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      has_role: {
+        Args: { role_name: string }
+        Returns: boolean
       }
     }
     Enums: {
