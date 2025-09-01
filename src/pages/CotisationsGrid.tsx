@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import LogoHeader from "@/components/LogoHeader";
 
 interface Membre {
   id: string;
@@ -224,15 +225,11 @@ export default function CotisationsGrid() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            Grille des Cotisations
-          </h1>
-          <p className="text-muted-foreground">
-            Gestion par membre et type de cotisation
-          </p>
-        </div>
+      <LogoHeader 
+        title="Grille des Cotisations"
+        subtitle="Gestion par membre et type de cotisation"
+      />
+      <div className="flex justify-end">
         <div className="relative">
           <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
           <Input

@@ -25,6 +25,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import CotisationForm from "@/components/forms/CotisationForm";
+import LogoHeader from "@/components/LogoHeader";
 
 interface Cotisation {
   id: string;
@@ -190,30 +191,26 @@ export default function Cotisations() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            Gestion des Cotisations
-          </h1>
-          <p className="text-muted-foreground">
-            Suivi des cotisations et contributions
-          </p>
+      <LogoHeader 
+        title="Gestion des Cotisations"
+        subtitle="Suivi des cotisations et contributions"
+      />
+      <div className="flex justify-end">
+        <div className="flex gap-2">
+          <Button 
+            variant="outline"
+            onClick={() => navigate("/cotisations-grid")}
+          >
+            Vue Grille
+          </Button>
+          <Button 
+            className="bg-gradient-to-r from-primary to-secondary"
+            onClick={() => setShowForm(true)}
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Nouvelle cotisation
+          </Button>
         </div>
-          <div className="flex gap-2">
-            <Button 
-              variant="outline"
-              onClick={() => navigate("/cotisations-grid")}
-            >
-              Vue Grille
-            </Button>
-            <Button 
-              className="bg-gradient-to-r from-primary to-primary-light"
-              onClick={() => setShowForm(true)}
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Nouvelle cotisation
-            </Button>
-          </div>
       </div>
 
       {/* Stats Cards */}
