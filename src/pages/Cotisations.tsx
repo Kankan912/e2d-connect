@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -56,6 +57,7 @@ export default function Cotisations() {
   const [searchTerm, setSearchTerm] = useState("");
   const [showForm, setShowForm] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     loadCotisations();
@@ -197,13 +199,21 @@ export default function Cotisations() {
             Suivi des cotisations et contributions
           </p>
         </div>
-        <Button 
-          className="bg-gradient-to-r from-primary to-primary-light"
-          onClick={() => setShowForm(true)}
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Nouvelle cotisation
-        </Button>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline"
+              onClick={() => navigate("/cotisations-grid")}
+            >
+              Vue Grille
+            </Button>
+            <Button 
+              className="bg-gradient-to-r from-primary to-primary-light"
+              onClick={() => setShowForm(true)}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Nouvelle cotisation
+            </Button>
+          </div>
       </div>
 
       {/* Stats Cards */}

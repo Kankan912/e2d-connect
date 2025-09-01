@@ -579,6 +579,33 @@ export type Database = {
           },
         ]
       }
+      role_permissions: {
+        Row: {
+          created_at: string
+          granted: boolean
+          id: string
+          permission: string
+          resource: string
+          role_id: string
+        }
+        Insert: {
+          created_at?: string
+          granted?: boolean
+          id?: string
+          permission: string
+          resource: string
+          role_id: string
+        }
+        Update: {
+          created_at?: string
+          granted?: boolean
+          id?: string
+          permission?: string
+          resource?: string
+          role_id?: string
+        }
+        Relationships: []
+      }
       roles: {
         Row: {
           created_at: string | null
@@ -726,6 +753,48 @@ export type Database = {
           justificatif_url?: string | null
           libelle?: string
           montant?: number
+        }
+        Relationships: []
+      }
+      sport_e2d_matchs: {
+        Row: {
+          created_at: string
+          date_match: string
+          equipe_adverse: string
+          heure_match: string | null
+          id: string
+          lieu: string | null
+          notes: string | null
+          score_adverse: number | null
+          score_e2d: number | null
+          statut: string
+          type_match: string
+        }
+        Insert: {
+          created_at?: string
+          date_match?: string
+          equipe_adverse: string
+          heure_match?: string | null
+          id?: string
+          lieu?: string | null
+          notes?: string | null
+          score_adverse?: number | null
+          score_e2d?: number | null
+          statut?: string
+          type_match?: string
+        }
+        Update: {
+          created_at?: string
+          date_match?: string
+          equipe_adverse?: string
+          heure_match?: string | null
+          id?: string
+          lieu?: string | null
+          notes?: string | null
+          score_adverse?: number | null
+          score_e2d?: number | null
+          statut?: string
+          type_match?: string
         }
         Relationships: []
       }

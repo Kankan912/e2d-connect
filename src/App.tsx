@@ -19,6 +19,7 @@ import Sanctions from "./pages/Sanctions";
 import Reunions from "./pages/Reunions";
 import SportE2D from "./pages/SportE2D";
 import Configuration from "./pages/Configuration";
+import CotisationsGrid from "./pages/CotisationsGrid";
 import NotFound from "./pages/NotFound";
 import Layout from "@/components/Layout";
 
@@ -75,6 +76,11 @@ const App = () => {
                 <Route path="/cotisations" element={
                   <Layout user={user}>
                     <Cotisations />
+                  </Layout>
+                } />
+                <Route path="/cotisations-grid" element={
+                  <Layout user={user}>
+                    <CotisationsGrid />
                   </Layout>
                 } />
                 <Route path="/sport-phoenix" element={

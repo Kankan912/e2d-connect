@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import AdminCreateAccount from "@/components/AdminCreateAccount";
 
 interface TypeCotisation {
   id: string;
@@ -252,6 +253,9 @@ export default function Configuration() {
         <Settings className="h-8 w-8 text-muted-foreground" />
       </div>
 
+      {/* Création compte admin */}
+      <AdminCreateAccount />
+
       <Tabs defaultValue="cotisations" className="space-y-6">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="cotisations" className="flex items-center gap-2">
@@ -298,6 +302,7 @@ export default function Configuration() {
                       </DialogDescription>
                     </DialogHeader>
                     <form onSubmit={handleSubmitCotisation} className="space-y-4">
+                      
                       <div className="space-y-2">
                         <Label htmlFor="nom">Nom *</Label>
                         <Input
@@ -395,7 +400,7 @@ export default function Configuration() {
           </Card>
         </TabsContent>
 
-        {/* Types d'Aides */}
+        
         <TabsContent value="aides">
           <Card>
             <CardHeader>
@@ -515,7 +520,7 @@ export default function Configuration() {
           </Card>
         </TabsContent>
 
-        {/* Types de Sanctions */}  
+        
         <TabsContent value="sanctions">
           <Card>
             <CardHeader>
