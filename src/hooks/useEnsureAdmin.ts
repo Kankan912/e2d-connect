@@ -1,3 +1,4 @@
+
 import { useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -7,9 +8,10 @@ export function useEnsureAdmin() {
 
   const ensureAdmin = useCallback(async (): Promise<boolean> => {
     try {
+      console.log('🔧 Tentative ensure-admin...');
       const { error } = await supabase.functions.invoke('ensure-admin');
       if (error) {
-        console.error('Erreur ensure-admin:', error);
+        console.error('❌ Erreur ensure-admin:', error);
         toast({
           title: "Erreur d'autorisation",
           description: "Impossible de vérifier les droits administrateur.",
@@ -17,9 +19,14 @@ export function useEnsureAdmin() {
         });
         return false;
       }
+      console.log('✅ ensure-admin réussi');
+      toast({
+        title: "Droits administrateur",
+        description: "Accès administrateur confirmé.",
+      });
       return true;
     } catch (error) {
-      console.error('Erreur ensure-admin:', error);
+      console.error('❌ Erreur ensure-admin:', error);
       toast({
         title: "Erreur d'autorisation",
         description: "Impossible de vérifier les droits administrateur.",
@@ -34,15 +41,28 @@ export function useEnsureAdmin() {
     retryOnce = true
   ): Promise<T | null> => {
     try {
+      console.log('🚀 Tentative opération...');
       return await operation();
     } catch (error: any) {
-      if (retryOnce && (error.message?.includes('403') || error.code === 'PGRST301')) {
+      console.log('❌ Erreur détectée:', error);
+      
+      // Détecter les erreurs RLS (code 42501) ou 403
+      const isRLSError = error.code === '42501' || 
+                        error.message?.includes('42501') ||
+                        error.message?.includes('row-level security') ||
+                        error.message?.includes('violates') ||
+                        error.message?.includes('403') ||
+                        error.code === 'PGRST301';
+
+      if (retryOnce && isRLSError) {
+        console.log('🔄 Erreur RLS détectée, tentative ensure-admin...');
         const adminEnsured = await ensureAdmin();
         if (adminEnsured) {
           try {
+            console.log('🔄 Retry de l\'opération après ensure-admin...');
             return await operation();
           } catch (retryError) {
-            console.error('Retry failed after ensure-admin:', retryError);
+            console.error('❌ Retry échoué après ensure-admin:', retryError);
             throw retryError;
           }
         }

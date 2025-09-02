@@ -1,245 +1,158 @@
-import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import React from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import { useQueryClient } from '@tanstack/react-query';
+import { useEnsureAdmin } from '@/hooks/useEnsureAdmin';
+
+const reunionSchema = z.object({
+  date_reunion: z.string().min(1, "La date est requise"),
+  lieu_membre_id: z.string().optional(),
+  lieu_description: z.string().optional(),
+  ordre_du_jour: z.string().optional(),
+  statut: z.enum(['planifiee', 'en_cours', 'terminee', 'reportee', 'annulee']).default('planifiee'),
+});
+
+type ReunionFormData = z.infer<typeof reunionSchema>;
 
 interface ReunionFormProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onSuccess: () => void;
+  onSuccess?: () => void;
+  initialData?: Partial<ReunionFormData> & { id?: string };
 }
 
-interface Membre {
-  id: string;
-  nom: string;
-  prenom: string;
-}
-
-export default function ReunionForm({ open, onOpenChange, onSuccess }: ReunionFormProps) {
-  const [formData, setFormData] = useState({
-    date_reunion: "",
-    heure_reunion: "09:00",
-    lieu_membre_id: "",
-    lieu_description: "",
-    ordre_du_jour: "",
-    statut: "planifie"
-  });
-  const [membres, setMembres] = useState<Membre[]>([]);
-  const [loading, setLoading] = useState(false);
+export default function ReunionForm({ onSuccess, initialData }: ReunionFormProps) {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const { withEnsureAdmin } = useEnsureAdmin();
 
-  useEffect(() => {
-    if (open) {
-      fetchMembres();
-      // Set default date to next week
-      const nextWeek = new Date();
-      nextWeek.setDate(nextWeek.getDate() + 7);
-      setFormData(prev => ({
-        ...prev,
-        date_reunion: nextWeek.toISOString().split('T')[0]
-      }));
-    }
-  }, [open]);
+  const form = useForm<ReunionFormData>({
+    resolver: zodResolver(reunionSchema),
+    defaultValues: {
+      date_reunion: initialData?.date_reunion || '',
+      lieu_membre_id: initialData?.lieu_membre_id || '',
+      lieu_description: initialData?.lieu_description || '',
+      ordre_du_jour: initialData?.ordre_du_jour || '',
+      statut: initialData?.statut || 'planifiee',
+    },
+  });
 
-  const fetchMembres = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('membres')
-        .select('id, nom, prenom')
-        .eq('statut', 'actif')
-        .order('nom');
-
-      if (error) throw error;
-      setMembres(data || []);
-    } catch (error) {
-      console.error('Erreur lors du chargement des membres:', error);
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (data: ReunionFormData) => {
+    console.log('📝 Soumission réunion:', data);
     
-    // Validation
-    if (!formData.date_reunion || !formData.heure_reunion) {
-      toast({
-        title: "Erreur",
-        description: "Veuillez remplir la date et l'heure de la réunion",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!formData.lieu_membre_id && !formData.lieu_description) {
-      toast({
-        title: "Erreur",
-        description: "Veuillez spécifier le lieu de la réunion",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setLoading(true);
+    const operation = async () => {
+      if (initialData?.id) {
+        const { error } = await supabase
+          .from('reunions')
+          .update(data)
+          .eq('id', initialData.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('reunions')
+          .insert([data]);
+        if (error) throw error;
+      }
+    };
 
     try {
-      // Combine date and time
-      const dateTime = new Date(`${formData.date_reunion}T${formData.heure_reunion}:00`);
-
-      const { error } = await supabase
-        .from('reunions')
-        .insert([{
-          date_reunion: dateTime.toISOString(),
-          lieu_membre_id: formData.lieu_membre_id || null,
-          lieu_description: formData.lieu_description.trim() || null,
-          ordre_du_jour: formData.ordre_du_jour.trim() || null,
-          statut: formData.statut,
-        }]);
-
-      if (error) throw error;
-
+      await withEnsureAdmin(operation);
+      
+      console.log('✅ Réunion sauvegardée');
       toast({
         title: "Succès",
-        description: "Réunion planifiée avec succès",
+        description: initialData?.id ? "Réunion mise à jour" : "Réunion créée avec succès",
       });
-
-      onOpenChange(false);
-      onSuccess();
       
-      // Reset form
-      const nextWeek = new Date();
-      nextWeek.setDate(nextWeek.getDate() + 7);
-      setFormData({
-        date_reunion: nextWeek.toISOString().split('T')[0],
-        heure_reunion: "09:00",
-        lieu_membre_id: "",
-        lieu_description: "",
-        ordre_du_jour: "",
-        statut: "planifie"
-      });
+      // Invalider les queries pour rafraîchir
+      queryClient.invalidateQueries({ queryKey: ['reunions'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+      
+      form.reset();
+      onSuccess?.();
     } catch (error: any) {
+      console.error('❌ Erreur réunion:', error);
       toast({
         title: "Erreur",
-        description: "Impossible de planifier la réunion",
+        description: error.message || "Impossible d'enregistrer la réunion",
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
-        <DialogHeader>
-          <DialogTitle>Planifier une réunion</DialogTitle>
-          <DialogDescription>
-            Créez une nouvelle réunion pour les membres de l'association.
-          </DialogDescription>
-        </DialogHeader>
-        
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="date_reunion">Date *</Label>
-              <Input
-                id="date_reunion"
-                type="date"
-                value={formData.date_reunion}
-                onChange={(e) => setFormData(prev => ({ ...prev, date_reunion: e.target.value }))}
-                required
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="heure_reunion">Heure *</Label>
-              <Input
-                id="heure_reunion"
-                type="time"
-                value={formData.heure_reunion}
-                onChange={(e) => setFormData(prev => ({ ...prev, heure_reunion: e.target.value }))}
-                required
-              />
-            </div>
-          </div>
-          
+    <Card>
+      <CardHeader>
+        <CardTitle>{initialData?.id ? 'Modifier' : 'Nouvelle'} Réunion</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="lieu_membre">Lieu - Chez un membre</Label>
-            <Select value={formData.lieu_membre_id} onValueChange={(value) => 
-              setFormData(prev => ({ ...prev, lieu_membre_id: value, lieu_description: "" }))
-            }>
-              <SelectTrigger>
-                <SelectValue placeholder="Sélectionner un membre hôte" />
-              </SelectTrigger>
-              <SelectContent>
-                {membres.map((membre) => (
-                  <SelectItem key={membre.id} value={membre.id}>
-                    Chez {membre.prenom} {membre.nom}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label htmlFor="date_reunion">Date de la réunion *</Label>
+            <Input
+              id="date_reunion"
+              type="date"
+              {...form.register('date_reunion')}
+            />
+            {form.formState.errors.date_reunion && (
+              <p className="text-sm text-red-500">{form.formState.errors.date_reunion.message}</p>
+            )}
           </div>
-          
+
           <div className="space-y-2">
-            <Label htmlFor="lieu_description">
-              OU Lieu - Description libre 
-              {formData.lieu_membre_id && (
-                <span className="text-sm text-muted-foreground ml-2">
-                  (Laissez vide si vous avez sélectionné un membre)
-                </span>
-              )}
-            </Label>
+            <Label htmlFor="lieu_description">Lieu</Label>
             <Input
               id="lieu_description"
-              placeholder="Ex: Salle communautaire, Bureau de l'association..."
-              value={formData.lieu_description}
-              onChange={(e) => setFormData(prev => ({ ...prev, lieu_description: e.target.value, lieu_membre_id: "" }))}
-              disabled={!!formData.lieu_membre_id}
+              placeholder="Ex: Salle communale, Domicile..."
+              {...form.register('lieu_description')}
             />
           </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="statut">Statut</Label>
-            <Select value={formData.statut} onValueChange={(value) => 
-              setFormData(prev => ({ ...prev, statut: value }))
-            }>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="planifie">Planifiée</SelectItem>
-                <SelectItem value="en_cours">En cours</SelectItem>
-                <SelectItem value="terminee">Terminée</SelectItem>
-                <SelectItem value="annulee">Annulée</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          
+
           <div className="space-y-2">
             <Label htmlFor="ordre_du_jour">Ordre du jour</Label>
             <Textarea
               id="ordre_du_jour"
-              placeholder="Points à aborder lors de la réunion..."
-              value={formData.ordre_du_jour}
-              onChange={(e) => setFormData(prev => ({ ...prev, ordre_du_jour: e.target.value }))}
+              placeholder="Points à l'ordre du jour..."
               rows={4}
+              {...form.register('ordre_du_jour')}
             />
           </div>
-          
-          <div className="flex justify-end space-x-2 pt-4">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Annuler
-            </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? "Planification..." : "Planifier"}
-            </Button>
+
+          <div className="space-y-2">
+            <Label htmlFor="statut">Statut</Label>
+            <Select 
+              value={form.watch('statut')} 
+              onValueChange={(value) => form.setValue('statut', value as any)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionner le statut" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="planifiee">Planifiée</SelectItem>
+                <SelectItem value="en_cours">En cours</SelectItem>
+                <SelectItem value="terminee">Terminée</SelectItem>
+                <SelectItem value="reportee">Reportée</SelectItem>
+                <SelectItem value="annulee">Annulée</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
+
+          <Button 
+            type="submit" 
+            className="w-full"
+            disabled={form.formState.isSubmitting}
+          >
+            {form.formState.isSubmitting ? 'Enregistrement...' : (initialData?.id ? 'Mettre à jour' : 'Créer la réunion')}
+          </Button>
         </form>
-      </DialogContent>
-    </Dialog>
+      </CardContent>
+    </Card>
   );
 }

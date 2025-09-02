@@ -1,214 +1,257 @@
+
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Mail, Lock, User, Phone } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Mail, Lock, User, Phone } from "lucide-react";
 
 export default function AuthForm() {
-  const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-    nom: "",
-    prenom: "",
-    telephone: ""
-  });
-  
-  const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
-  const handleSignIn = async (e: React.FormEvent) => {
+  const handleSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!formData.email || !formData.password) return;
+    setIsLoading(true);
+    
+    const formData = new FormData(e.currentTarget);
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
 
-    setLoading(true);
     try {
       const { error } = await supabase.auth.signInWithPassword({
-        email: formData.email,
-        password: formData.password,
+        email,
+        password,
       });
 
-      if (error) {
-        toast({
-          title: "Erreur de connexion",
-          description: error.message,
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Connexion réussie",
-          description: "Bienvenue dans E2D Connect !",
-        });
-        navigate("/");
-      }
-    } catch (error) {
+      if (error) throw error;
+
       toast({
-        title: "Erreur",
-        description: "Une erreur inattendue s'est produite",
-        variant: "destructive",
+        title: "Connexion réussie",
+        description: "Vous êtes maintenant connecté.",
       });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.email || !formData.password || !formData.nom || !formData.prenom) return;
-
-    setLoading(true);
-    try {
-      const redirectUrl = `${window.location.origin}/`;
       
-      const { data, error } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
-        options: {
-          emailRedirectTo: redirectUrl,
-          data: {
-            nom: formData.nom,
-            prenom: formData.prenom,
-            telephone: formData.telephone
-          }
+      // Appeler ensure-admin après connexion si c'est l'admin
+      if (email === 'admin@e2d.com') {
+        try {
+          await supabase.functions.invoke('ensure-admin');
+          console.log('✅ Admin bootstrap effectué');
+        } catch (adminError) {
+          console.warn('⚠️ Admin bootstrap échoué (non critique):', adminError);
         }
-      });
-
-      if (error) {
-        toast({
-          title: "Erreur d'inscription",
-          description: error.message,
-          variant: "destructive",
-        });
-      } else if (data.user) {
-        // Créer le profil membre
-        const { error: profileError } = await supabase
-          .from('membres')
-          .insert({
-            user_id: data.user.id,
-            nom: formData.nom,
-            prenom: formData.prenom,
-            email: formData.email,
-            telephone: formData.telephone,
-            statut: 'actif',
-            est_membre_e2d: true
-          });
-
-        if (profileError) {
-          console.error('Erreur création profil:', profileError);
-        }
-
-        toast({
-          title: "Inscription réussie",
-          description: "Vérifiez votre email pour confirmer votre compte",
-        });
       }
-    } catch (error) {
+      
+      navigate("/");
+    } catch (error: any) {
       toast({
-        title: "Erreur",
-        description: "Une erreur inattendue s'est produite",
+        title: "Erreur de connexion",
+        description: error.message,
         variant: "destructive",
       });
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
-  const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+  const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsLoading(true);
+    
+    const formData = new FormData(e.currentTarget);
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
+    const nom = formData.get("nom") as string;
+    const prenom = formData.get("prenom") as string;
+    const telephone = formData.get("telephone") as string;
+
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            nom,
+            prenom,
+            telephone,
+          },
+        },
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Inscription réussie",
+        description: "Compte créé avec succès.",
+      });
+      
+      navigate("/");
+    } catch (error: any) {
+      toast({
+        title: "Erreur d'inscription",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-primary/5 via-background to-secondary/5">
-      <div className="w-full max-w-md">
-        {/* Logo et titre */}
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center">
-            <span className="text-white font-bold text-xl">E2D</span>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center pb-6">
+          <div className="mx-auto mb-4">
+            <img 
+              src="/src/assets/logo-e2d.png" 
+              alt="E2D Logo" 
+              className="h-16 w-auto mx-auto"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.style.display = 'none';
+                const fallback = target.nextElementSibling as HTMLElement;
+                if (fallback) fallback.style.display = 'flex';
+              }}
+            />
+            <div 
+              className="h-16 w-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center text-white font-bold text-xl mx-auto"
+              style={{ display: 'none' }}
+            >
+              E2D
+            </div>
           </div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-            E2D Connect
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            Plateforme de gestion de l'association
-          </p>
-        </div>
-
-        <Card className="shadow-xl border-0 bg-card/80 backdrop-blur-sm">
-          <CardHeader className="space-y-1 text-center">
-            <CardTitle className="text-2xl">Accès membre</CardTitle>
-            <CardDescription>
-              Connectez-vous ou créez votre compte
-            </CardDescription>
-          </CardHeader>
-          
-          <CardContent>
-            {/* Connexion uniquement */}
-            <form onSubmit={handleSignIn} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="signin-email">Email</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="signin-email"
-                    type="email"
-                    placeholder="votre@email.com"
-                    className="pl-10"
-                    value={formData.email}
-                    onChange={(e) => handleInputChange("email", e.target.value)}
-                    required
-                  />
+          <CardTitle className="text-2xl font-bold text-gray-900">E2D Association</CardTitle>
+          <CardDescription>Connectez-vous à votre espace membre</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Tabs defaultValue="signin" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="signin">Connexion</TabsTrigger>
+              <TabsTrigger value="signup">Inscription</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="signin">
+              <form onSubmit={handleSignIn} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="signin-email">Email</Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Input
+                      id="signin-email"
+                      name="email"
+                      type="email"
+                      placeholder="votre@email.com"
+                      className="pl-10"
+                      required
+                    />
+                  </div>
                 </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="signin-password">Mot de passe</Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="signin-password"
-                    type="password"
-                    placeholder="Votre mot de passe"
-                    className="pl-10"
-                    value={formData.password}
-                    onChange={(e) => handleInputChange("password", e.target.value)}
-                    required
-                  />
+                <div className="space-y-2">
+                  <Label htmlFor="signin-password">Mot de passe</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Input
+                      id="signin-password"
+                      name="password"
+                      type="password"
+                      placeholder="••••••••"
+                      className="pl-10"
+                      required
+                    />
+                  </div>
                 </div>
-              </div>
-              
-              <Button 
-                type="submit" 
-                className="w-full bg-gradient-to-r from-primary to-primary-light hover:from-primary-dark hover:to-primary" 
-                disabled={loading}
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Connexion...
-                  </>
-                ) : (
-                  "Se connecter"
-                )}
-              </Button>
-              
-              <div className="text-center mt-4">
-                <p className="text-sm text-muted-foreground">
-                  Pas de compte ? Contactez l'administrateur pour en créer un.
-                </p>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
-
-        <p className="text-center text-sm text-muted-foreground mt-6">
-          En vous connectant, vous acceptez les conditions d'utilisation de E2D Connect
-        </p>
-      </div>
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading ? "Connexion..." : "Se connecter"}
+                </Button>
+              </form>
+            </TabsContent>
+            
+            <TabsContent value="signup">
+              <form onSubmit={handleSignUp} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-prenom">Prénom</Label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <Input
+                        id="signup-prenom"
+                        name="prenom"
+                        type="text"
+                        placeholder="Prénom"
+                        className="pl-10"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-nom">Nom</Label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <Input
+                        id="signup-nom"
+                        name="nom"
+                        type="text"
+                        placeholder="Nom"
+                        className="pl-10"
+                        required
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="signup-email">Email</Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Input
+                      id="signup-email"
+                      name="email"
+                      type="email"
+                      placeholder="votre@email.com"
+                      className="pl-10"
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="signup-telephone">Téléphone</Label>
+                  <div className="relative">
+                    <Phone className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Input
+                      id="signup-telephone"
+                      name="telephone"
+                      type="tel"
+                      placeholder="+33 6 12 34 56 78"
+                      className="pl-10"
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="signup-password">Mot de passe</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Input
+                      id="signup-password"
+                      name="password"
+                      type="password"
+                      placeholder="••••••••"
+                      className="pl-10"
+                      required
+                    />
+                  </div>
+                </div>
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading ? "Inscription..." : "S'inscrire"}
+                </Button>
+              </form>
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
     </div>
   );
 }

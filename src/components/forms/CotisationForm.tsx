@@ -1,262 +1,246 @@
-import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import React from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEnsureAdmin } from '@/hooks/useEnsureAdmin';
 
-interface Membre {
-  id: string;
-  nom: string;
-  prenom: string;
-}
+const cotisationSchema = z.object({
+  membre_id: z.string().min(1, "Le membre est requis"),
+  type_cotisation_id: z.string().min(1, "Le type de cotisation est requis"),
+  montant: z.number().min(0, "Le montant doit être positif"),
+  date_paiement: z.string().optional(),
+  statut: z.enum(['en_attente', 'payee', 'en_retard', 'exoneree']).default('en_attente'),
+  notes: z.string().optional(),
+});
 
-interface TypeCotisation {
-  id: string;
-  nom: string;
-  montant_defaut: number;
-}
+type CotisationFormData = z.infer<typeof cotisationSchema>;
 
 interface CotisationFormProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onSuccess: () => void;
+  onSuccess?: () => void;
+  initialData?: Partial<CotisationFormData> & { id?: string };
 }
 
-export default function CotisationForm({ open, onOpenChange, onSuccess }: CotisationFormProps) {
-  const [formData, setFormData] = useState({
-    membre_id: "",
-    type_cotisation_id: "",
-    montant: "",
-    date_paiement: new Date().toISOString().split('T')[0],
-    statut: "paye",
-    notes: ""
-  });
-  const [membres, setMembres] = useState<Membre[]>([]);
-  const [typesCotisations, setTypesCotisations] = useState<TypeCotisation[]>([]);
-  const [loading, setLoading] = useState(false);
+export default function CotisationForm({ onSuccess, initialData }: CotisationFormProps) {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const { withEnsureAdmin } = useEnsureAdmin();
 
-  useEffect(() => {
-    if (open) {
-      fetchMembres();
-      fetchTypesCotisations();
-    }
-  }, [open]);
-
-  const fetchMembres = async () => {
-    try {
+  const { data: membres } = useQuery({
+    queryKey: ['membres'],
+    queryFn: async () => {
       const { data, error } = await supabase
         .from('membres')
         .select('id, nom, prenom')
         .eq('statut', 'actif')
         .order('nom');
-
       if (error) throw error;
-      setMembres(data || []);
-    } catch (error) {
-      console.error('Erreur lors du chargement des membres:', error);
+      return data;
     }
-  };
+  });
 
-  const fetchTypesCotisations = async () => {
-    try {
+  const { data: typesCotisations } = useQuery({
+    queryKey: ['cotisations-types'],
+    queryFn: async () => {
       const { data, error } = await supabase
         .from('cotisations_types')
         .select('*')
         .order('nom');
-
       if (error) throw error;
-      setTypesCotisations(data || []);
-    } catch (error) {
-      console.error('Erreur lors du chargement des types:', error);
+      return data;
     }
-  };
+  });
 
-  const handleTypeChange = (typeId: string) => {
-    const selectedType = typesCotisations.find(t => t.id === typeId);
-    setFormData(prev => ({
-      ...prev,
-      type_cotisation_id: typeId,
-      montant: selectedType?.montant_defaut?.toString() || ""
-    }));
-  };
+  const form = useForm<CotisationFormData>({
+    resolver: zodResolver(cotisationSchema),
+    defaultValues: {
+      membre_id: initialData?.membre_id || '',
+      type_cotisation_id: initialData?.type_cotisation_id || '',
+      montant: initialData?.montant || 0,
+      date_paiement: initialData?.date_paiement || '',
+      statut: initialData?.statut || 'en_attente',
+      notes: initialData?.notes || '',
+    },
+  });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const selectedType = typesCotisations?.find(t => t.id === form.watch('type_cotisation_id'));
+
+  // Auto-remplir le montant par défaut si un type est sélectionné
+  React.useEffect(() => {
+    if (selectedType && selectedType.montant_defaut && !initialData?.id) {
+      form.setValue('montant', selectedType.montant_defaut);
+    }
+  }, [selectedType, form, initialData?.id]);
+
+  const onSubmit = async (data: CotisationFormData) => {
+    console.log('💳 Soumission cotisation:', data);
     
-    // Validation
-    if (!formData.membre_id || !formData.type_cotisation_id || !formData.montant) {
-      toast({
-        title: "Erreur",
-        description: "Veuillez remplir tous les champs obligatoires",
-        variant: "destructive",
-      });
-      return;
-    }
+    const operation = async () => {
+      const payload = {
+        ...data,
+        date_paiement: data.date_paiement || null,
+      };
 
-    const montant = parseFloat(formData.montant);
-    if (isNaN(montant) || montant <= 0) {
-      toast({
-        title: "Erreur",
-        description: "Veuillez saisir un montant valide",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setLoading(true);
+      if (initialData?.id) {
+        const { error } = await supabase
+          .from('cotisations')
+          .update(payload)
+          .eq('id', initialData.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('cotisations')
+          .insert([payload]);
+        if (error) throw error;
+      }
+    };
 
     try {
-      const { error } = await supabase
-        .from('cotisations')
-        .insert([{
-          membre_id: formData.membre_id,
-          type_cotisation_id: formData.type_cotisation_id,
-          montant: montant,
-          date_paiement: formData.date_paiement,
-          statut: formData.statut,
-          notes: formData.notes.trim() || null,
-        }]);
-
-      if (error) throw error;
-
+      await withEnsureAdmin(operation);
+      
+      console.log('✅ Cotisation sauvegardée');
       toast({
         title: "Succès",
-        description: "Cotisation ajoutée avec succès",
+        description: initialData?.id ? "Cotisation mise à jour" : "Cotisation enregistrée avec succès",
       });
-
-      onOpenChange(false);
-      onSuccess();
       
-      // Reset form
-      setFormData({
-        membre_id: "",
-        type_cotisation_id: "",
-        montant: "",
-        date_paiement: new Date().toISOString().split('T')[0],
-        statut: "paye",
-        notes: ""
-      });
+      // Invalider les queries pour rafraîchir
+      queryClient.invalidateQueries({ queryKey: ['cotisations'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+      
+      form.reset();
+      onSuccess?.();
     } catch (error: any) {
+      console.error('❌ Erreur cotisation:', error);
       toast({
         title: "Erreur",
-        description: "Impossible d'enregistrer la cotisation",
+        description: error.message || "Impossible d'enregistrer la cotisation",
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>Ajouter une cotisation</DialogTitle>
-          <DialogDescription>
-            Enregistrez le paiement d'une cotisation par un membre.
-          </DialogDescription>
-        </DialogHeader>
-        
-        <form onSubmit={handleSubmit} className="space-y-4">
+    <Card>
+      <CardHeader>
+        <CardTitle>{initialData?.id ? 'Modifier' : 'Nouvelle'} Cotisation</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="membre">Membre *</Label>
-            <Select value={formData.membre_id} onValueChange={(value) => 
-              setFormData(prev => ({ ...prev, membre_id: value }))
-            }>
+            <Label htmlFor="membre_id">Membre *</Label>
+            <Select 
+              value={form.watch('membre_id')} 
+              onValueChange={(value) => form.setValue('membre_id', value)}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Sélectionner un membre" />
               </SelectTrigger>
               <SelectContent>
-                {membres.map((membre) => (
+                {membres?.map((membre) => (
                   <SelectItem key={membre.id} value={membre.id}>
                     {membre.prenom} {membre.nom}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
+            {form.formState.errors.membre_id && (
+              <p className="text-sm text-red-500">{form.formState.errors.membre_id.message}</p>
+            )}
           </div>
-          
+
           <div className="space-y-2">
-            <Label htmlFor="type">Type de cotisation *</Label>
-            <Select value={formData.type_cotisation_id} onValueChange={handleTypeChange}>
+            <Label htmlFor="type_cotisation_id">Type de cotisation *</Label>
+            <Select 
+              value={form.watch('type_cotisation_id')} 
+              onValueChange={(value) => form.setValue('type_cotisation_id', value)}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Sélectionner un type" />
               </SelectTrigger>
               <SelectContent>
-                {typesCotisations.map((type) => (
+                {typesCotisations?.map((type) => (
                   <SelectItem key={type.id} value={type.id}>
-                    {type.nom} - {type.montant_defaut?.toLocaleString()} FCFA
+                    {type.nom} {type.montant_defaut && `(${type.montant_defaut}€)`}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
+            {form.formState.errors.type_cotisation_id && (
+              <p className="text-sm text-red-500">{form.formState.errors.type_cotisation_id.message}</p>
+            )}
           </div>
-          
+
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="montant">Montant (FCFA) *</Label>
+              <Label htmlFor="montant">Montant (€) *</Label>
               <Input
                 id="montant"
                 type="number"
-                placeholder="Ex: 10000"
-                value={formData.montant}
-                onChange={(e) => setFormData(prev => ({ ...prev, montant: e.target.value }))}
-                required
+                step="0.01"
+                min="0"
+                {...form.register('montant', { valueAsNumber: true })}
               />
+              {form.formState.errors.montant && (
+                <p className="text-sm text-red-500">{form.formState.errors.montant.message}</p>
+              )}
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="date_paiement">Date de paiement</Label>
               <Input
                 id="date_paiement"
                 type="date"
-                value={formData.date_paiement}
-                onChange={(e) => setFormData(prev => ({ ...prev, date_paiement: e.target.value }))}
+                {...form.register('date_paiement')}
               />
             </div>
           </div>
-          
+
           <div className="space-y-2">
             <Label htmlFor="statut">Statut</Label>
-            <Select value={formData.statut} onValueChange={(value) => 
-              setFormData(prev => ({ ...prev, statut: value }))
-            }>
+            <Select 
+              value={form.watch('statut')} 
+              onValueChange={(value) => form.setValue('statut', value as any)}
+            >
               <SelectTrigger>
-                <SelectValue />
+                <SelectValue placeholder="Sélectionner le statut" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="paye">Payé</SelectItem>
                 <SelectItem value="en_attente">En attente</SelectItem>
+                <SelectItem value="payee">Payée</SelectItem>
                 <SelectItem value="en_retard">En retard</SelectItem>
+                <SelectItem value="exoneree">Exonérée</SelectItem>
               </SelectContent>
             </Select>
           </div>
-          
+
           <div className="space-y-2">
             <Label htmlFor="notes">Notes</Label>
             <Textarea
               id="notes"
-              placeholder="Notes additionnelles..."
-              value={formData.notes}
-              onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+              placeholder="Informations complémentaires..."
+              rows={3}
+              {...form.register('notes')}
             />
           </div>
-          
-          <div className="flex justify-end space-x-2 pt-4">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Annuler
-            </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? "Enregistrement..." : "Ajouter"}
-            </Button>
-          </div>
+
+          <Button 
+            type="submit" 
+            className="w-full"
+            disabled={form.formState.isSubmitting}
+          >
+            {form.formState.isSubmitting ? 'Enregistrement...' : (initialData?.id ? 'Mettre à jour' : 'Enregistrer la cotisation')}
+          </Button>
         </form>
-      </DialogContent>
-    </Dialog>
+      </CardContent>
+    </Card>
   );
 }

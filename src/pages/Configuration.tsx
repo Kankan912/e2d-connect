@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -8,8 +9,60 @@ import RolePermissionsManager from "@/components/RolePermissionsManager";
 import RoleManager from "@/components/RoleManager";
 import LogoHeader from "@/components/LogoHeader";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 
 export default function Configuration() {
+  const { toast } = useToast();
+  const [ensureAdminLoading, setEnsureAdminLoading] = useState(false);
+
+  const { data: currentRole } = useQuery({
+    queryKey: ['current-user-role'],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('get_current_user_role');
+      if (error) {
+        console.warn('Impossible de récupérer le rôle:', error);
+        return null;
+      }
+      return data;
+    },
+    retry: false,
+  });
+
+  const handleEnsureAdmin = async () => {
+    setEnsureAdminLoading(true);
+    try {
+      console.log('🔧 Correction des accès administrateur...');
+      const { error } = await supabase.functions.invoke('ensure-admin');
+      if (error) {
+        console.error('❌ Échec ensure-admin:', error);
+        toast({
+          title: "Échec",
+          description: `Erreur: ${error.message}`,
+          variant: "destructive",
+        });
+      } else {
+        console.log('✅ Rôle administrateur initialisé');
+        toast({
+          title: "Succès",
+          description: "Rôle administrateur initialisé. Réessayez votre action.",
+        });
+        // Recharger la page pour actualiser les permissions
+        setTimeout(() => window.location.reload(), 1500);
+      }
+    } catch (error: any) {
+      console.error('❌ Erreur ensure-admin:', error);
+      toast({
+        title: "Erreur",
+        description: error.message || "Une erreur inattendue s'est produite",
+        variant: "destructive",
+      });
+    } finally {
+      setEnsureAdminLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -55,20 +108,42 @@ export default function Configuration() {
         <TabsContent value="permissions" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Réparer les accès administrateur</CardTitle>
+              <CardTitle>Diagnostics des accès</CardTitle>
             </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground mb-3">Cliquez pour initialiser votre rôle administrateur si vous rencontrez des erreurs 403.</p>
-              <Button onClick={async () => {
-                const { error } = await supabase.functions.invoke('ensure-admin');
-                if (error) {
-                  alert('Échec: ' + error.message);
-                } else {
-                  alert('Rôle administrateur initialisé. Réessayez votre action.');
-                }
-              }}>Corriger les accès</Button>
+            <CardContent className="space-y-4">
+              <div className="p-3 bg-blue-50 rounded-lg">
+                <p className="text-sm">
+                  <strong>Rôle actuel:</strong> {currentRole || 'Aucun rôle détecté'}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Dernière vérification: {new Date().toLocaleString()}
+                </p>
+              </div>
+              
+              <div>
+                <p className="text-sm text-muted-foreground mb-3">
+                  Si vous rencontrez des erreurs 403 (accès refusé), cliquez ci-dessous pour corriger automatiquement vos droits administrateur.
+                </p>
+                <Button 
+                  onClick={handleEnsureAdmin}
+                  disabled={ensureAdminLoading}
+                  className="w-full"
+                >
+                  {ensureAdminLoading ? "Correction en cours..." : "🔧 Rétablir les accès administrateur"}
+                </Button>
+              </div>
+
+              <div className="text-xs text-muted-foreground space-y-1">
+                <p><strong>Erreurs communes:</strong></p>
+                <ul className="list-disc pl-4 space-y-1">
+                  <li><strong>403 Forbidden:</strong> Permissions manquantes → Utiliser le bouton ci-dessus</li>
+                  <li><strong>RLS Policy:</strong> Rôle non reconnu → Vérifier l'association membre/rôle</li>
+                  <li><strong>42501:</strong> Violation RLS → Réessayer après correction des accès</li>
+                </ul>
+              </div>
             </CardContent>
           </Card>
+          
           <div className="grid gap-6 md:grid-cols-2">
             <RoleManager />
             <RolePermissionsManager />

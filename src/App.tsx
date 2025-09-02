@@ -1,57 +1,64 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
+
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { useState, useEffect } from "react";
-import { User, Session } from "@supabase/supabase-js";
+import { Toaster } from "@/components/ui/toaster";
 import { supabase } from "@/integrations/supabase/client";
+import { useEffect, useState } from "react";
+import { Session } from "@supabase/supabase-js";
+import Layout from "./components/Layout";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Membres from "./pages/Membres";
+import MembresWrapped from "./pages/MembresWrapped";
 import Cotisations from "./pages/Cotisations";
-import SportPhoenix from "./pages/SportPhoenix";
-import Rapports from "./pages/Rapports";
+import CotisationsGrid from "./pages/CotisationsGrid";
 import Prets from "./pages/Prets";
+import Sanctions from "./pages/Sanctions";
 import Epargnes from "./pages/Epargnes";
 import Aides from "./pages/Aides";
-import Sanctions from "./pages/Sanctions";
 import Reunions from "./pages/Reunions";
-import SportE2D from "./pages/SportE2D";
 import Configuration from "./pages/Configuration";
-import CotisationsGrid from "./pages/CotisationsGrid";
-import MatchResults from "./pages/MatchResults";
+import SportE2D from "./pages/SportE2D";
+import SportPhoenix from "./pages/SportPhoenix";
+import Rapports from "./pages/Rapports";
 import CalendrierSportif from "./pages/CalendrierSportif";
+import EligibiliteGala from "./pages/EligibiliteGala";
+import MatchResults from "./pages/MatchResults";
 import GestionPresences from "./pages/GestionPresences";
 import HistoriqueConnexion from "./pages/HistoriqueConnexion";
-import EligibiliteGala from "./pages/EligibiliteGala";
 import MembreCotisationConfig from "./pages/MembreCotisationConfig";
 import NotFound from "./pages/NotFound";
-import Layout from "@/components/Layout";
-import { ErrorBoundary } from "@/components/ErrorBoundary";
+import ErrorBoundary from "./components/ErrorBoundary";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: (failureCount, error: any) => {
+        // Ne pas retry sur les erreurs d'autorisation
+        if (error?.code === '42501' || error?.message?.includes('403')) {
+          return false;
+        }
+        return failureCount < 2;
+      },
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    },
+  },
+});
 
-const App = () => {
-  const [user, setUser] = useState<User | null>(null);
+function App() {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
-      }
-    );
-
-    // Check for existing session
+    // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-      setUser(session?.user ?? null);
       setLoading(false);
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
     });
 
     return () => subscription.unsubscribe();
@@ -60,123 +67,51 @@ const App = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <ErrorBoundary>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-          <Routes>
-            {user ? (
-              <>
-                <Route path="/" element={<Index user={user} />} />
-                <Route path="/membres" element={
-                  <Layout user={user}>
-                    <Membres />
-                  </Layout>
-                } />
-                <Route path="/cotisations" element={
-                  <Layout user={user}>
-                    <Cotisations />
-                  </Layout>
-                } />
-                <Route path="/cotisations-grid" element={
-                  <Layout user={user}>
-                    <CotisationsGrid />
-                  </Layout>
-                } />
-                <Route path="/sport-phoenix" element={
-                  <Layout user={user}>
-                    <SportPhoenix />
-                  </Layout>
-                } />
-                <Route path="/rapports" element={
-                  <Layout user={user}>
-                    <Rapports />
-                  </Layout>
-                } />
-                <Route path="/prets" element={
-                  <Layout user={user}>
-                    <Prets />
-                  </Layout>
-                } />
-                <Route path="/epargnes" element={
-                  <Layout user={user}>
-                    <Epargnes />
-                  </Layout>
-                } />
-                <Route path="/aides" element={
-                  <Layout user={user}>
-                    <Aides />
-                  </Layout>
-                } />
-                <Route path="/sanctions" element={
-                  <Layout user={user}>
-                    <Sanctions />
-                  </Layout>
-                } />
-                <Route path="/reunions" element={
-                  <Layout user={user}>
-                    <Reunions />
-                  </Layout>
-                } />
-                <Route path="/sport-e2d" element={
-                  <Layout user={user}>
-                    <SportE2D />
-                  </Layout>
-                } />
-                <Route path="/configuration" element={
-                  <Layout user={user}>
-                    <Configuration />
-                  </Layout>
-                } />
-                <Route path="/match-results" element={
-                    <Layout user={user}>
-                      <MatchResults />
-                    </Layout>
-                  } />
-                  <Route path="/calendrier-sportif" element={
-                    <Layout user={user}>
-                      <CalendrierSportif />
-                    </Layout>
-                  } />
-                  <Route path="/presences" element={
-                    <Layout user={user}>
-                      <GestionPresences />
-                    </Layout>
-                  } />
-                  <Route path="/historique" element={
-                    <Layout user={user}>
-                      <HistoriqueConnexion />
-                    </Layout>
-                  } />
-                  <Route path="/eligibilite-gala" element={
-                    <Layout user={user}>
-                      <EligibiliteGala />
-                    </Layout>
-                  } />
-                  <Route path="/membre-cotisations-config" element={
-                    <Layout user={user}>
-                      <MembreCotisationConfig />
-                    </Layout>
-                  } />
-              </>
-            ) : (
-              <Route path="*" element={<Auth />} />
-            )}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-        </ErrorBoundary>
-      </TooltipProvider>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <Router>
+          {!session ? (
+            <Auth />
+          ) : (
+            <Layout>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/membres" element={<Membres />} />
+                <Route path="/membres-wrapped" element={<MembresWrapped />} />
+                <Route path="/cotisations" element={<Cotisations />} />
+                <Route path="/cotisations-grid" element={<CotisationsGrid />} />
+                <Route path="/membre-cotisation-config" element={<MembreCotisationConfig />} />
+                <Route path="/prets" element={<Prets />} />
+                <Route path="/sanctions" element={<Sanctions />} />
+                <Route path="/epargnes" element={<Epargnes />} />
+                <Route path="/aides" element={<Aides />} />
+                <Route path="/reunions" element={<Reunions />} />
+                <Route path="/sport-e2d" element={<SportE2D />} />
+                <Route path="/sport-phoenix" element={<SportPhoenix />} />
+                <Route path="/calendrier-sportif" element={<CalendrierSportif />} />
+                <Route path="/calendrier" element={<Navigate to="/calendrier-sportif" replace />} />
+                <Route path="/match-results" element={<MatchResults />} />
+                <Route path="/resultats-matchs" element={<Navigate to="/match-results" replace />} />
+                <Route path="/eligibilite-gala" element={<EligibiliteGala />} />
+                <Route path="/gestion-presences" element={<GestionPresences />} />
+                <Route path="/historique-connexion" element={<HistoriqueConnexion />} />
+                <Route path="/rapports" element={<Rapports />} />
+                <Route path="/configuration" element={<Configuration />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Layout>
+          )}
+        </Router>
+        <Toaster />
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
-};
+}
 
 export default App;

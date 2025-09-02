@@ -1,184 +1,223 @@
-import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import { useEnsureAdmin } from "@/hooks/useEnsureAdmin";
-import { addMonths, format } from "date-fns";
+import React from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEnsureAdmin } from '@/hooks/useEnsureAdmin';
 
-interface Membre {
-  id: string;
-  nom: string;
-  prenom: string;
-}
+const pretSchema = z.object({
+  membre_id: z.string().min(1, "Le membre est requis"),
+  montant: z.number().min(1, "Le montant doit être positif"),
+  date_pret: z.string().min(1, "La date du prêt est requise"),
+  echeance: z.string().min(1, "L'échéance est requise"),
+  taux_interet: z.number().min(0).default(0),
+  avaliste_id: z.string().optional(),
+  notes: z.string().optional(),
+  statut: z.enum(['en_cours', 'rembourse', 'en_retard', 'annule']).default('en_cours'),
+});
+
+type PretFormData = z.infer<typeof pretSchema>;
 
 interface PretFormProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  pret?: any | null;
-  onSuccess: () => void;
+  onSuccess?: () => void;
+  initialData?: Partial<PretFormData> & { id?: string };
 }
 
-export default function PretForm({ open, onOpenChange, pret, onSuccess }: PretFormProps) {
-  const [formData, setFormData] = useState({
-    membre_id: "",
-    avaliste_id: "",
-    montant: "",
-    notes: ""
-  });
-  const [membres, setMembres] = useState<Membre[]>([]);
-  const [loading, setLoading] = useState(false);
+export default function PretForm({ onSuccess, initialData }: PretFormProps) {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const { withEnsureAdmin } = useEnsureAdmin();
 
-  // Calculer automatiquement la date d'échéance (2 mois)
-  const datePret = new Date();
-  const dateEcheance = addMonths(datePret, 2);
-
-  useEffect(() => {
-    if (open) {
-      fetchMembres();
-      if (pret) {
-        setFormData({
-          membre_id: pret.membre_id || "",
-          avaliste_id: pret.avaliste_id || "",
-          montant: pret.montant?.toString() || "",
-          notes: pret.notes || ""
-        });
-      } else {
-        setFormData({
-          membre_id: "",
-          avaliste_id: "",
-          montant: "",
-          notes: ""
-        });
-      }
-    }
-  }, [open, pret]);
-
-  const fetchMembres = async () => {
-    try {
+  const { data: membres } = useQuery({
+    queryKey: ['membres'],
+    queryFn: async () => {
       const { data, error } = await supabase
         .from('membres')
         .select('id, nom, prenom')
         .eq('statut', 'actif')
-        .eq('est_membre_e2d', true)
         .order('nom');
-
       if (error) throw error;
-      setMembres(data || []);
-    } catch (error) {
-      console.error('Erreur lors du chargement des membres:', error);
+      return data;
     }
-  };
+  });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const form = useForm<PretFormData>({
+    resolver: zodResolver(pretSchema),
+    defaultValues: {
+      membre_id: initialData?.membre_id || '',
+      montant: initialData?.montant || 0,
+      date_pret: initialData?.date_pret || new Date().toISOString().split('T')[0],
+      echeance: initialData?.echeance || '',
+      taux_interet: initialData?.taux_interet || 0,
+      avaliste_id: initialData?.avaliste_id || '',
+      notes: initialData?.notes || '',
+      statut: initialData?.statut || 'en_cours',
+    },
+  });
+
+  const onSubmit = async (data: PretFormData) => {
+    console.log('💰 Soumission prêt:', data);
     
-    if (!formData.membre_id || !formData.montant) {
+    // Validation des dates
+    const datePret = new Date(data.date_pret);
+    const echeance = new Date(data.echeance);
+    
+    if (echeance <= datePret) {
       toast({
-        title: "Erreur",
-        description: "Veuillez remplir tous les champs obligatoires",
+        title: "Erreur de validation",
+        description: "L'échéance doit être postérieure à la date du prêt",
         variant: "destructive",
       });
       return;
     }
 
-    if (formData.membre_id === formData.avaliste_id) {
-      toast({
-        title: "Erreur",
-        description: "L'avaliste ne peut pas être le même que le bénéficiaire",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      const pretData = {
-        membre_id: formData.membre_id,
-        avaliste_id: formData.avaliste_id || null,
-        montant: parseFloat(formData.montant),
-        date_pret: format(datePret, 'yyyy-MM-dd'),
-        echeance: format(dateEcheance, 'yyyy-MM-dd'),
-        notes: formData.notes || null,
-        taux_interet: 5.0,
-        statut: 'en_cours'
+    const operation = async () => {
+      const payload = {
+        ...data,
+        avaliste_id: data.avaliste_id || null, // Convertir chaîne vide en null
       };
 
-      await withEnsureAdmin(async () => {
-        if (pret?.id) {
-          const { error } = await supabase
-            .from('prets')
-            .update(pretData)
-            .eq('id', pret.id);
-          
-          if (error) throw error;
-        } else {
-          const { error } = await supabase
-            .from('prets')
-            .insert([pretData]);
-          
-          if (error) throw error;
-        }
-      });
+      if (initialData?.id) {
+        const { error } = await supabase
+          .from('prets')
+          .update(payload)
+          .eq('id', initialData.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('prets')
+          .insert([payload]);
+        if (error) throw error;
+      }
+    };
 
+    try {
+      await withEnsureAdmin(operation);
+      
+      console.log('✅ Prêt sauvegardé');
       toast({
         title: "Succès",
-        description: pret?.id ? "Prêt modifié avec succès" : "Prêt ajouté avec succès",
+        description: initialData?.id ? "Prêt mis à jour" : "Prêt créé avec succès",
       });
-
-      onOpenChange(false);
-      onSuccess();
       
-      // Reset form
-      setFormData({
-        membre_id: "",
-        avaliste_id: "",
-        montant: "",
-        notes: ""
-      });
+      // Invalider les queries pour rafraîchir
+      queryClient.invalidateQueries({ queryKey: ['prets'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+      
+      form.reset();
+      onSuccess?.();
     } catch (error: any) {
+      console.error('❌ Erreur prêt:', error);
       toast({
         title: "Erreur",
-        description: error.message.includes('duplicate') 
-          ? "Ce membre a déjà un prêt en cours" 
-          : "Impossible d'enregistrer le prêt",
+        description: error.message || "Impossible d'enregistrer le prêt",
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>
-            {pret?.id ? "Modifier le prêt" : "Nouveau prêt"}
-          </DialogTitle>
-          <DialogDescription>
-            Prêt avec taux d'intérêt de 5% et échéance automatique de 2 mois ({format(dateEcheance, 'dd/MM/yyyy')})
-          </DialogDescription>
-        </DialogHeader>
-        
-        <form onSubmit={handleSubmit} className="space-y-4">
+    <Card>
+      <CardHeader>
+        <CardTitle>{initialData?.id ? 'Modifier' : 'Nouveau'} Prêt</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="membre">Bénéficiaire *</Label>
-            <Select value={formData.membre_id} onValueChange={(value) => 
-              setFormData(prev => ({ ...prev, membre_id: value }))
-            }>
+            <Label htmlFor="membre_id">Bénéficiaire *</Label>
+            <Select 
+              value={form.watch('membre_id')} 
+              onValueChange={(value) => form.setValue('membre_id', value)}
+            >
               <SelectTrigger>
-                <SelectValue placeholder="Sélectionner le bénéficiaire" />
+                <SelectValue placeholder="Sélectionner un membre" />
               </SelectTrigger>
               <SelectContent>
-                {membres.map((membre) => (
+                {membres?.map((membre) => (
+                  <SelectItem key={membre.id} value={membre.id}>
+                    {membre.prenom} {membre.nom}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {form.formState.errors.membre_id && (
+              <p className="text-sm text-red-500">{form.formState.errors.membre_id.message}</p>
+            )}
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="montant">Montant (€) *</Label>
+              <Input
+                id="montant"
+                type="number"
+                step="0.01"
+                min="0"
+                {...form.register('montant', { valueAsNumber: true })}
+              />
+              {form.formState.errors.montant && (
+                <p className="text-sm text-red-500">{form.formState.errors.montant.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="taux_interet">Taux d'intérêt (%)</Label>
+              <Input
+                id="taux_interet"
+                type="number"
+                step="0.01"
+                min="0"
+                {...form.register('taux_interet', { valueAsNumber: true })}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="date_pret">Date du prêt *</Label>
+              <Input
+                id="date_pret"
+                type="date"
+                {...form.register('date_pret')}
+              />
+              {form.formState.errors.date_pret && (
+                <p className="text-sm text-red-500">{form.formState.errors.date_pret.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="echeance">Échéance *</Label>
+              <Input
+                id="echeance"
+                type="date"
+                {...form.register('echeance')}
+              />
+              {form.formState.errors.echeance && (
+                <p className="text-sm text-red-500">{form.formState.errors.echeance.message}</p>
+              )}
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="avaliste_id">Avaliste (optionnel)</Label>
+            <Select 
+              value={form.watch('avaliste_id') || ''} 
+              onValueChange={(value) => form.setValue('avaliste_id', value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionner un avaliste" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Aucun avaliste</SelectItem>
+                {membres?.map((membre) => (
                   <SelectItem key={membre.id} value={membre.id}>
                     {membre.prenom} {membre.nom}
                   </SelectItem>
@@ -188,84 +227,42 @@ export default function PretForm({ open, onOpenChange, pret, onSuccess }: PretFo
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="avaliste">Avaliste</Label>
-            <Select value={formData.avaliste_id || ''} onValueChange={(value) => 
-              setFormData(prev => ({ ...prev, avaliste_id: value === 'none' ? '' : value }))
-            }>
+            <Label htmlFor="statut">Statut</Label>
+            <Select 
+              value={form.watch('statut')} 
+              onValueChange={(value) => form.setValue('statut', value as any)}
+            >
               <SelectTrigger>
-                <SelectValue placeholder="Sélectionner l'avaliste (optionnel)" />
+                <SelectValue placeholder="Sélectionner le statut" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">Aucun avaliste</SelectItem>
-                {membres
-                  .filter(m => m.id !== formData.membre_id)
-                  .map((membre) => (
-                    <SelectItem key={membre.id} value={membre.id}>
-                      {membre.prenom} {membre.nom}
-                    </SelectItem>
-                  ))}
+                <SelectItem value="en_cours">En cours</SelectItem>
+                <SelectItem value="rembourse">Remboursé</SelectItem>
+                <SelectItem value="en_retard">En retard</SelectItem>
+                <SelectItem value="annule">Annulé</SelectItem>
               </SelectContent>
             </Select>
-            <p className="text-xs text-muted-foreground">
-              L'avaliste garantit le remboursement du prêt
-            </p>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="montant">Montant (FCFA) *</Label>
-            <Input
-              id="montant"
-              type="number"
-              placeholder="Ex: 50000"
-              value={formData.montant}
-              onChange={(e) => setFormData(prev => ({ ...prev, montant: e.target.value }))}
-              required
-            />
           </div>
 
-          <div className="bg-muted p-4 rounded-lg space-y-2">
-            <div className="flex justify-between text-sm">
-              <span>Date du prêt:</span>
-              <span className="font-medium">{format(datePret, 'dd/MM/yyyy')}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span>Date d'échéance:</span>
-              <span className="font-medium text-warning">{format(dateEcheance, 'dd/MM/yyyy')}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span>Taux d'intérêt:</span>
-              <span className="font-medium">5% / 2 mois</span>
-            </div>
-            {formData.montant && (
-              <div className="flex justify-between text-sm font-bold border-t pt-2">
-                <span>Montant à rembourser:</span>
-                <span className="text-primary">
-                  {(parseFloat(formData.montant) * 1.05).toLocaleString()} FCFA
-                </span>
-              </div>
-            )}
-          </div>
-          
           <div className="space-y-2">
             <Label htmlFor="notes">Notes</Label>
             <Textarea
               id="notes"
-              placeholder="Notes additionnelles sur le prêt..."
-              value={formData.notes}
-              onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+              placeholder="Informations complémentaires..."
+              rows={3}
+              {...form.register('notes')}
             />
           </div>
-          
-          <div className="flex justify-end space-x-2 pt-4">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Annuler
-            </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? "Enregistrement..." : pret?.id ? "Modifier" : "Ajouter"}
-            </Button>
-          </div>
+
+          <Button 
+            type="submit" 
+            className="w-full"
+            disabled={form.formState.isSubmitting}
+          >
+            {form.formState.isSubmitting ? 'Enregistrement...' : (initialData?.id ? 'Mettre à jour' : 'Créer le prêt')}
+          </Button>
         </form>
-      </DialogContent>
-    </Dialog>
+      </CardContent>
+    </Card>
   );
 }
