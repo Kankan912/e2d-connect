@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useEnsureAdmin } from "@/hooks/useEnsureAdmin";
 import { addMonths, format } from "date-fns";
 
 interface Membre {
@@ -32,6 +33,7 @@ export default function PretForm({ open, onOpenChange, pret, onSuccess }: PretFo
   const [membres, setMembres] = useState<Membre[]>([]);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const { withEnsureAdmin } = useEnsureAdmin();
 
   // Calculer automatiquement la date d'échéance (2 mois)
   const datePret = new Date();
@@ -109,20 +111,22 @@ export default function PretForm({ open, onOpenChange, pret, onSuccess }: PretFo
         statut: 'en_cours'
       };
 
-      if (pret?.id) {
-        const { error } = await supabase
-          .from('prets')
-          .update(pretData)
-          .eq('id', pret.id);
-        
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from('prets')
-          .insert([pretData]);
-        
-        if (error) throw error;
-      }
+      await withEnsureAdmin(async () => {
+        if (pret?.id) {
+          const { error } = await supabase
+            .from('prets')
+            .update(pretData)
+            .eq('id', pret.id);
+          
+          if (error) throw error;
+        } else {
+          const { error } = await supabase
+            .from('prets')
+            .insert([pretData]);
+          
+          if (error) throw error;
+        }
+      });
 
       toast({
         title: "Succès",

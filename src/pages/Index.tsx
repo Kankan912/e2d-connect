@@ -1,5 +1,5 @@
 import Layout from "@/components/Layout";
-import Dashboard from "@/components/Dashboard";
+import DynamicDashboard from "@/components/DynamicDashboard";
 
 interface IndexProps {
   user: any;
@@ -8,7 +8,7 @@ interface IndexProps {
 const Index = ({ user }: IndexProps) => {
   return (
     <Layout user={user}>
-      <Dashboard />
+      <DynamicDashboard />
     </Layout>
   );
 };

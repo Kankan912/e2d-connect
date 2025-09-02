@@ -25,8 +25,10 @@ import CalendrierSportif from "./pages/CalendrierSportif";
 import GestionPresences from "./pages/GestionPresences";
 import HistoriqueConnexion from "./pages/HistoriqueConnexion";
 import EligibiliteGala from "./pages/EligibiliteGala";
+import MembreCotisationConfig from "./pages/MembreCotisationConfig";
 import NotFound from "./pages/NotFound";
 import Layout from "@/components/Layout";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 const queryClient = new QueryClient();
 
@@ -66,9 +68,10 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
+        <ErrorBoundary>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
           <Routes>
             {user ? (
               <>
@@ -158,6 +161,11 @@ const App = () => {
                       <EligibiliteGala />
                     </Layout>
                   } />
+                  <Route path="/membre-cotisations-config" element={
+                    <Layout user={user}>
+                      <MembreCotisationConfig />
+                    </Layout>
+                  } />
               </>
             ) : (
               <Route path="*" element={<Auth />} />
@@ -165,6 +173,7 @@ const App = () => {
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
+        </ErrorBoundary>
       </TooltipProvider>
     </QueryClientProvider>
   );

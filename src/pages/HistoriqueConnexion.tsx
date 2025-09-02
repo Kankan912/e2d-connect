@@ -28,7 +28,15 @@ export default function HistoriqueConnexion() {
       if (error) {
         setError(error.message);
       } else {
-        setLogs(data || []);
+        const typedLogs: LogItem[] = (data || []).map(log => ({
+          id: log.id,
+          user_id: log.user_id,
+          date_connexion: log.date_connexion,
+          statut: log.statut,
+          ip_address: log.ip_address ? String(log.ip_address) : null,
+          user_agent: log.user_agent ? String(log.user_agent) : null
+        }));
+        setLogs(typedLogs);
       }
     })();
   }, []);
