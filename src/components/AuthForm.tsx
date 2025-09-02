@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { Mail, Lock, User, Phone } from "lucide-react";
+import logoE2D from "@/assets/logo-e2d.png";
 
 export default function AuthForm() {
   const [isLoading, setIsLoading] = useState(false);
@@ -107,8 +108,8 @@ export default function AuthForm() {
         <CardHeader className="text-center pb-6">
           <div className="mx-auto mb-4">
             <img 
-              src="/src/assets/logo-e2d.png" 
-              alt="E2D Logo" 
+              src={logoE2D} 
+              alt="Logo E2D" 
               className="h-16 w-auto mx-auto"
               onError={(e) => {
                 const target = e.target as HTMLImageElement;
@@ -131,7 +132,6 @@ export default function AuthForm() {
           <Tabs defaultValue="signin" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="signin">Connexion</TabsTrigger>
-              <TabsTrigger value="signup">Inscription</TabsTrigger>
             </TabsList>
             
             <TabsContent value="signin">
@@ -170,85 +170,6 @@ export default function AuthForm() {
               </form>
             </TabsContent>
             
-            <TabsContent value="signup">
-              <form onSubmit={handleSignUp} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-prenom">Prénom</Label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                      <Input
-                        id="signup-prenom"
-                        name="prenom"
-                        type="text"
-                        placeholder="Prénom"
-                        className="pl-10"
-                        required
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-nom">Nom</Label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                      <Input
-                        id="signup-nom"
-                        name="nom"
-                        type="text"
-                        placeholder="Nom"
-                        className="pl-10"
-                        required
-                      />
-                    </div>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signup-email">Email</Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                    <Input
-                      id="signup-email"
-                      name="email"
-                      type="email"
-                      placeholder="votre@email.com"
-                      className="pl-10"
-                      required
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signup-telephone">Téléphone</Label>
-                  <div className="relative">
-                    <Phone className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                    <Input
-                      id="signup-telephone"
-                      name="telephone"
-                      type="tel"
-                      placeholder="+33 6 12 34 56 78"
-                      className="pl-10"
-                      required
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signup-password">Mot de passe</Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                    <Input
-                      id="signup-password"
-                      name="password"
-                      type="password"
-                      placeholder="••••••••"
-                      className="pl-10"
-                      required
-                    />
-                  </div>
-                </div>
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "Inscription..." : "S'inscrire"}
-                </Button>
-              </form>
-            </TabsContent>
           </Tabs>
         </CardContent>
       </Card>

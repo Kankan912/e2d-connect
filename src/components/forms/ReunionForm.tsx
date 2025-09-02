@@ -26,6 +26,8 @@ type ReunionFormData = z.infer<typeof reunionSchema>;
 interface ReunionFormProps {
   onSuccess?: () => void;
   initialData?: Partial<ReunionFormData> & { id?: string };
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export default function ReunionForm({ onSuccess, initialData }: ReunionFormProps) {
@@ -51,13 +53,13 @@ export default function ReunionForm({ onSuccess, initialData }: ReunionFormProps
       if (initialData?.id) {
         const { error } = await supabase
           .from('reunions')
-          .update(data)
+          .update(data as any)
           .eq('id', initialData.id);
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from('reunions')
-          .insert([data]);
+          .insert([data as any]);
         if (error) throw error;
       }
     };

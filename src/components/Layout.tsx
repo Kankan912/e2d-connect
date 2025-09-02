@@ -44,7 +44,7 @@ const menuItems = [
   { id: "calendrier", label: "Calendrier Sportif", icon: Calendar, path: "/calendrier-sportif" },
   { id: "presences", label: "Présences", icon: Users, path: "/presences" },
   { id: "match-results", label: "Résultats Matchs", icon: Trophy, path: "/match-results" },
-  { id: "historique", label: "Historique Connexions", icon: FileText, path: "/historique" },
+  { id: "historique", label: "Historique Connexions", icon: FileText, path: "/historique-connexion" },
   { id: "eligibilite", label: "Éligibilité Gala", icon: Trophy, path: "/eligibilite-gala" },
   { id: "rapports", label: "Rapports", icon: FileText, path: "/rapports" },
   { id: "configuration", label: "Configuration", icon: Settings, path: "/configuration" },
@@ -59,16 +59,14 @@ export default function Layout({ children, user }: LayoutProps) {
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
+    } catch (error) {
+      // Ignorer les erreurs 403/Session not found et naviguer quand même
+      console.warn('Logout error (ignored):', error);
+    } finally {
       navigate("/auth");
       toast({
-        title: "Déconnexion réussie",
+        title: "Déconnexion",
         description: "À bientôt !",
-      });
-    } catch (error) {
-      toast({
-        title: "Erreur",
-        description: "Erreur lors de la déconnexion",
-        variant: "destructive",
       });
     }
   };

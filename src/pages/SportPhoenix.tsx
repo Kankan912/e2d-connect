@@ -10,17 +10,8 @@ import { useNavigate } from "react-router-dom";
 export default function SportPhoenix() {
   const navigate = useNavigate();
   
-  const { data: stats } = useQuery({
-    queryKey: ['dashboard-stats'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('dashboard_stats')
-        .select('*')
-        .single();
-      if (error) throw error;
-      return data;
-    }
-  });
+  // Stats globales (désactivées pour l'instant)
+  const stats: any = null;
 
   const { data: config } = useQuery({
     queryKey: ['sport-phoenix-config'],

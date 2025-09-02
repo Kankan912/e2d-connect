@@ -27,6 +27,8 @@ type CotisationFormData = z.infer<typeof cotisationSchema>;
 interface CotisationFormProps {
   onSuccess?: () => void;
   initialData?: Partial<CotisationFormData> & { id?: string };
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export default function CotisationForm({ onSuccess, initialData }: CotisationFormProps) {
@@ -92,13 +94,13 @@ export default function CotisationForm({ onSuccess, initialData }: CotisationFor
       if (initialData?.id) {
         const { error } = await supabase
           .from('cotisations')
-          .update(payload)
+          .update(payload as any)
           .eq('id', initialData.id);
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from('cotisations')
-          .insert([payload]);
+          .insert([payload as any]);
         if (error) throw error;
       }
     };

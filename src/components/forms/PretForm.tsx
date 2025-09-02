@@ -29,6 +29,8 @@ type PretFormData = z.infer<typeof pretSchema>;
 interface PretFormProps {
   onSuccess?: () => void;
   initialData?: Partial<PretFormData> & { id?: string };
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export default function PretForm({ onSuccess, initialData }: PretFormProps) {
@@ -88,13 +90,13 @@ export default function PretForm({ onSuccess, initialData }: PretFormProps) {
       if (initialData?.id) {
         const { error } = await supabase
           .from('prets')
-          .update(payload)
+          .update(payload as any)
           .eq('id', initialData.id);
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from('prets')
-          .insert([payload]);
+          .insert([payload as any]);
         if (error) throw error;
       }
     };

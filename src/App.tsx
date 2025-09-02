@@ -79,7 +79,7 @@ function App() {
           {!session ? (
             <Auth />
           ) : (
-            <Layout>
+            <Layout user={session?.user}>
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/membres" element={<Membres />} />
@@ -103,6 +103,7 @@ function App() {
                 <Route path="/historique-connexion" element={<HistoriqueConnexion />} />
                 <Route path="/rapports" element={<Rapports />} />
                 <Route path="/configuration" element={<Configuration />} />
+                <Route path="/auth" element={<Navigate to="/" replace />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Layout>
