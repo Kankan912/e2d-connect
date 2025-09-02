@@ -1,6 +1,7 @@
 
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { HelmetProvider } from "react-helmet-async";
 import { Toaster } from "@/components/ui/toaster";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
@@ -75,41 +76,43 @@ function App() {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <Router>
-          {!session ? (
-            <Auth />
-          ) : (
-            <Layout user={session?.user}>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/membres" element={<Membres />} />
-                <Route path="/membres-wrapped" element={<MembresWrapped />} />
-                <Route path="/cotisations" element={<Cotisations />} />
-                <Route path="/cotisations-grid" element={<CotisationsGrid />} />
-                <Route path="/membre-cotisation-config" element={<MembreCotisationConfig />} />
-                <Route path="/prets" element={<Prets />} />
-                <Route path="/sanctions" element={<Sanctions />} />
-                <Route path="/epargnes" element={<Epargnes />} />
-                <Route path="/aides" element={<Aides />} />
-                <Route path="/reunions" element={<Reunions />} />
-                <Route path="/sport-e2d" element={<SportE2D />} />
-                <Route path="/sport-phoenix" element={<SportPhoenix />} />
-                <Route path="/calendrier-sportif" element={<CalendrierSportif />} />
-                <Route path="/calendrier" element={<Navigate to="/calendrier-sportif" replace />} />
-                <Route path="/match-results" element={<MatchResults />} />
-                <Route path="/resultats-matchs" element={<Navigate to="/match-results" replace />} />
-                <Route path="/eligibilite-gala" element={<EligibiliteGala />} />
-                <Route path="/gestion-presences" element={<GestionPresences />} />
-                <Route path="/historique-connexion" element={<HistoriqueConnexion />} />
-                <Route path="/rapports" element={<Rapports />} />
-                <Route path="/configuration" element={<Configuration />} />
-                <Route path="/auth" element={<Navigate to="/" replace />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Layout>
-          )}
-        </Router>
-        <Toaster />
+        <HelmetProvider>
+          <Router>
+            {!session ? (
+              <Auth />
+            ) : (
+              <Layout user={session?.user}>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/membres" element={<Membres />} />
+                  <Route path="/membres-wrapped" element={<MembresWrapped />} />
+                  <Route path="/cotisations" element={<Cotisations />} />
+                  <Route path="/cotisations-grid" element={<CotisationsGrid />} />
+                  <Route path="/membre-cotisation-config" element={<MembreCotisationConfig />} />
+                  <Route path="/prets" element={<Prets />} />
+                  <Route path="/sanctions" element={<Sanctions />} />
+                  <Route path="/epargnes" element={<Epargnes />} />
+                  <Route path="/aides" element={<Aides />} />
+                  <Route path="/reunions" element={<Reunions />} />
+                  <Route path="/sport-e2d" element={<SportE2D />} />
+                  <Route path="/sport-phoenix" element={<SportPhoenix />} />
+                  <Route path="/calendrier-sportif" element={<CalendrierSportif />} />
+                  <Route path="/calendrier" element={<Navigate to="/calendrier-sportif" replace />} />
+                  <Route path="/match-results" element={<MatchResults />} />
+                  <Route path="/resultats-matchs" element={<Navigate to="/match-results" replace />} />
+                  <Route path="/eligibilite-gala" element={<EligibiliteGala />} />
+                  <Route path="/gestion-presences" element={<GestionPresences />} />
+                  <Route path="/historique-connexion" element={<HistoriqueConnexion />} />
+                  <Route path="/rapports" element={<Rapports />} />
+                  <Route path="/configuration" element={<Configuration />} />
+                  <Route path="/auth" element={<Navigate to="/" replace />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </Layout>
+            )}
+          </Router>
+          <Toaster />
+        </HelmetProvider>
       </QueryClientProvider>
     </ErrorBoundary>
   );

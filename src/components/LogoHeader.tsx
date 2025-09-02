@@ -22,7 +22,19 @@ export default function LogoHeader({
             src={logoE2D} 
             alt="Logo E2D" 
             className="h-12 w-auto object-contain"
+            onError={(e) => {
+              const target = e.target as HTMLImageElement;
+              target.style.display = 'none';
+              const fallback = target.nextElementSibling as HTMLElement;
+              if (fallback) fallback.style.display = 'flex';
+            }}
           />
+          <div 
+            className="h-12 w-12 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center text-white font-bold text-sm"
+            style={{ display: 'none' }}
+          >
+            E2D
+          </div>
         </div>
       )}
       {(title || subtitle) && (

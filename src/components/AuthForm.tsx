@@ -59,48 +59,7 @@ export default function AuthForm() {
     }
   };
 
-  const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setIsLoading(true);
-    
-    const formData = new FormData(e.currentTarget);
-    const email = formData.get("email") as string;
-    const password = formData.get("password") as string;
-    const nom = formData.get("nom") as string;
-    const prenom = formData.get("prenom") as string;
-    const telephone = formData.get("telephone") as string;
-
-    try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            nom,
-            prenom,
-            telephone,
-          },
-        },
-      });
-
-      if (error) throw error;
-
-      toast({
-        title: "Inscription réussie",
-        description: "Compte créé avec succès.",
-      });
-      
-      navigate("/");
-    } catch (error: any) {
-      toast({
-        title: "Erreur d'inscription",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // Inscription désactivée pour l'instant
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
@@ -130,7 +89,7 @@ export default function AuthForm() {
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="signin" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-1">
               <TabsTrigger value="signin">Connexion</TabsTrigger>
             </TabsList>
             

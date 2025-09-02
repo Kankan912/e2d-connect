@@ -95,7 +95,19 @@ export default function Layout({ children, user }: LayoutProps) {
                 src={logoE2D} 
                 alt="Logo E2D" 
                 className="h-10 w-auto object-contain"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                  const fallback = target.nextElementSibling as HTMLElement;
+                  if (fallback) fallback.style.display = 'flex';
+                }}
               />
+              <div 
+                className="h-10 w-10 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center text-white font-bold text-sm"
+                style={{ display: 'none' }}
+              >
+                E2D
+              </div>
               <div>
                 <h1 className="font-bold text-lg bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
                   E2D Connect
@@ -162,7 +174,19 @@ export default function Layout({ children, user }: LayoutProps) {
                   src={logoE2D} 
                   alt="Logo E2D" 
                   className="h-4 w-auto object-contain"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                    const fallback = target.nextElementSibling as HTMLElement;
+                    if (fallback) fallback.style.display = 'flex';
+                  }}
                 />
+                <div 
+                  className="h-4 w-4 bg-gradient-to-br from-primary to-secondary rounded text-white flex items-center justify-center font-bold text-xs"
+                  style={{ display: 'none' }}
+                >
+                  E2D
+                </div>
                 <div>
                   <p className="text-xs font-medium text-primary">Version 1.0</p>
                   <p className="text-xs text-muted-foreground">MVP E2D Connect</p>
