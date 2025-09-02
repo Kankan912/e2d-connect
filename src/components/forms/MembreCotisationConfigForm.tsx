@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -59,9 +60,10 @@ export default function MembreCotisationConfigForm({
       setMembres(membresRes.data || []);
       setTypes(typesRes.data || []);
     } catch (error: any) {
+      console.error('Erreur lors du chargement:', error);
       toast({
         title: "Erreur",
-        description: "Impossible de charger les données",
+        description: "Impossible de charger les données: " + error.message,
         variant: "destructive",
       });
     }
@@ -88,7 +90,7 @@ export default function MembreCotisationConfigForm({
         .select('id')
         .eq('membre_id', formData.membre_id)
         .eq('type_cotisation_id', formData.type_cotisation_id)
-        .single();
+        .maybeSingle();
 
       const configData = {
         membre_id: formData.membre_id,
@@ -116,9 +118,10 @@ export default function MembreCotisationConfigForm({
       onOpenChange(false);
       onSuccess();
     } catch (error: any) {
+      console.error('Erreur lors de la sauvegarde:', error);
       toast({
         title: "Erreur",
-        description: "Impossible d'enregistrer la configuration",
+        description: "Impossible d'enregistrer la configuration: " + error.message,
         variant: "destructive",
       });
     } finally {

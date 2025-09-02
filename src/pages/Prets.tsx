@@ -1,81 +1,85 @@
+
 import { useState, useEffect } from "react";
-import { Plus, Edit, Eye, FileText, DollarSign, Calendar, User, AlertCircle } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table";
+import { 
+  Banknote, 
+  Plus, 
+  Search, 
+  DollarSign,
+  Calendar,
+  CheckCircle,
+  Clock,
+  AlertTriangle,
+  TrendingUp
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import PretForm from "@/components/forms/PretForm";
 import LogoHeader from "@/components/LogoHeader";
-import { format } from "date-fns";
-import { fr } from "date-fns/locale";
 
 interface Pret {
   id: string;
-  membre_id: string;
   montant: number;
   date_pret: string;
   echeance: string;
   statut: string;
   taux_interet: number;
   reconductions: number;
-  justificatif_url?: string;
-  notes?: string;
-  membres?: {
+  notes: string;
+  membre: {
     nom: string;
     prenom: string;
-  } | null;
-}
-
-interface Membre {
-  id: string;
-  nom: string;
-  prenom: string;
+  };
+  avaliste?: {
+    nom: string;
+    prenom: string;
+  };
 }
 
 export default function Prets() {
   const [prets, setPrets] = useState<Pret[]>([]);
-  const [membres, setMembres] = useState<Membre[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showAddDialog, setShowAddDialog] = useState(false);
-  const [selectedPret, setSelectedPret] = useState<Pret | null>(null);
-  const [formData, setFormData] = useState({
-    membre_id: "",
-    montant: "",
-    echeance: "",
-    notes: ""
-  });
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showForm, setShowForm] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
-    fetchPrets();
-    fetchMembres();
+    loadPrets();
   }, []);
 
-  const fetchPrets = async () => {
+  const loadPrets = async () => {
     try {
       const { data, error } = await supabase
         .from('prets')
         .select(`
           *,
-          membres!membre_id (
-            nom,
-            prenom
-          )
+          membre:membres!prets_membre_id_fkey(nom, prenom),
+          avaliste:membres!prets_avaliste_id_fkey(nom, prenom)
         `)
         .order('date_pret', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erreur Supabase:', error);
+        throw error;
+      }
+      
       setPrets(data || []);
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Erreur lors du chargement des prêts:', error);
       toast({
         title: "Erreur",
-        description: "Impossible de charger les prêts",
+        description: "Impossible de charger les prêts: " + error.message,
         variant: "destructive",
       });
     } finally {
@@ -83,253 +87,244 @@ export default function Prets() {
     }
   };
 
-  const fetchMembres = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('membres')
-        .select('id, nom, prenom')
-        .eq('statut', 'actif')
-        .order('nom');
+  const filteredPrets = prets.filter(pret =>
+    `${pret.membre?.nom} ${pret.membre?.prenom}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    pret.notes?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
-      if (error) throw error;
-      setMembres(data || []);
-    } catch (error) {
-      console.error('Erreur lors du chargement des membres:', error);
-    }
-  };
+  const StatCard = ({ 
+    title, 
+    value, 
+    icon: Icon, 
+    color = "primary" 
+  }: {
+    title: string;
+    value: string | number;
+    icon: any;
+    color?: string;
+  }) => (
+    <Card className="transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium text-muted-foreground">
+          {title}
+        </CardTitle>
+        <Icon className={`h-4 w-4 text-${color}`} />
+      </CardHeader>
+      <CardContent>
+        <div className="text-2xl font-bold">{value}</div>
+      </CardContent>
+    </Card>
+  );
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const getStatutBadge = (statut: string, echeance: string) => {
+    const dateEcheance = new Date(echeance);
+    const now = new Date();
     
-    if (!formData.membre_id || !formData.montant || !formData.echeance) {
-      toast({
-        title: "Erreur",
-        description: "Veuillez remplir tous les champs obligatoires",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      const pretData = {
-        membre_id: formData.membre_id,
-        montant: parseFloat(formData.montant),
-        echeance: formData.echeance,
-        notes: formData.notes || null,
-        taux_interet: 5.0
-      };
-
-      const { error } = selectedPret
-        ? await supabase
-            .from('prets')
-            .update(pretData)
-            .eq('id', selectedPret.id)
-        : await supabase
-            .from('prets')
-            .insert([pretData]);
-
-      if (error) throw error;
-
-      toast({
-        title: "Succès",
-        description: selectedPret ? "Prêt modifié avec succès" : "Prêt ajouté avec succès",
-      });
-
-      setShowAddDialog(false);
-      setSelectedPret(null);
-      setFormData({ membre_id: "", montant: "", echeance: "", notes: "" });
-      fetchPrets();
-    } catch (error) {
-      toast({
-        title: "Erreur",
-        description: "Impossible d'enregistrer le prêt",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const getStatutColor = (statut: string) => {
     switch (statut) {
-      case 'en_cours': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'rembourse': return 'bg-green-100 text-green-800 border-green-200';
-      case 'en_retard': return 'bg-red-100 text-red-800 border-red-200';
-      case 'reconduit': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'rembourse':
+        return (
+          <Badge className="bg-success text-success-foreground">
+            <CheckCircle className="w-3 h-3 mr-1" />
+            Remboursé
+          </Badge>
+        );
+      case 'en_cours':
+        if (dateEcheance < now) {
+          return (
+            <Badge className="bg-destructive text-destructive-foreground">
+              <AlertTriangle className="w-3 h-3 mr-1" />
+              En retard
+            </Badge>
+          );
+        }
+        return (
+          <Badge className="bg-warning text-warning-foreground">
+            <Clock className="w-3 h-3 mr-1" />
+            En cours
+          </Badge>
+        );
+      case 'annule':
+        return (
+          <Badge variant="outline">
+            Annulé
+          </Badge>
+        );
+      default:
+        return <Badge variant="outline">{statut}</Badge>;
     }
-  };
-
-  const getStatutLabel = (statut: string) => {
-    switch (statut) {
-      case 'en_cours': return 'En cours';
-      case 'rembourse': return 'Remboursé';
-      case 'en_retard': return 'En retard';
-      case 'reconduit': return 'Reconduit';
-      default: return statut;
-    }
-  };
-
-  const openEditDialog = (pret: Pret) => {
-    setSelectedPret(pret);
-    setFormData({
-      membre_id: pret.membre_id,
-      montant: pret.montant.toString(),
-      echeance: pret.echeance,
-      notes: pret.notes || ""
-    });
-    setShowAddDialog(true);
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="space-y-6">
+        <LogoHeader 
+          title="Gestion des Prêts"
+          subtitle="Suivi des prêts accordés aux membres"
+        />
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          {[1,2,3,4].map(i => (
+            <Card key={i} className="animate-pulse">
+              <CardContent className="p-6">
+                <div className="h-16 bg-muted rounded" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
     );
   }
 
+  const totalPrets = prets.reduce((sum, p) => sum + p.montant, 0);
+  const pretsEnCours = prets.filter(p => p.statut === 'en_cours').length;
+  const pretsRembourses = prets.filter(p => p.statut === 'rembourse').length;
+  const pretsEnRetard = prets.filter(p => {
+    const dateEcheance = new Date(p.echeance);
+    const now = new Date();
+    return p.statut === 'en_cours' && dateEcheance < now;
+  }).length;
+
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="space-y-6">
       {/* Header */}
-      <LogoHeader 
-        title="Gestion des Prêts"
-        subtitle="Gérez les prêts accordés aux membres (Taux: 5%, Remboursement: 2 mois)"
-      />
-      <div className="flex justify-end">
-        <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-          <DialogTrigger asChild>
-            <Button onClick={() => {
-              setSelectedPret(null);
-              setFormData({ membre_id: "", montant: "", echeance: "", notes: "" });
-            }}>
-              <Plus className="w-4 h-4 mr-2" />
-              Nouveau Prêt
-            </Button>
-          </DialogTrigger>
-          <PretForm 
-            open={showAddDialog}
-            onOpenChange={setShowAddDialog}
-            pret={selectedPret}
-            onSuccess={fetchPrets}
-          />
-        </Dialog>
+      <div className="flex items-center justify-between">
+        <LogoHeader 
+          title="Gestion des Prêts"
+          subtitle="Suivi des prêts accordés aux membres"
+        />
+        <Button 
+          className="bg-gradient-to-r from-primary to-secondary"
+          onClick={() => setShowForm(true)}
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Nouveau prêt
+        </Button>
       </div>
 
-      {/* Statistiques */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Prêts</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{prets.length}</div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">En Cours</CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-600">
-              {prets.filter(p => p.statut === 'en_cours').length}
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Remboursés</CardTitle>
-            <User className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              {prets.filter(p => p.statut === 'rembourse').length}
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">En Retard</CardTitle>
-            <AlertCircle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-600">
-              {prets.filter(p => p.statut === 'en_retard').length}
-            </div>
-          </CardContent>
-        </Card>
+      {/* Stats Cards */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <StatCard
+          title="Total Prêts"
+          value={`${totalPrets.toLocaleString()} FCFA`}
+          icon={DollarSign}
+          color="primary"
+        />
+        <StatCard
+          title="En Cours"
+          value={pretsEnCours}
+          icon={Clock}
+          color="warning"
+        />
+        <StatCard
+          title="Remboursés"
+          value={pretsRembourses}
+          icon={CheckCircle}
+          color="success"
+        />
+        <StatCard
+          title="En Retard"
+          value={pretsEnRetard}
+          icon={AlertTriangle}
+          color="destructive"
+        />
       </div>
 
       {/* Liste des prêts */}
-      <div className="grid gap-4">
-        {prets.length === 0 ? (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-8">
-              <FileText className="h-12 w-12 text-muted-foreground mb-4" />
-              <p className="text-lg font-medium text-muted-foreground">Aucun prêt enregistré</p>
-              <p className="text-sm text-muted-foreground">Ajoutez le premier prêt pour commencer</p>
-            </CardContent>
-          </Card>
-        ) : (
-          prets.map((pret) => (
-            <Card key={pret.id} className="hover:shadow-md transition-shadow">
-              <CardHeader>
-                <div className="flex justify-between items-start">
-                  <div className="space-y-1">
-                    <CardTitle className="text-lg">
-                      {pret.membres?.prenom} {pret.membres?.nom}
-                    </CardTitle>
-                    <CardDescription>
-                      Prêt du {format(new Date(pret.date_pret), "dd MMMM yyyy", { locale: fr })}
-                    </CardDescription>
-                  </div>
-                  <Badge className={getStatutColor(pret.statut)}>
-                    {getStatutLabel(pret.statut)}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Montant</p>
-                    <p className="font-semibold">{pret.montant.toLocaleString()} FCFA</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Échéance</p>
-                    <p className="font-semibold">
-                      {format(new Date(pret.echeance), "dd MMMM yyyy", { locale: fr })}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Taux d'intérêt</p>
-                    <p className="font-semibold">{pret.taux_interet}%</p>
-                  </div>
-                </div>
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <Banknote className="h-5 w-5" />
+              Historique des Prêts
+            </CardTitle>
+            <div className="relative">
+              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Rechercher..."
+                className="pl-10 w-64"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+          </div>
+        </CardHeader>
+        
+        <CardContent>
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Emprunteur</TableHead>
+                  <TableHead>Montant</TableHead>
+                  <TableHead>Taux</TableHead>
+                  <TableHead>Date prêt</TableHead>
+                  <TableHead>Échéance</TableHead>
+                  <TableHead>Statut</TableHead>
+                  <TableHead>Avaliste</TableHead>
+                  <TableHead>Notes</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredPrets.map((pret) => (
+                  <TableRow key={pret.id} className="hover:bg-muted/50">
+                    <TableCell className="font-medium">
+                      {pret.membre?.nom} {pret.membre?.prenom}
+                    </TableCell>
+                    
+                    <TableCell className="font-bold text-primary">
+                      {pret.montant.toLocaleString()} FCFA
+                    </TableCell>
+                    
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        <TrendingUp className="w-4 h-4 text-muted-foreground" />
+                        {pret.taux_interet}%
+                      </div>
+                    </TableCell>
+                    
+                    <TableCell className="text-muted-foreground">
+                      {new Date(pret.date_pret).toLocaleDateString('fr-FR')}
+                    </TableCell>
+                    
+                    <TableCell className="text-muted-foreground">
+                      {new Date(pret.echeance).toLocaleDateString('fr-FR')}
+                    </TableCell>
+                    
+                    <TableCell>
+                      {getStatutBadge(pret.statut, pret.echeance)}
+                    </TableCell>
+                    
+                    <TableCell className="text-muted-foreground">
+                      {pret.avaliste ? (
+                        `${pret.avaliste.nom} ${pret.avaliste.prenom}`
+                      ) : (
+                        "Aucun"
+                      )}
+                    </TableCell>
+                    
+                    <TableCell className="text-muted-foreground max-w-xs truncate">
+                      {pret.notes || "-"}
+                    </TableCell>
+                  </TableRow>
+                ))}
                 
-                {pret.notes && (
-                  <div className="mt-4">
-                    <p className="text-sm text-muted-foreground">Notes</p>
-                    <p className="text-sm">{pret.notes}</p>
-                  </div>
+                {filteredPrets.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                      {searchTerm ? "Aucun prêt trouvé" : "Aucun prêt enregistré"}
+                    </TableCell>
+                  </TableRow>
                 )}
-                
-                <div className="flex justify-end space-x-2 mt-4">
-                  <Button variant="outline" size="sm" onClick={() => {
-                    setSelectedPret(pret);
-                    setShowAddDialog(true);
-                  }}>
-                    <Edit className="w-4 h-4 mr-1" />
-                    Modifier
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))
-        )}
-      </div>
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+
+      <PretForm
+        open={showForm}
+        onOpenChange={setShowForm}
+        onSuccess={loadPrets}
+      />
     </div>
   );
 }

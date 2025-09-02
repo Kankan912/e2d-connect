@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import logoE2D from "@/assets/logo-e2d.png";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -86,9 +88,11 @@ export default function Layout({ children, user }: LayoutProps) {
             </Button>
             
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">E2D</span>
-              </div>
+              <img 
+                src={logoE2D} 
+                alt="Logo E2D" 
+                className="h-10 w-auto object-contain"
+              />
               <div>
                 <h1 className="font-bold text-lg bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
                   E2D Connect
@@ -151,7 +155,11 @@ export default function Layout({ children, user }: LayoutProps) {
           <div className="absolute bottom-4 left-4 right-4">
             <Card className="p-3 bg-gradient-to-br from-info to-info/20 border-primary/20">
               <div className="flex items-center gap-2">
-                <Settings size={16} className="text-primary" />
+                <img 
+                  src={logoE2D} 
+                  alt="Logo E2D" 
+                  className="h-4 w-auto object-contain"
+                />
                 <div>
                   <p className="text-xs font-medium text-primary">Version 1.0</p>
                   <p className="text-xs text-muted-foreground">MVP E2D Connect</p>
