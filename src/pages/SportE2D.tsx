@@ -10,15 +10,19 @@ import {
   MapPin,
   Clock,
   Shirt,
-  User
+  User,
+  Plus
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import LogoHeader from "@/components/LogoHeader";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import E2DMatchForm from "@/components/forms/E2DMatchForm";
 
 export default function SportE2D() {
   const navigate = useNavigate();
+  const [showMatchForm, setShowMatchForm] = useState(false);
 
   const { data: membres } = useQuery({
     queryKey: ['membres'],
@@ -131,10 +135,10 @@ export default function SportE2D() {
 
         <Button 
           className="h-full min-h-[120px] flex flex-col items-center justify-center"
-          onClick={() => navigate("/calendrier-sportif")}
+          onClick={() => setShowMatchForm(true)}
         >
-          <Calendar className="h-8 w-8 mb-2" />
-          <span className="text-sm">Calendrier matchs</span>
+          <Plus className="h-8 w-8 mb-2" />
+          <span className="text-sm">Planifier un match</span>
         </Button>
 
         <Button 
@@ -193,6 +197,15 @@ export default function SportE2D() {
           </CardContent>
         </Card>
       )}
+
+      <E2DMatchForm
+        open={showMatchForm}
+        onOpenChange={setShowMatchForm}
+        onSuccess={() => {
+          // Rafraîchir les données des matchs
+          window.location.reload();
+        }}
+      />
     </div>
   );
 }

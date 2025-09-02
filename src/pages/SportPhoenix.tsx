@@ -1,14 +1,17 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, TrendingUp, Users, Settings, Trophy, MapPin, Clock, DollarSign } from "lucide-react";
+import { Calendar, TrendingUp, Users, Settings, Trophy, MapPin, Clock, DollarSign, Plus } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import LogoHeader from "@/components/LogoHeader";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import PhoenixMatchForm from "@/components/forms/PhoenixMatchForm";
 
 export default function SportPhoenix() {
   const navigate = useNavigate();
+  const [showMatchForm, setShowMatchForm] = useState(false);
   
   // Stats globales (désactivées pour l'instant)
   const stats: any = null;
@@ -90,7 +93,7 @@ export default function SportPhoenix() {
                 <Button 
                   variant="outline" 
                   size="sm"
-                  onClick={() => navigate("/sport-phoenix-config")}
+                  onClick={() => navigate("/sport-config")}
                 >
                   <Settings className="h-4 w-4 mr-1" />
                   Modifier la config
@@ -129,10 +132,10 @@ export default function SportPhoenix() {
 
         <Button 
           className="h-full min-h-[120px] flex flex-col items-center justify-center"
-          onClick={() => navigate("/calendrier-sportif")}
+          onClick={() => setShowMatchForm(true)}
         >
-          <Calendar className="h-8 w-8 mb-2" />
-          <span className="text-sm">Calendrier matchs</span>
+          <Plus className="h-8 w-8 mb-2" />
+          <span className="text-sm">Planifier un match</span>
         </Button>
 
         <Button 
@@ -179,6 +182,15 @@ export default function SportPhoenix() {
           </CardContent>
         </Card>
       )}
+
+      <PhoenixMatchForm
+        open={showMatchForm}
+        onOpenChange={setShowMatchForm}
+        onSuccess={() => {
+          // Rafraîchir les données des matchs
+          window.location.reload();
+        }}
+      />
     </div>
   );
 }

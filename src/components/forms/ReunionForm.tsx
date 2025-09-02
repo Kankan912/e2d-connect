@@ -15,10 +15,11 @@ import { useEnsureAdmin } from '@/hooks/useEnsureAdmin';
 
 const reunionSchema = z.object({
   date_reunion: z.string().min(1, "La date est requise"),
+  heure_reunion: z.string().optional(),
   lieu_membre_id: z.string().optional(),
   lieu_description: z.string().optional(),
   ordre_du_jour: z.string().optional(),
-  statut: z.enum(['planifiee', 'en_cours', 'terminee', 'reportee', 'annulee']).default('planifiee'),
+  statut: z.enum(['planifie', 'en_cours', 'termine', 'reporte', 'annule']).default('planifie'),
 });
 
 type ReunionFormData = z.infer<typeof reunionSchema>;
@@ -39,27 +40,42 @@ export default function ReunionForm({ onSuccess, initialData }: ReunionFormProps
     resolver: zodResolver(reunionSchema),
     defaultValues: {
       date_reunion: initialData?.date_reunion || '',
+      heure_reunion: initialData?.heure_reunion || '19:00',
       lieu_membre_id: initialData?.lieu_membre_id || '',
       lieu_description: initialData?.lieu_description || '',
       ordre_du_jour: initialData?.ordre_du_jour || '',
-      statut: initialData?.statut || 'planifiee',
+      statut: initialData?.statut || 'planifie',
     },
   });
 
   const onSubmit = async (data: ReunionFormData) => {
     console.log('📝 Soumission réunion:', data);
     
+    // Préparer les données avec gestion des UUID vides
+    const formattedData = {
+      ...data,
+      date_reunion: data.heure_reunion 
+        ? `${data.date_reunion}T${data.heure_reunion}:00.000Z`
+        : `${data.date_reunion}T19:00:00.000Z`,
+      lieu_membre_id: data.lieu_membre_id && data.lieu_membre_id.trim() !== '' 
+        ? data.lieu_membre_id 
+        : null,
+    };
+    
+    // Supprimer heure_reunion car elle est intégrée dans date_reunion
+    delete (formattedData as any).heure_reunion;
+    
     const operation = async () => {
       if (initialData?.id) {
         const { error } = await supabase
           .from('reunions')
-          .update(data as any)
+          .update(formattedData)
           .eq('id', initialData.id);
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from('reunions')
-          .insert([data as any]);
+          .insert([formattedData]);
         if (error) throw error;
       }
     };
@@ -96,16 +112,26 @@ export default function ReunionForm({ onSuccess, initialData }: ReunionFormProps
       </CardHeader>
       <CardContent>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="date_reunion">Date de la réunion *</Label>
-            <Input
-              id="date_reunion"
-              type="date"
-              {...form.register('date_reunion')}
-            />
-            {form.formState.errors.date_reunion && (
-              <p className="text-sm text-red-500">{form.formState.errors.date_reunion.message}</p>
-            )}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="date_reunion">Date de la réunion *</Label>
+              <Input
+                id="date_reunion"
+                type="date"
+                {...form.register('date_reunion')}
+              />
+              {form.formState.errors.date_reunion && (
+                <p className="text-sm text-red-500">{form.formState.errors.date_reunion.message}</p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="heure_reunion">Heure</Label>
+              <Input
+                id="heure_reunion"
+                type="time"
+                {...form.register('heure_reunion')}
+              />
+            </div>
           </div>
 
           <div className="space-y-2">
@@ -137,11 +163,11 @@ export default function ReunionForm({ onSuccess, initialData }: ReunionFormProps
                 <SelectValue placeholder="Sélectionner le statut" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="planifiee">Planifiée</SelectItem>
+                <SelectItem value="planifie">Planifiée</SelectItem>
                 <SelectItem value="en_cours">En cours</SelectItem>
-                <SelectItem value="terminee">Terminée</SelectItem>
-                <SelectItem value="reportee">Reportée</SelectItem>
-                <SelectItem value="annulee">Annulée</SelectItem>
+                <SelectItem value="termine">Terminée</SelectItem>
+                <SelectItem value="reporte">Reportée</SelectItem>
+                <SelectItem value="annule">Annulée</SelectItem>
               </SelectContent>
             </Select>
           </div>

@@ -190,7 +190,7 @@ export default function Prets() {
     );
   }
 
-  const totalPrets = prets.reduce((sum, p) => sum + p.montant, 0);
+  const totalPrets = prets.reduce((sum, p) => sum + Number(p.montant || 0), 0);
   const pretsEnCours = prets.filter(p => p.statut === 'en_cours').length;
   const pretsRembourses = prets.filter(p => p.statut === 'rembourse').length;
   const pretsEnRetard = prets.filter(p => {
@@ -287,7 +287,7 @@ export default function Prets() {
                     </TableCell>
                     
                     <TableCell className="font-bold text-primary">
-                      {pret.montant.toLocaleString()} FCFA
+                      {Number(pret.montant || 0).toLocaleString()} FCFA
                     </TableCell>
                     
                     <TableCell>

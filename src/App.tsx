@@ -27,6 +27,7 @@ import EligibiliteGala from "./pages/EligibiliteGala";
 import MatchResults from "./pages/MatchResults";
 import GestionPresences from "./pages/GestionPresences";
 import HistoriqueConnexion from "./pages/HistoriqueConnexion";
+import SportConfig from "./pages/SportConfig";
 import MembreCotisationConfig from "./pages/MembreCotisationConfig";
 import NotFound from "./pages/NotFound";
 import ErrorBoundary from "./components/ErrorBoundary";
@@ -102,6 +103,8 @@ function App() {
                   <Route path="/resultats-matchs" element={<Navigate to="/match-results" replace />} />
                   <Route path="/eligibilite-gala" element={<EligibiliteGala />} />
                   <Route path="/gestion-presences" element={<GestionPresences />} />
+                  <Route path="/presences" element={<Navigate to="/gestion-presences" replace />} />
+                  <Route path="/sport-config" element={<SportConfig />} />
                   <Route path="/historique-connexion" element={<HistoriqueConnexion />} />
                   <Route path="/rapports" element={<Rapports />} />
                   <Route path="/configuration" element={<Configuration />} />

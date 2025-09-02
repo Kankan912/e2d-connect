@@ -9,20 +9,20 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useEnsureAdmin } from "@/hooks/useEnsureAdmin";
 
-interface PhoenixMatchFormProps {
+interface E2DMatchFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
 }
 
-export default function PhoenixMatchForm({ open, onOpenChange, onSuccess }: PhoenixMatchFormProps) {
+export default function E2DMatchForm({ open, onOpenChange, onSuccess }: E2DMatchFormProps) {
   const [formData, setFormData] = useState({
     date_match: "",
     heure_match: "15:00",
     equipe_adverse: "",
     lieu: "",
     type_match: "amical",
-    score_phoenix: "",
+    score_e2d: "",
     score_adverse: "",
     statut: "prevu",
     notes: ""
@@ -52,14 +52,14 @@ export default function PhoenixMatchForm({ open, onOpenChange, onSuccess }: Phoe
         equipe_adverse: formData.equipe_adverse,
         lieu: formData.lieu || null,
         type_match: formData.type_match,
-        score_phoenix: formData.score_phoenix ? parseInt(formData.score_phoenix) : null,
+        score_e2d: formData.score_e2d ? parseInt(formData.score_e2d) : null,
         score_adverse: formData.score_adverse ? parseInt(formData.score_adverse) : null,
         statut: formData.statut,
         notes: formData.notes || null,
       };
 
       const { error } = await supabase
-        .from('sport_phoenix_matchs')
+        .from('sport_e2d_matchs')
         .insert([matchData]);
 
       if (error) throw error;
@@ -70,7 +70,7 @@ export default function PhoenixMatchForm({ open, onOpenChange, onSuccess }: Phoe
 
       toast({
         title: "Succès",
-        description: "Match Phoenix programmé avec succès",
+        description: "Match E2D programmé avec succès",
       });
 
       onOpenChange(false);
@@ -83,7 +83,7 @@ export default function PhoenixMatchForm({ open, onOpenChange, onSuccess }: Phoe
         equipe_adverse: "",
         lieu: "",
         type_match: "amical",
-        score_phoenix: "",
+        score_e2d: "",
         score_adverse: "",
         statut: "prevu",
         notes: ""
@@ -103,9 +103,9 @@ export default function PhoenixMatchForm({ open, onOpenChange, onSuccess }: Phoe
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Programmer un match Phoenix</DialogTitle>
+          <DialogTitle>Programmer un match E2D</DialogTitle>
           <DialogDescription>
-            Planifiez un nouveau match pour l'équipe Phoenix.
+            Planifiez un nouveau match pour l'équipe E2D.
           </DialogDescription>
         </DialogHeader>
         
@@ -194,14 +194,14 @@ export default function PhoenixMatchForm({ open, onOpenChange, onSuccess }: Phoe
           {formData.statut === "termine" && (
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="score_phoenix">Buts Phoenix</Label>
+                <Label htmlFor="score_e2d">Buts E2D</Label>
                 <Input
-                  id="score_phoenix"
+                  id="score_e2d"
                   type="number"
                   min="0"
                   placeholder="0"
-                  value={formData.score_phoenix}
-                  onChange={(e) => setFormData(prev => ({ ...prev, score_phoenix: e.target.value }))}
+                  value={formData.score_e2d}
+                  onChange={(e) => setFormData(prev => ({ ...prev, score_e2d: e.target.value }))}
                 />
               </div>
               

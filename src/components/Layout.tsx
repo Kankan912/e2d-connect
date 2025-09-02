@@ -42,7 +42,7 @@ const menuItems = [
   { id: "sport-phoenix", label: "Sport Phoenix", icon: Trophy, path: "/sport-phoenix" },
   { id: "sport-e2d", label: "Sport E2D", icon: Activity, path: "/sport-e2d" },
   { id: "calendrier", label: "Calendrier Sportif", icon: Calendar, path: "/calendrier-sportif" },
-  { id: "presences", label: "Présences", icon: Users, path: "/presences" },
+  { id: "presences", label: "Présences", icon: Users, path: "/gestion-presences" },
   { id: "match-results", label: "Résultats Matchs", icon: Trophy, path: "/match-results" },
   { id: "historique", label: "Historique Connexions", icon: FileText, path: "/historique-connexion" },
   { id: "eligibilite", label: "Éligibilité Gala", icon: Trophy, path: "/eligibilite-gala" },
