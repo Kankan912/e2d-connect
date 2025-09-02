@@ -883,6 +883,36 @@ export type Database = {
         }
         Relationships: []
       }
+      sport_e2d_presences: {
+        Row: {
+          created_at: string
+          date_seance: string
+          id: string
+          membre_id: string
+          notes: string | null
+          present: boolean
+          type_seance: string
+        }
+        Insert: {
+          created_at?: string
+          date_seance: string
+          id?: string
+          membre_id: string
+          notes?: string | null
+          present?: boolean
+          type_seance: string
+        }
+        Update: {
+          created_at?: string
+          date_seance?: string
+          id?: string
+          membre_id?: string
+          notes?: string | null
+          present?: boolean
+          type_seance?: string
+        }
+        Relationships: []
+      }
       sport_e2d_recettes: {
         Row: {
           created_at: string
@@ -934,6 +964,48 @@ export type Database = {
           montant_adhesion?: number | null
           nom_club?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      sport_phoenix_matchs: {
+        Row: {
+          created_at: string
+          date_match: string
+          equipe_adverse: string
+          heure_match: string | null
+          id: string
+          lieu: string | null
+          notes: string | null
+          score_adverse: number | null
+          score_phoenix: number | null
+          statut: string
+          type_match: string
+        }
+        Insert: {
+          created_at?: string
+          date_match?: string
+          equipe_adverse: string
+          heure_match?: string | null
+          id?: string
+          lieu?: string | null
+          notes?: string | null
+          score_adverse?: number | null
+          score_phoenix?: number | null
+          statut?: string
+          type_match?: string
+        }
+        Update: {
+          created_at?: string
+          date_match?: string
+          equipe_adverse?: string
+          heure_match?: string | null
+          id?: string
+          lieu?: string | null
+          notes?: string | null
+          score_adverse?: number | null
+          score_phoenix?: number | null
+          statut?: string
+          type_match?: string
         }
         Relationships: []
       }

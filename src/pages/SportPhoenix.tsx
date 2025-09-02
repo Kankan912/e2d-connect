@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -20,7 +21,8 @@ import {
   Target,
   Award,
   UserCheck,
-  UserX
+  UserX,
+  Settings
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -49,6 +51,7 @@ export default function SportPhoenix() {
   const [searchTerm, setSearchTerm] = useState("");
   const [showAdherentDialog, setShowAdherentDialog] = useState(false);
   const [showMatchDialog, setShowMatchDialog] = useState(false);
+  const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -271,8 +274,31 @@ export default function SportPhoenix() {
         </Card>
       </div>
 
-      {/* Configuration */}
-      <SportConfigForm />
+      {/* Configuration Sportive */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Settings className="h-5 w-5" />
+            Configurations Sport
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <SportConfigForm />
+          <div className="mt-4 p-4 bg-muted/50 rounded-lg">
+            <h4 className="font-medium mb-2">Actions rapides</h4>
+            <div className="grid gap-2 md:grid-cols-2">
+              <Button variant="outline" onClick={() => navigate("/match-results")}>
+                <Trophy className="w-4 h-4 mr-2" />
+                Voir les résultats
+              </Button>
+              <Button variant="outline">
+                <Calendar className="w-4 h-4 mr-2" />
+                Calendrier matchs
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Liste des adhérents */}
       <Card>

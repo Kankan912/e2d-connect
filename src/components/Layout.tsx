@@ -41,6 +41,7 @@ const menuItems = [
   { id: "reunions", label: "Réunions", icon: Calendar, path: "/reunions" },
   { id: "sport-phoenix", label: "Sport Phoenix", icon: Trophy, path: "/sport-phoenix" },
   { id: "sport-e2d", label: "Sport E2D", icon: Activity, path: "/sport-e2d" },
+  { id: "match-results", label: "Résultats Matchs", icon: Trophy, path: "/match-results" },
   { id: "rapports", label: "Rapports", icon: FileText, path: "/rapports" },
   { id: "configuration", label: "Configuration", icon: Settings, path: "/configuration" },
 ];

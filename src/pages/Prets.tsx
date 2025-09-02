@@ -62,11 +62,7 @@ export default function Prets() {
     try {
       const { data, error } = await supabase
         .from('prets')
-        .select(`
-          *,
-          membre:membres!prets_membre_id_fkey(nom, prenom),
-          avaliste:membres!prets_avaliste_id_fkey(nom, prenom)
-        `)
+        .select('*')
         .order('date_pret', { ascending: false });
 
       if (error) {
@@ -74,12 +70,32 @@ export default function Prets() {
         throw error;
       }
       
-      setPrets(data || []);
+      // Charger séparément les données des membres
+      const pretsWithMembers = await Promise.all(
+        (data || []).map(async (pret) => {
+          const [membreData, avalisteData] = await Promise.all([
+            pret.membre_id 
+              ? supabase.from('membres').select('nom, prenom').eq('id', pret.membre_id).single()
+              : { data: null, error: null },
+            pret.avaliste_id
+              ? supabase.from('membres').select('nom, prenom').eq('id', pret.avaliste_id).single()
+              : { data: null, error: null }
+          ]);
+
+          return {
+            ...pret,
+            membre: membreData.data || { nom: '', prenom: '' },
+            avaliste: avalisteData.data || { nom: '', prenom: '' }
+          };
+        })
+      );
+      
+      setPrets(pretsWithMembers);
     } catch (error: any) {
       console.error('Erreur lors du chargement des prêts:', error);
       toast({
         title: "Erreur",
-        description: "Impossible de charger les prêts: " + error.message,
+        description: "Impossible de charger les prêts: " + (error.message || "Erreur inconnue"),
         variant: "destructive",
       });
     } finally {

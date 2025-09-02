@@ -38,8 +38,16 @@ interface Membre {
   est_adherent_phoenix: boolean;
 }
 
+interface CotisationStatus {
+  total: number;
+  payees: number;
+  pourcentage: number;
+  dernierePaie?: string;
+}
+
 export default function Membres() {
   const [membres, setMembres] = useState<Membre[]>([]);
+  const [cotisationsStatus, setCotisationsStatus] = useState<Map<string, CotisationStatus>>(new Map());
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [showForm, setShowForm] = useState(false);
@@ -58,7 +66,11 @@ export default function Membres() {
         .order('nom', { ascending: true });
 
       if (error) throw error;
-      setMembres(data || []);
+      const membresData = data || [];
+      setMembres(membresData);
+
+      // Charger le statut des cotisations pour chaque membre
+      await loadCotisationsStatus(membresData);
     } catch (error: any) {
       toast({
         title: "Erreur",
@@ -67,6 +79,36 @@ export default function Membres() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadCotisationsStatus = async (membresData: Membre[]) => {
+    try {
+      const statusMap = new Map<string, CotisationStatus>();
+      
+      for (const membre of membresData) {
+        const { data: cotisations } = await supabase
+          .from('cotisations')
+          .select('*')
+          .eq('membre_id', membre.id)
+          .order('date_paiement', { ascending: false });
+
+        const total = cotisations?.length || 0;
+        const payees = cotisations?.filter(c => c.statut === 'paye').length || 0;
+        const pourcentage = total > 0 ? (payees / total) * 100 : 0;
+        const dernierePaie = cotisations?.find(c => c.statut === 'paye')?.date_paiement;
+
+        statusMap.set(membre.id, {
+          total,
+          payees,
+          pourcentage,
+          dernierePaie
+        });
+      }
+      
+      setCotisationsStatus(statusMap);
+    } catch (error) {
+      console.error('Erreur lors du chargement des cotisations:', error);
     }
   };
 
@@ -204,99 +246,142 @@ export default function Membres() {
                   <TableHead>Nom Complet</TableHead>
                   <TableHead>Contact</TableHead>
                   <TableHead>Statut</TableHead>
+                  <TableHead>Cotisations</TableHead>
                   <TableHead>Types</TableHead>
                   <TableHead>Date d'inscription</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredMembres.map((membre) => (
-                  <TableRow key={membre.id} className="hover:bg-muted/50">
-                    <TableCell className="font-medium">
-                      <div>
-                        <p className="font-semibold">{membre.nom} {membre.prenom}</p>
-                      </div>
-                    </TableCell>
+                {filteredMembres.map((membre) => {
+                  const cotisationStatus = cotisationsStatus.get(membre.id);
+                  
+                  const getCotisationsBadge = () => {
+                    if (!cotisationStatus) return <Badge variant="outline">-</Badge>;
                     
-                    <TableCell>
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2 text-sm">
-                          <Mail className="h-3 w-3 text-muted-foreground" />
-                          {membre.email}
+                    if (cotisationStatus.pourcentage >= 80) {
+                      return (
+                        <Badge className="bg-success text-success-foreground">
+                          {cotisationStatus.pourcentage.toFixed(0)}%
+                        </Badge>
+                      );
+                    } else if (cotisationStatus.pourcentage >= 50) {
+                      return (
+                        <Badge className="bg-warning text-warning-foreground">
+                          {cotisationStatus.pourcentage.toFixed(0)}%
+                        </Badge>
+                      );
+                    } else {
+                      return (
+                        <Badge className="bg-destructive text-destructive-foreground">
+                          {cotisationStatus.pourcentage.toFixed(0)}%
+                        </Badge>
+                      );
+                    }
+                  };
+
+                  return (
+                    <TableRow key={membre.id} className="hover:bg-muted/50">
+                      <TableCell className="font-medium">
+                        <div>
+                          <p className="font-semibold">{membre.nom} {membre.prenom}</p>
                         </div>
-                        {membre.telephone && (
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <Phone className="h-3 w-3" />
-                            {membre.telephone}
+                      </TableCell>
+                      
+                      <TableCell>
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2 text-sm">
+                            <Mail className="h-3 w-3 text-muted-foreground" />
+                            {membre.email}
                           </div>
-                        )}
-                      </div>
-                    </TableCell>
-                    
-                    <TableCell>
-                      <Badge 
-                        variant={membre.statut === 'actif' ? 'default' : 'secondary'}
-                        className={membre.statut === 'actif' 
-                          ? 'bg-success text-success-foreground' 
-                          : 'bg-muted text-muted-foreground'
-                        }
-                      >
-                        {membre.statut === 'actif' ? (
-                          <>
-                            <UserCheck className="w-3 h-3 mr-1" />
-                            Actif
-                          </>
-                        ) : (
-                          <>
-                            <UserX className="w-3 h-3 mr-1" />
-                            Inactif
-                          </>
-                        )}
-                      </Badge>
-                    </TableCell>
-                    
-                    <TableCell>
-                      <div className="flex gap-1">
-                        {membre.est_membre_e2d && (
-                          <Badge variant="outline" className="text-xs">
-                            E2D
-                          </Badge>
-                        )}
-                        {membre.est_adherent_phoenix && (
-                          <Badge variant="outline" className="text-xs">
-                            Phoenix
-                          </Badge>
-                        )}
-                      </div>
-                    </TableCell>
-                    
-                    <TableCell className="text-muted-foreground">
-                      {new Date(membre.date_inscription).toLocaleDateString('fr-FR')}
-                    </TableCell>
-                    
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => {
-                            setSelectedMembre(membre);
-                            setShowForm(true);
-                          }}
+                          {membre.telephone && (
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                              <Phone className="h-3 w-3" />
+                              {membre.telephone}
+                            </div>
+                          )}
+                        </div>
+                      </TableCell>
+                      
+                      <TableCell>
+                        <Badge 
+                          variant={membre.statut === 'actif' ? 'default' : 'secondary'}
+                          className={membre.statut === 'actif' 
+                            ? 'bg-success text-success-foreground' 
+                            : 'bg-muted text-muted-foreground'
+                          }
                         >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                          {membre.statut === 'actif' ? (
+                            <>
+                              <UserCheck className="w-3 h-3 mr-1" />
+                              Actif
+                            </>
+                          ) : (
+                            <>
+                              <UserX className="w-3 h-3 mr-1" />
+                              Inactif
+                            </>
+                          )}
+                        </Badge>
+                      </TableCell>
+
+                      <TableCell>
+                        <div className="space-y-1">
+                          {getCotisationsBadge()}
+                          {cotisationStatus && (
+                            <div className="text-xs text-muted-foreground">
+                              {cotisationStatus.payees}/{cotisationStatus.total} payées
+                              {cotisationStatus.dernierePaie && (
+                                <div>Dernière: {new Date(cotisationStatus.dernierePaie).toLocaleDateString('fr-FR')}</div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </TableCell>
+                      
+                      <TableCell>
+                        <div className="flex gap-1">
+                          {membre.est_membre_e2d && (
+                            <Badge variant="outline" className="text-xs">
+                              E2D
+                            </Badge>
+                          )}
+                          {membre.est_adherent_phoenix && (
+                            <Badge variant="outline" className="text-xs">
+                              Phoenix
+                            </Badge>
+                          )}
+                        </div>
+                      </TableCell>
+                      
+                      <TableCell className="text-muted-foreground">
+                        {new Date(membre.date_inscription).toLocaleDateString('fr-FR')}
+                      </TableCell>
+                      
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => {
+                              setSelectedMembre(membre);
+                              setShowForm(true);
+                            }}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
                 
                 {filteredMembres.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                       {searchTerm ? "Aucun membre trouvé" : "Aucun membre enregistré"}
                     </TableCell>
                   </TableRow>

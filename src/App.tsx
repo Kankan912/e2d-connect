@@ -20,6 +20,7 @@ import Reunions from "./pages/Reunions";
 import SportE2D from "./pages/SportE2D";
 import Configuration from "./pages/Configuration";
 import CotisationsGrid from "./pages/CotisationsGrid";
+import MatchResults from "./pages/MatchResults";
 import NotFound from "./pages/NotFound";
 import Layout from "@/components/Layout";
 
@@ -126,6 +127,11 @@ const App = () => {
                 <Route path="/configuration" element={
                   <Layout user={user}>
                     <Configuration />
+                  </Layout>
+                } />
+                <Route path="/match-results" element={
+                  <Layout user={user}>
+                    <MatchResults />
                   </Layout>
                 } />
               </>
