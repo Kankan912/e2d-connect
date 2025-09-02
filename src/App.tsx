@@ -21,6 +21,10 @@ import SportE2D from "./pages/SportE2D";
 import Configuration from "./pages/Configuration";
 import CotisationsGrid from "./pages/CotisationsGrid";
 import MatchResults from "./pages/MatchResults";
+import CalendrierSportif from "./pages/CalendrierSportif";
+import GestionPresences from "./pages/GestionPresences";
+import HistoriqueConnexion from "./pages/HistoriqueConnexion";
+import EligibiliteGala from "./pages/EligibiliteGala";
 import NotFound from "./pages/NotFound";
 import Layout from "@/components/Layout";
 
@@ -130,10 +134,30 @@ const App = () => {
                   </Layout>
                 } />
                 <Route path="/match-results" element={
-                  <Layout user={user}>
-                    <MatchResults />
-                  </Layout>
-                } />
+                    <Layout user={user}>
+                      <MatchResults />
+                    </Layout>
+                  } />
+                  <Route path="/calendrier-sportif" element={
+                    <Layout user={user}>
+                      <CalendrierSportif />
+                    </Layout>
+                  } />
+                  <Route path="/presences" element={
+                    <Layout user={user}>
+                      <GestionPresences />
+                    </Layout>
+                  } />
+                  <Route path="/historique" element={
+                    <Layout user={user}>
+                      <HistoriqueConnexion />
+                    </Layout>
+                  } />
+                  <Route path="/eligibilite-gala" element={
+                    <Layout user={user}>
+                      <EligibiliteGala />
+                    </Layout>
+                  } />
               </>
             ) : (
               <Route path="*" element={<Auth />} />

@@ -1,12 +1,13 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Settings, Users, Shield, Database, Download, Upload } from "lucide-react";
+import { Settings, Users, Shield, Database } from "lucide-react";
 import AdminCreateAccount from "@/components/AdminCreateAccount";
 import BackupManager from "@/components/BackupManager";
 import RolePermissionsManager from "@/components/RolePermissionsManager";
 import RoleManager from "@/components/RoleManager";
 import LogoHeader from "@/components/LogoHeader";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Configuration() {
   return (
@@ -52,6 +53,22 @@ export default function Configuration() {
         </TabsContent>
 
         <TabsContent value="permissions" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Réparer les accès administrateur</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground mb-3">Cliquez pour initialiser votre rôle administrateur si vous rencontrez des erreurs 403.</p>
+              <Button onClick={async () => {
+                const { error } = await supabase.functions.invoke('ensure-admin');
+                if (error) {
+                  alert('Échec: ' + error.message);
+                } else {
+                  alert('Rôle administrateur initialisé. Réessayez votre action.');
+                }
+              }}>Corriger les accès</Button>
+            </CardContent>
+          </Card>
           <div className="grid gap-6 md:grid-cols-2">
             <RoleManager />
             <RolePermissionsManager />

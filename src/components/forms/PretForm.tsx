@@ -185,14 +185,14 @@ export default function PretForm({ open, onOpenChange, pret, onSuccess }: PretFo
 
           <div className="space-y-2">
             <Label htmlFor="avaliste">Avaliste</Label>
-            <Select value={formData.avaliste_id} onValueChange={(value) => 
-              setFormData(prev => ({ ...prev, avaliste_id: value }))
+            <Select value={formData.avaliste_id || ''} onValueChange={(value) => 
+              setFormData(prev => ({ ...prev, avaliste_id: value === 'none' ? '' : value }))
             }>
               <SelectTrigger>
                 <SelectValue placeholder="Sélectionner l'avaliste (optionnel)" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Aucun avaliste</SelectItem>
+                <SelectItem value="none">Aucun avaliste</SelectItem>
                 {membres
                   .filter(m => m.id !== formData.membre_id)
                   .map((membre) => (
