@@ -25,6 +25,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import ReunionForm from "@/components/forms/ReunionForm";
 import LogoHeader from "@/components/LogoHeader";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 interface Reunion {
   id: string;
@@ -321,11 +322,15 @@ export default function Reunions() {
         </CardContent>
       </Card>
 
-      <ReunionForm
-        open={showForm}
-        onOpenChange={setShowForm}
-        onSuccess={loadReunions}
-      />
+      <Dialog open={showForm} onOpenChange={setShowForm}>
+        <DialogContent className="sm:max-w-[600px]">
+          <ReunionForm
+            open={showForm}
+            onOpenChange={setShowForm}
+            onSuccess={loadReunions}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

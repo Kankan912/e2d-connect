@@ -136,7 +136,7 @@ export default function PretForm({ onSuccess, initialData }: PretFormProps) {
           <div className="space-y-2">
             <Label htmlFor="membre_id">Bénéficiaire *</Label>
             <Select 
-              value={form.watch('membre_id')} 
+              value={form.watch('membre_id') || undefined} 
               onValueChange={(value) => form.setValue('membre_id', value)}
             >
               <SelectTrigger>
@@ -211,14 +211,14 @@ export default function PretForm({ onSuccess, initialData }: PretFormProps) {
           <div className="space-y-2">
             <Label htmlFor="avaliste_id">Avaliste (optionnel)</Label>
             <Select 
-              value={form.watch('avaliste_id') || ''} 
-              onValueChange={(value) => form.setValue('avaliste_id', value)}
+              value={form.watch('avaliste_id') || undefined} 
+              onValueChange={(value) => form.setValue('avaliste_id', value === 'none' ? '' : value)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Sélectionner un avaliste" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Aucun avaliste</SelectItem>
+                <SelectItem value="none">Aucun avaliste</SelectItem>
                 {membres?.map((membre) => (
                   <SelectItem key={membre.id} value={membre.id}>
                     {membre.prenom} {membre.nom}
