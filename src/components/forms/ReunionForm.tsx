@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -14,12 +14,15 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useEnsureAdmin } from '@/hooks/useEnsureAdmin';
 
 const reunionSchema = z.object({
+  type_reunion: z.enum(['AGO', 'AGE']).default('AGO'),
+  sujet: z.string().min(1, "Le sujet est requis"),
   date_reunion: z.string().min(1, "La date est requise"),
   heure_reunion: z.string().optional(),
   lieu_membre_id: z.string().optional(),
   lieu_description: z.string().optional(),
   ordre_du_jour: z.string().optional(),
   statut: z.enum(['planifie', 'en_cours', 'termine', 'reporte', 'annule']).default('planifie'),
+  invites_ids: z.array(z.string()).default([]),
 });
 
 type ReunionFormData = z.infer<typeof reunionSchema>;
@@ -31,22 +34,50 @@ interface ReunionFormProps {
   onOpenChange?: (open: boolean) => void;
 }
 
+interface Membre {
+  id: string;
+  nom: string;
+  prenom: string;
+}
+
 export default function ReunionForm({ onSuccess, initialData }: ReunionFormProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { withEnsureAdmin } = useEnsureAdmin();
+  const [membres, setMembres] = useState<Membre[]>([]);
 
   const form = useForm<ReunionFormData>({
     resolver: zodResolver(reunionSchema),
     defaultValues: {
+      type_reunion: initialData?.type_reunion || 'AGO',
+      sujet: initialData?.sujet || '',
       date_reunion: initialData?.date_reunion || '',
       heure_reunion: initialData?.heure_reunion || '19:00',
       lieu_membre_id: initialData?.lieu_membre_id || '',
       lieu_description: initialData?.lieu_description || '',
       ordre_du_jour: initialData?.ordre_du_jour || '',
       statut: initialData?.statut || 'planifie',
+      invites_ids: initialData?.invites_ids || [],
     },
   });
+
+  useEffect(() => {
+    fetchMembres();
+  }, []);
+
+  const fetchMembres = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('membres')
+        .select('id, nom, prenom')
+        .eq('statut', 'actif')
+        .order('nom');
+      if (error) throw error;
+      setMembres(data || []);
+    } catch (error) {
+      console.error('Erreur chargement membres:', error);
+    }
+  };
 
   const onSubmit = async (data: ReunionFormData) => {
     console.log('📝 Soumission réunion:', data);
