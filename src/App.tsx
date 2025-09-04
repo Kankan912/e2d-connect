@@ -29,6 +29,8 @@ import GestionPresences from "./pages/GestionPresences";
 import HistoriqueConnexion from "./pages/HistoriqueConnexion";
 import SportConfig from "./pages/SportConfig";
 import MembreCotisationConfig from "./pages/MembreCotisationConfig";
+import MembreFiche from "./pages/MembreFiche";
+import ConfigurationGenerale from "./pages/ConfigurationGenerale";
 import NotFound from "./pages/NotFound";
 import ErrorBoundary from "./components/ErrorBoundary";
 
@@ -87,6 +89,7 @@ function App() {
                   <Route path="/" element={<Index />} />
                   <Route path="/membres" element={<Membres />} />
                   <Route path="/membres-wrapped" element={<MembresWrapped />} />
+                  <Route path="/membre/:id" element={<MembreFiche />} />
                   <Route path="/cotisations" element={<Cotisations />} />
                   <Route path="/cotisations-grid" element={<CotisationsGrid />} />
                   <Route path="/membre-cotisation-config" element={<MembreCotisationConfig />} />
@@ -108,6 +111,7 @@ function App() {
                   <Route path="/historique-connexion" element={<HistoriqueConnexion />} />
                   <Route path="/rapports" element={<Rapports />} />
                   <Route path="/configuration" element={<Configuration />} />
+                  <Route path="/configuration-generale" element={<ConfigurationGenerale />} />
                   <Route path="/auth" element={<Navigate to="/" replace />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>

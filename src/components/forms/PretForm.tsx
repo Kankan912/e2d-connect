@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -6,97 +6,131 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import { useEnsureAdmin } from '@/hooks/useEnsureAdmin';
 
 const pretSchema = z.object({
-  membre_id: z.string().min(1, "Le membre est requis"),
-  montant: z.number().min(1, "Le montant doit être positif"),
-  date_pret: z.string().min(1, "La date du prêt est requise"),
-  echeance: z.string().min(1, "L'échéance est requise"),
-  taux_interet: z.number().min(0).default(0),
+  membre_id: z.string().min(1, "Le bénéficiaire est requis"),
+  montant: z.number().min(1, "Le montant doit être supérieur à 0"),
+  taux_interet: z.number().min(0).max(100).default(5),
+  date_pret: z.string().min(1, "La date de prêt est requise"),
+  echeance: z.string().min(1, "La date d'échéance est requise"),
   avaliste_id: z.string().optional(),
-  notes: z.string().optional(),
   statut: z.enum(['en_cours', 'rembourse', 'en_retard', 'annule']).default('en_cours'),
+  notes: z.string().optional(),
 });
 
 type PretFormData = z.infer<typeof pretSchema>;
 
 interface PretFormProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
   initialData?: Partial<PretFormData> & { id?: string };
-  open?: boolean;
-  onOpenChange?: (open: boolean) => void;
 }
 
-export default function PretForm({ onSuccess, initialData }: PretFormProps) {
+interface Membre {
+  id: string;
+  nom: string;
+  prenom: string;
+}
+
+export default function PretForm({ open, onOpenChange, onSuccess, initialData }: PretFormProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { withEnsureAdmin } = useEnsureAdmin();
-
-  const { data: membres } = useQuery({
-    queryKey: ['membres'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('membres')
-        .select('id, nom, prenom')
-        .eq('statut', 'actif')
-        .order('nom');
-      if (error) throw error;
-      return data;
-    }
-  });
+  const [membres, setMembres] = useState<Membre[]>([]);
+  const [tauxInteretFixe, setTauxInteretFixe] = useState(5);
 
   const form = useForm<PretFormData>({
     resolver: zodResolver(pretSchema),
     defaultValues: {
       membre_id: initialData?.membre_id || '',
       montant: initialData?.montant || 0,
+      taux_interet: initialData?.taux_interet || tauxInteretFixe,
       date_pret: initialData?.date_pret || new Date().toISOString().split('T')[0],
       echeance: initialData?.echeance || '',
-      taux_interet: initialData?.taux_interet || 0,
       avaliste_id: initialData?.avaliste_id || '',
-      notes: initialData?.notes || '',
       statut: initialData?.statut || 'en_cours',
+      notes: initialData?.notes || '',
     },
   });
 
-  const onSubmit = async (data: PretFormData) => {
-    console.log('💰 Soumission prêt:', data);
-    
-    // Validation des dates
-    const datePret = new Date(data.date_pret);
-    const echeance = new Date(data.echeance);
-    
-    if (echeance <= datePret) {
-      toast({
-        title: "Erreur de validation",
-        description: "L'échéance doit être postérieure à la date du prêt",
-        variant: "destructive",
-      });
-      return;
+  useEffect(() => {
+    if (open) {
+      fetchMembres();
+      loadTauxInteret();
     }
+  }, [open]);
 
+  // Calcul automatique de l'échéance (2 mois après)
+  useEffect(() => {
+    const datePret = form.watch('date_pret');
+    if (datePret) {
+      const date = new Date(datePret);
+      date.setMonth(date.getMonth() + 2);
+      form.setValue('echeance', date.toISOString().split('T')[0]);
+    }
+  }, [form.watch('date_pret')]);
+
+  const fetchMembres = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('membres')
+        .select('id, nom, prenom')
+        .eq('statut', 'actif')
+        .order('nom');
+      if (error) throw error;
+      setMembres(data || []);
+    } catch (error) {
+      console.error('Erreur chargement membres:', error);
+    }
+  };
+
+  const loadTauxInteret = () => {
+    // Charger depuis localStorage temporairement (en attendant la table configurations)
+    const configs = localStorage.getItem('app_configurations');
+    if (configs) {
+      try {
+        const parsedConfigs = JSON.parse(configs);
+        const taux = parseFloat(parsedConfigs.taux_interet_pret || '5');
+        setTauxInteretFixe(taux);
+        form.setValue('taux_interet', taux);
+      } catch (error) {
+        console.error('Erreur chargement taux:', error);
+      }
+    }
+  };
+
+  const onSubmit = async (data: PretFormData) => {
+    console.log('📝 Soumission prêt:', data);
+    
     const operation = async () => {
-      const payload = {
-        ...data,
-        avaliste_id: data.avaliste_id || null, // Convertir chaîne vide en null
+      const pretData = {
+        membre_id: data.membre_id,
+        montant: data.montant,
+        date_pret: data.date_pret,
+        echeance: data.echeance,
+        taux_interet: data.taux_interet,
+        statut: data.statut,
+        notes: data.notes || null,
+        avaliste_id: data.avaliste_id && data.avaliste_id.trim() !== '' ? data.avaliste_id : null,
       };
 
       if (initialData?.id) {
         const { error } = await supabase
           .from('prets')
-          .update(payload as any)
+          .update(pretData)
           .eq('id', initialData.id);
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from('prets')
-          .insert([payload as any]);
+          .insert(pretData);
         if (error) throw error;
       }
     };
@@ -110,11 +144,11 @@ export default function PretForm({ onSuccess, initialData }: PretFormProps) {
         description: initialData?.id ? "Prêt mis à jour" : "Prêt créé avec succès",
       });
       
-      // Invalider les queries pour rafraîchir
       queryClient.invalidateQueries({ queryKey: ['prets'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
       
       form.reset();
+      onOpenChange(false);
       onSuccess?.();
     } catch (error: any) {
       console.error('❌ Erreur prêt:', error);
@@ -127,11 +161,12 @@ export default function PretForm({ onSuccess, initialData }: PretFormProps) {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{initialData?.id ? 'Modifier' : 'Nouveau'} Prêt</CardTitle>
-      </CardHeader>
-      <CardContent>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[600px]">
+        <DialogHeader>
+          <DialogTitle>{initialData?.id ? 'Modifier' : 'Nouveau'} Prêt</DialogTitle>
+        </DialogHeader>
+        
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="membre_id">Bénéficiaire *</Label>
@@ -157,28 +192,28 @@ export default function PretForm({ onSuccess, initialData }: PretFormProps) {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="montant">Montant (€) *</Label>
+              <Label htmlFor="montant">Montant (FCFA) *</Label>
               <Input
                 id="montant"
                 type="number"
-                step="0.01"
-                min="0"
+                placeholder="Ex: 500000"
                 {...form.register('montant', { valueAsNumber: true })}
               />
               {form.formState.errors.montant && (
                 <p className="text-sm text-red-500">{form.formState.errors.montant.message}</p>
               )}
             </div>
-
             <div className="space-y-2">
-              <Label htmlFor="taux_interet">Taux d'intérêt (%)</Label>
+              <Label htmlFor="taux_interet">Taux d'intérêt (%) *</Label>
               <Input
                 id="taux_interet"
                 type="number"
-                step="0.01"
-                min="0"
-                {...form.register('taux_interet', { valueAsNumber: true })}
+                step="0.1"
+                value={tauxInteretFixe}
+                disabled
+                className="bg-muted"
               />
+              <p className="text-xs text-muted-foreground">Taux fixe configuré par l'administrateur</p>
             </div>
           </div>
 
@@ -194,17 +229,16 @@ export default function PretForm({ onSuccess, initialData }: PretFormProps) {
                 <p className="text-sm text-red-500">{form.formState.errors.date_pret.message}</p>
               )}
             </div>
-
             <div className="space-y-2">
-              <Label htmlFor="echeance">Échéance *</Label>
+              <Label htmlFor="echeance">Date d'échéance *</Label>
               <Input
                 id="echeance"
                 type="date"
                 {...form.register('echeance')}
+                className="bg-muted"
+                readOnly
               />
-              {form.formState.errors.echeance && (
-                <p className="text-sm text-red-500">{form.formState.errors.echeance.message}</p>
-              )}
+              <p className="text-xs text-muted-foreground">Calculée automatiquement (2 mois après)</p>
             </div>
           </div>
 
@@ -250,21 +284,25 @@ export default function PretForm({ onSuccess, initialData }: PretFormProps) {
             <Label htmlFor="notes">Notes</Label>
             <Textarea
               id="notes"
-              placeholder="Informations complémentaires..."
+              placeholder="Notes sur ce prêt..."
               rows={3}
               {...form.register('notes')}
             />
           </div>
 
-          <Button 
-            type="submit" 
-            className="w-full"
-            disabled={form.formState.isSubmitting}
-          >
-            {form.formState.isSubmitting ? 'Enregistrement...' : (initialData?.id ? 'Mettre à jour' : 'Créer le prêt')}
-          </Button>
+          <div className="flex justify-end space-x-2 pt-4">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Annuler
+            </Button>
+            <Button 
+              type="submit" 
+              disabled={form.formState.isSubmitting}
+            >
+              {form.formState.isSubmitting ? 'Enregistrement...' : (initialData?.id ? 'Mettre à jour' : 'Créer le prêt')}
+            </Button>
+          </div>
         </form>
-      </CardContent>
-    </Card>
+      </DialogContent>
+    </Dialog>
   );
 }

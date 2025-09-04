@@ -9,126 +9,37 @@ import {
   Settings, 
   CreditCard, 
   Percent, 
-  Calendar,
   Save
 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useEnsureAdmin } from "@/hooks/useEnsureAdmin";
 import LogoHeader from "@/components/LogoHeader";
 
-interface Configuration {
-  cle: string;
-  valeur: string;
-  description: string;
-}
-
 export default function ConfigurationGenerale() {
-  const [configurations, setConfigurations] = useState<Record<string, string>>({});
-  const [loading, setLoading] = useState(true);
+  const [configurations, setConfigurations] = useState<Record<string, string>>({
+    taux_interet_pret: '5',
+    duree_pret_mois: '2',
+    montant_cotisation_huile: '1000',
+    montant_cotisation_savon: '500',
+    cotisation_huile_active: 'true',
+    cotisation_savon_active: 'true',
+    nom_organisation: 'Association E2D',
+    email_organisation: 'contact@e2d.org',
+    telephone_organisation: '+225 00 00 00 00',
+    adresse_organisation: 'Abidjan, Côte d\'Ivoire'
+  });
   const [saving, setSaving] = useState(false);
   const { toast } = useToast();
-  const { withEnsureAdmin } = useEnsureAdmin();
-
-  useEffect(() => {
-    loadConfigurations();
-  }, []);
-
-  const loadConfigurations = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('configurations')
-        .select('*');
-
-      if (error) throw error;
-
-      const configsMap: Record<string, string> = {};
-      (data || []).forEach(config => {
-        configsMap[config.cle] = config.valeur;
-      });
-
-      // Valeurs par défaut
-      const defaultConfigs = {
-        taux_interet_pret: '5',
-        duree_pret_mois: '2',
-        montant_cotisation_huile: '1000',
-        montant_cotisation_savon: '500',
-        cotisation_huile_active: 'true',
-        cotisation_savon_active: 'true',
-        nom_organisation: 'Association E2D',
-        email_organisation: 'contact@e2d.org',
-        telephone_organisation: '+225 00 00 00 00',
-        adresse_organisation: 'Abidjan, Côte d\'Ivoire'
-      };
-
-      setConfigurations({ ...defaultConfigs, ...configsMap });
-    } catch (error: any) {
-      console.error('Erreur chargement configurations:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de charger les configurations",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const saveConfiguration = async (cle: string, valeur: string) => {
-    const operation = async () => {
-      const { error } = await supabase
-        .from('configurations')
-        .upsert([{ 
-          cle, 
-          valeur, 
-          description: getConfigDescription(cle) 
-        }]);
-
-      if (error) throw error;
-    };
-
-    try {
-      await withEnsureAdmin(operation);
-      
-      setConfigurations(prev => ({ ...prev, [cle]: valeur }));
-      
-      toast({
-        title: "Succès",
-        description: "Configuration mise à jour",
-      });
-    } catch (error: any) {
-      console.error('Erreur sauvegarde configuration:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de sauvegarder la configuration",
-        variant: "destructive",
-      });
-    }
-  };
 
   const saveAllConfigurations = async () => {
     setSaving(true);
     
-    const operation = async () => {
-      const configsToSave = Object.entries(configurations).map(([cle, valeur]) => ({
-        cle,
-        valeur,
-        description: getConfigDescription(cle)
-      }));
-
-      const { error } = await supabase
-        .from('configurations')
-        .upsert(configsToSave);
-
-      if (error) throw error;
-    };
-
     try {
-      await withEnsureAdmin(operation);
+      // Pour l'instant, on simule la sauvegarde dans localStorage
+      localStorage.setItem('app_configurations', JSON.stringify(configurations));
       
       toast({
         title: "Succès",
-        description: "Toutes les configurations ont été sauvegardées",
+        description: "Configurations sauvegardées localement (version temporaire)",
       });
     } catch (error: any) {
       console.error('Erreur sauvegarde configurations:', error);
@@ -142,33 +53,21 @@ export default function ConfigurationGenerale() {
     }
   };
 
-  const getConfigDescription = (cle: string): string => {
-    const descriptions: Record<string, string> = {
-      taux_interet_pret: "Taux d'intérêt fixe appliqué aux prêts",
-      duree_pret_mois: "Durée par défaut d'un prêt en mois",
-      montant_cotisation_huile: "Montant par défaut pour la cotisation huile",
-      montant_cotisation_savon: "Montant par défaut pour la cotisation savon",
-      cotisation_huile_active: "Activation de la cotisation huile",
-      cotisation_savon_active: "Activation de la cotisation savon",
-      nom_organisation: "Nom officiel de l'organisation",
-      email_organisation: "Email de contact principal",
-      telephone_organisation: "Numéro de téléphone principal",
-      adresse_organisation: "Adresse physique de l'organisation"
-    };
-    return descriptions[cle] || "Configuration système";
-  };
-
   const handleConfigChange = (cle: string, valeur: string) => {
     setConfigurations(prev => ({ ...prev, [cle]: valeur }));
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
+  useEffect(() => {
+    // Charger depuis localStorage temporairement
+    const saved = localStorage.getItem('app_configurations');
+    if (saved) {
+      try {
+        setConfigurations(prev => ({ ...prev, ...JSON.parse(saved) }));
+      } catch (error) {
+        console.error('Erreur chargement configurations locales:', error);
+      }
+    }
+  }, []);
 
   return (
     <div className="space-y-6">

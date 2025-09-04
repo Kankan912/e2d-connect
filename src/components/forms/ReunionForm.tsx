@@ -84,17 +84,24 @@ export default function ReunionForm({ onSuccess, initialData }: ReunionFormProps
     
     // Préparer les données avec gestion des UUID vides
     const formattedData = {
-      ...data,
+      type_reunion: data.type_reunion,
+      sujet: data.sujet,
       date_reunion: data.heure_reunion 
         ? `${data.date_reunion}T${data.heure_reunion}:00.000Z`
         : `${data.date_reunion}T19:00:00.000Z`,
       lieu_membre_id: data.lieu_membre_id && data.lieu_membre_id.trim() !== '' 
         ? data.lieu_membre_id 
         : null,
+      lieu_description: data.lieu_description,
+      ordre_du_jour: data.ordre_du_jour,
+      statut: data.statut,
     };
     
     // Supprimer heure_reunion car elle est intégrée dans date_reunion
     delete (formattedData as any).heure_reunion;
+    
+    // Gérer les invitations (pour l'instant on les stock comme metadata ou dans une table séparée)
+    console.log('Invités sélectionnés:', data.invites_ids);
     
     const operation = async () => {
       if (initialData?.id) {
@@ -145,6 +152,38 @@ export default function ReunionForm({ onSuccess, initialData }: ReunionFormProps
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
+              <Label htmlFor="type_reunion">Type de réunion *</Label>
+              <Select 
+                value={form.watch('type_reunion')} 
+                onValueChange={(value) => form.setValue('type_reunion', value as any)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner le type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="AGO">AGO - Assemblée Générale Ordinaire</SelectItem>
+                  <SelectItem value="AGE">AGE - Assemblée Générale Extraordinaire</SelectItem>
+                </SelectContent>
+              </Select>
+              {form.formState.errors.type_reunion && (
+                <p className="text-sm text-red-500">{form.formState.errors.type_reunion.message}</p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="sujet">Sujet de la réunion *</Label>
+              <Input
+                id="sujet"
+                placeholder="Ex: Budget 2024, Élections..."
+                {...form.register('sujet')}
+              />
+              {form.formState.errors.sujet && (
+                <p className="text-sm text-red-500">{form.formState.errors.sujet.message}</p>
+              )}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
               <Label htmlFor="date_reunion">Date de la réunion *</Label>
               <Input
                 id="date_reunion"
@@ -172,6 +211,37 @@ export default function ReunionForm({ onSuccess, initialData }: ReunionFormProps
               placeholder="Ex: Salle communale, Domicile..."
               {...form.register('lieu_description')}
             />
+          </div>
+
+          {/* Section invitation des membres */}
+          <div className="space-y-2">
+            <Label>Membres à inviter</Label>
+            <div className="max-h-32 overflow-y-auto border rounded-md p-3 space-y-2">
+              {membres.map((membre) => (
+                <div key={membre.id} className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id={`membre-${membre.id}`}
+                    checked={form.watch('invites_ids').includes(membre.id)}
+                    onChange={(e) => {
+                      const currentInvites = form.watch('invites_ids');
+                      if (e.target.checked) {
+                        form.setValue('invites_ids', [...currentInvites, membre.id]);
+                      } else {
+                        form.setValue('invites_ids', currentInvites.filter(id => id !== membre.id));
+                      }
+                    }}
+                    className="rounded"
+                  />
+                  <label htmlFor={`membre-${membre.id}`} className="text-sm">
+                    {membre.prenom} {membre.nom}
+                  </label>
+                </div>
+              ))}
+              {membres.length === 0 && (
+                <p className="text-sm text-muted-foreground">Aucun membre trouvé</p>
+              )}
+            </div>
           </div>
 
           <div className="space-y-2">

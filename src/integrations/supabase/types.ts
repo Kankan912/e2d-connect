@@ -95,6 +95,33 @@ export type Database = {
         }
         Relationships: []
       }
+      configurations: {
+        Row: {
+          cle: string
+          created_at: string
+          description: string | null
+          id: string
+          updated_at: string
+          valeur: string
+        }
+        Insert: {
+          cle: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          updated_at?: string
+          valeur: string
+        }
+        Update: {
+          cle?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          updated_at?: string
+          valeur?: string
+        }
+        Relationships: []
+      }
       cotisations: {
         Row: {
           created_at: string | null
@@ -600,6 +627,8 @@ export type Database = {
           lieu_membre_id: string | null
           ordre_du_jour: string | null
           statut: string
+          sujet: string | null
+          type_reunion: string | null
         }
         Insert: {
           compte_rendu_url?: string | null
@@ -610,6 +639,8 @@ export type Database = {
           lieu_membre_id?: string | null
           ordre_du_jour?: string | null
           statut?: string
+          sujet?: string | null
+          type_reunion?: string | null
         }
         Update: {
           compte_rendu_url?: string | null
@@ -620,6 +651,8 @@ export type Database = {
           lieu_membre_id?: string | null
           ordre_du_jour?: string | null
           statut?: string
+          sujet?: string | null
+          type_reunion?: string | null
         }
         Relationships: [
           {
