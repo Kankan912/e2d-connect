@@ -34,12 +34,12 @@ export default function ConfigurationGenerale() {
     setSaving(true);
     
     try {
-      // Pour l'instant, on simule la sauvegarde dans localStorage
+      // Sauvegarde dans localStorage
       localStorage.setItem('app_configurations', JSON.stringify(configurations));
       
       toast({
         title: "Succès",
-        description: "Configurations sauvegardées localement (version temporaire)",
+        description: "Configurations sauvegardées localement",
       });
     } catch (error: any) {
       console.error('Erreur sauvegarde configurations:', error);
@@ -58,7 +58,7 @@ export default function ConfigurationGenerale() {
   };
 
   useEffect(() => {
-    // Charger depuis localStorage temporairement
+    // Charger depuis localStorage
     const saved = localStorage.getItem('app_configurations');
     if (saved) {
       try {
