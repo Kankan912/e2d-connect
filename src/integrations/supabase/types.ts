@@ -681,7 +681,22 @@ export type Database = {
           statut?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "reunion_beneficiaires_membre_id_fkey"
+            columns: ["membre_id"]
+            isOneToOne: false
+            referencedRelation: "membres"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reunion_beneficiaires_reunion_id_fkey"
+            columns: ["reunion_id"]
+            isOneToOne: false
+            referencedRelation: "reunions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       reunions: {
         Row: {

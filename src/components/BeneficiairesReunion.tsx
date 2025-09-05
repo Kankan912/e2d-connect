@@ -46,26 +46,19 @@ export default function BeneficiairesReunion({ reunionId, open, onOpenChange }: 
     try {
       const { data, error } = await supabase
         .from('reunion_beneficiaires')
-        .select('*')
+        .select(`
+          *,
+          membre:membre_id (
+            nom,
+            prenom,
+            email
+          )
+        `)
         .eq('reunion_id', reunionId)
         .order('date_benefice_prevue');
 
       if (error) throw error;
-
-      let enriched = (data || []) as any[];
-      if (enriched.length > 0) {
-        const ids = enriched.map((b) => b.membre_id);
-        const { data: membres, error: memErr } = await supabase
-          .from('membres')
-          .select('id, nom, prenom, email')
-          .in('id', ids);
-        if (!memErr && membres) {
-          const map = new Map(membres.map((m) => [m.id, m]));
-          enriched = enriched.map((b) => ({ ...b, membre: map.get(b.membre_id) }));
-        }
-      }
-
-      setBeneficiaires(enriched as unknown as Beneficiaire[]);
+      setBeneficiaires(data || []);
     } catch (error: any) {
       toast({
         title: "Erreur",
