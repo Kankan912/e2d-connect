@@ -281,7 +281,7 @@ export default function Membres() {
                   };
 
                   return (
-                    <TableRow key={membre.id} className="hover:bg-muted/50">
+                    <TableRow key={membre.id} className="hover:bg-muted/50 cursor-pointer" onClick={() => window.location.href = `/membre/${membre.id}`}>
                       <TableCell className="font-medium">
                         <div>
                           <p className="font-semibold">{membre.nom} {membre.prenom}</p>

@@ -120,6 +120,39 @@ export default function CotisationsGrid() {
     setShowDialog(true);
   };
 
+  const handleMontantChange = async (membreId: string, typeCotisationId: string, montant: string) => {
+    const key = `${membreId}-${typeCotisationId}`;
+    const amount = parseFloat(montant) || 0;
+    
+    if (amount <= 0) return;
+
+    try {
+      const existingCotisation = cotisations[key];
+      const cotisationData = {
+        membre_id: membreId,
+        type_cotisation_id: typeCotisationId,
+        montant: amount,
+        statut: 'paye',
+        date_paiement: new Date().toISOString().split('T')[0]
+      };
+
+      if (existingCotisation) {
+        await supabase
+          .from('cotisations')
+          .update(cotisationData)
+          .eq('id', existingCotisation.id);
+      } else {
+        await supabase
+          .from('cotisations')
+          .insert([cotisationData]);
+      }
+      
+      loadData();
+    } catch (error) {
+      console.error('Erreur mise à jour cotisation:', error);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedCell) return;
@@ -159,13 +192,30 @@ export default function CotisationsGrid() {
       });
 
       setShowDialog(false);
-      loadData(); // Recharger les données
+      loadData();
     } catch (error: any) {
       toast({
         title: "Erreur",
         description: "Impossible d'enregistrer la cotisation",
         variant: "destructive",
       });
+    }
+  };
+
+  const updateCotisationStatut = async (membreId: string, typeCotisationId: string, statut: string) => {
+    const key = `${membreId}-${typeCotisationId}`;
+    const existingCotisation = cotisations[key];
+    
+    if (existingCotisation) {
+      try {
+        await supabase
+          .from('cotisations')
+          .update({ statut })
+          .eq('id', existingCotisation.id);
+        loadData();
+      } catch (error) {
+        console.error('Erreur mise à jour statut:', error);
+      }
     }
   };
 
@@ -297,15 +347,41 @@ export default function CotisationsGrid() {
                     </div>
                     
                     {/* Cellules des cotisations */}
-                    {typesCotisations.map((type) => (
-                      <div 
-                        key={`${membre.id}-${type.id}`} 
-                        onClick={() => handleCellClick(membre, type)}
-                        className="cursor-pointer"
-                      >
-                        {getCellContent(membre, type)}
-                      </div>
-                    ))}
+                    {typesCotisations.map((type) => {
+                      const key = `${membre.id}-${type.id}`;
+                      const cotisation = cotisations[key];
+                      
+                      return (
+                        <div 
+                          key={`${membre.id}-${type.id}`} 
+                          onClick={() => handleCellClick(membre, type)}
+                          className="cursor-pointer"
+                        >
+                          {(type.nom.toLowerCase().includes('huile') || type.nom.toLowerCase().includes('savon')) ? (
+                            <div className="p-2 border rounded hover:bg-muted/50 transition-colors h-16 flex items-center justify-center">
+                              <input
+                                type="checkbox"
+                                checked={cotisation?.statut === 'paye'}
+                                onChange={(e) => {
+                                  e.stopPropagation();
+                                  const montant = e.target.checked ? (type.montant_defaut || 0) : 0;
+                                  const statut = e.target.checked ? 'paye' : 'impaye';
+                                  if (e.target.checked) {
+                                    handleMontantChange(membre.id, type.id, montant.toString());
+                                  } else {
+                                    updateCotisationStatut(membre.id, type.id, statut);
+                                  }
+                                }}
+                                className="h-5 w-5"
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                            </div>
+                          ) : (
+                            getCellContent(membre, type)
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 ))}
               </div>

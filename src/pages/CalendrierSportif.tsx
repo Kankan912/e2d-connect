@@ -84,8 +84,30 @@ export default function CalendrierSportif() {
         }))
       ];
 
-      // Trier par date
-      allEvents.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      // Ajouter les entraînements Phoenix du dimanche
+      const trainingStartDate = new Date();
+      const trainingEndDate = new Date(trainingStartDate.getTime() + 30 * 24 * 60 * 60 * 1000);
+      
+      // Générer les dimanches d'entraînement Phoenix
+      const phoenixTrainings = [];
+      let iterDate = new Date(trainingStartDate);
+      while (iterDate <= trainingEndDate) {
+        if (iterDate.getDay() === 0) { // Dimanche = 0
+          phoenixTrainings.push({
+            id: `training-${iterDate.toISOString().slice(0, 10)}`,
+            type: 'entrainement' as const,
+            title: 'Entraînement Phoenix',
+            date: iterDate.toISOString().slice(0, 10),
+            time: '15:00',
+            lieu: 'Terrain habituel',
+            details: 'Entraînement hebdomadaire Phoenix',
+            equipe: 'phoenix' as const
+          });
+        }
+        iterDate.setDate(iterDate.getDate() + 1);
+      }
+
+      allEvents.push(...phoenixTrainings);
       setEvents(allEvents);
     } catch (error) {
       console.error('Erreur lors du chargement des événements:', error);

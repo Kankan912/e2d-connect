@@ -31,6 +31,7 @@ import SportConfig from "./pages/SportConfig";
 import MembreCotisationConfig from "./pages/MembreCotisationConfig";
 import MembreFiche from "./pages/MembreFiche";
 import ConfigurationGenerale from "./pages/ConfigurationGenerale";
+import StatistiquesMatchs from "./pages/StatistiquesMatchs";
 import NotFound from "./pages/NotFound";
 import ErrorBoundary from "./components/ErrorBoundary";
 
@@ -112,6 +113,7 @@ function App() {
                   <Route path="/rapports" element={<Rapports />} />
                   <Route path="/configuration" element={<Configuration />} />
                   <Route path="/configuration-generale" element={<ConfigurationGenerale />} />
+                  <Route path="/statistiques-matchs" element={<StatistiquesMatchs />} />
                   <Route path="/auth" element={<Navigate to="/" replace />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>

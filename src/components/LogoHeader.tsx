@@ -1,5 +1,5 @@
 
-import logoE2D from "@/assets/logo-e2d.png";
+import logoE2D from "/lovable-uploads/c1efd290-dcb8-44ad-bd52-81f65f2cb640.png";
 
 interface LogoHeaderProps {
   title?: string;
