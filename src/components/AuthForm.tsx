@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { Mail, Lock, User, Phone } from "lucide-react";
+import logoE2D from "@/assets/logo-e2d.png";
 
 
 export default function AuthForm() {
@@ -67,15 +68,9 @@ export default function AuthForm() {
         <CardHeader className="text-center pb-6">
           <div className="mx-auto mb-4">
             <img 
-              src="/lovable-uploads/e2d-logo-main.png" 
+              src={logoE2D} 
               alt="Logo E2D Association" 
               className="h-16 w-auto mx-auto"
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                target.style.display = 'none';
-                const fallback = target.nextElementSibling as HTMLElement;
-                if (fallback) fallback.style.display = 'flex';
-              }}
             />
             <div 
               className="h-16 w-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center text-white font-bold text-xl mx-auto"

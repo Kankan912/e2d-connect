@@ -1,5 +1,6 @@
 
 
+import logoE2D from "@/assets/logo-e2d.png";
 
 interface LogoHeaderProps {
   title?: string;
@@ -19,15 +20,9 @@ export default function LogoHeader({
       {showLogo && (
         <div className="flex-shrink-0">
           <img 
-            src="/lovable-uploads/e2d-logo-main.png" 
+            src={logoE2D} 
             alt="Logo E2D Association" 
             className="h-12 w-auto object-contain"
-            onError={(e) => {
-              const target = e.target as HTMLImageElement;
-              target.style.display = 'none';
-              const fallback = target.nextElementSibling as HTMLElement;
-              if (fallback) fallback.style.display = 'flex';
-            }}
           />
           <div 
             className="h-12 w-12 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center text-white font-bold text-sm"
