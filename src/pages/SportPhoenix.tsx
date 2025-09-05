@@ -87,7 +87,7 @@ export default function SportPhoenix() {
               </div>
               <div className="flex items-center gap-2">
                 <DollarSign className="h-4 w-4 text-green-500" />
-                <span>{config.montant_adhesion}€ / {config.duree_adhesion_mois} mois</span>
+                <span>{config.montant_adhesion} FCFA / {config.duree_adhesion_mois} mois</span>
               </div>
               <div className="col-span-2">
                 <Button 

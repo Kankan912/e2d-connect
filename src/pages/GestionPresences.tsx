@@ -65,7 +65,7 @@ export default function GestionPresences() {
           .from('phoenix_adherents')
           .select(`
             *,
-            membre:membres(id, nom, prenom, est_membre_e2d, est_adherent_phoenix)
+            membre:membre_id(id, nom, prenom, est_membre_e2d, est_adherent_phoenix)
           `)
       ]);
 
