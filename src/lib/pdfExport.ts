@@ -1,5 +1,6 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import logoE2D from '@/assets/logo-e2d.png';
 
 export interface ExportColumn {
   header: string;
@@ -30,15 +31,22 @@ export const exportToPDF = (options: ExportOptions): void => {
 
   const pdf = new jsPDF(orientation, 'mm', 'a4');
   
+  // Logo
+  try {
+    pdf.addImage(logoE2D, 'PNG', 15, 10, 20, 20);
+  } catch (error) {
+    console.log('Erreur chargement logo:', error);
+  }
+  
   // En-tête
   pdf.setFontSize(18);
   pdf.setFont('helvetica', 'bold');
-  pdf.text(title, 15, 20);
+  pdf.text(title, 40, 20);
   
   // Association
   pdf.setFontSize(12);
   pdf.setFont('helvetica', 'normal');
-  pdf.text('Association E2D', 15, 30);
+  pdf.text('Association E2D', 40, 30);
   
   if (includeDate) {
     pdf.text(`Date: ${new Date().toLocaleDateString('fr-FR')}`, 15, 40);

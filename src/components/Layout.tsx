@@ -44,6 +44,7 @@ const menuItems = [
   { id: "calendrier", label: "Calendrier Sportif", icon: Calendar, path: "/calendrier-sportif" },
   { id: "presences", label: "Présences", icon: Users, path: "/gestion-presences" },
   { id: "match-results", label: "Résultats Matchs", icon: Trophy, path: "/match-results" },
+  { id: "statistiques-matchs", label: "Statistiques Matchs", icon: Activity, path: "/sport/statistiques" },
   { id: "historique", label: "Historique Connexions", icon: FileText, path: "/historique-connexion" },
   { id: "eligibilite", label: "Éligibilité Gala", icon: Trophy, path: "/eligibilite-gala" },
   { id: "rapports", label: "Rapports", icon: FileText, path: "/rapports" },
