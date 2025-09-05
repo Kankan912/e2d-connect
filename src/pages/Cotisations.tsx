@@ -29,6 +29,7 @@ import { useToast } from "@/hooks/use-toast";
 import CotisationForm from "@/components/forms/CotisationForm";
 import CotisationTypeForm from "@/components/forms/CotisationTypeForm";
 import MembreCotisationConfigForm from "@/components/forms/MembreCotisationConfigForm";
+import BeneficiairesReunion from "@/components/BeneficiairesReunion";
 import LogoHeader from "@/components/LogoHeader";
 
 interface Cotisation {
@@ -63,6 +64,8 @@ export default function Cotisations() {
   const [showForm, setShowForm] = useState(false);
   const [showTypeForm, setShowTypeForm] = useState(false);
   const [showConfigForm, setShowConfigForm] = useState(false);
+  const [showBeneficiaires, setShowBeneficiaires] = useState(false);
+  const [selectedReunionId, setSelectedReunionId] = useState<string>("");
   const [typeToEdit, setTypeToEdit] = useState<TypeCotisation | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -210,13 +213,23 @@ export default function Cotisations() {
           >
             Vue Grille
           </Button>
-          <Button 
-            className="bg-gradient-to-r from-primary to-secondary"
-            onClick={() => setShowForm(true)}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Nouvelle cotisation
-          </Button>
+              <Button 
+                className="bg-gradient-to-r from-primary to-secondary"
+                onClick={() => setShowForm(true)}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Nouvelle cotisation
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={() => {
+                  // Simuler une réunion pour l'exemple - dans la vraie app, ça viendrait d'une sélection
+                  setSelectedReunionId("demo-reunion-id");
+                  setShowBeneficiaires(true);
+                }}
+              >
+                Bénéficiaires Réunion
+              </Button>
         </div>
       </div>
 
@@ -413,6 +426,14 @@ export default function Cotisations() {
           });
         }}
       />
+
+      {selectedReunionId && (
+        <BeneficiairesReunion
+          reunionId={selectedReunionId}
+          open={showBeneficiaires}
+          onOpenChange={setShowBeneficiaires}
+        />
+      )}
     </div>
   );
 }

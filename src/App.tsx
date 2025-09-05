@@ -99,6 +99,7 @@ function App() {
                   <Route path="/epargnes" element={<Epargnes />} />
                   <Route path="/aides" element={<Aides />} />
                   <Route path="/reunions" element={<Reunions />} />
+                  <Route path="/sport/statistiques" element={<StatistiquesMatchs />} />
                   <Route path="/sport-e2d" element={<SportE2D />} />
                   <Route path="/sport-phoenix" element={<SportPhoenix />} />
                   <Route path="/calendrier-sportif" element={<CalendrierSportif />} />

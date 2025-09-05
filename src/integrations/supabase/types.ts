@@ -460,6 +460,39 @@ export type Database = {
           },
         ]
       }
+      notifications_config: {
+        Row: {
+          actif: boolean
+          created_at: string
+          delai_jours: number
+          id: string
+          template_contenu: string | null
+          template_sujet: string | null
+          type_notification: string
+          updated_at: string
+        }
+        Insert: {
+          actif?: boolean
+          created_at?: string
+          delai_jours?: number
+          id?: string
+          template_contenu?: string | null
+          template_sujet?: string | null
+          type_notification: string
+          updated_at?: string
+        }
+        Update: {
+          actif?: boolean
+          created_at?: string
+          delai_jours?: number
+          id?: string
+          template_contenu?: string | null
+          template_sujet?: string | null
+          type_notification?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       phoenix_adherents: {
         Row: {
           adhesion_payee: boolean | null
@@ -614,6 +647,39 @@ export type Database = {
           resolution?: string | null
           reunion_id?: string
           sujet?: string
+        }
+        Relationships: []
+      }
+      reunion_beneficiaires: {
+        Row: {
+          created_at: string
+          date_benefice_prevue: string
+          id: string
+          membre_id: string
+          montant_benefice: number
+          reunion_id: string
+          statut: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          date_benefice_prevue: string
+          id?: string
+          membre_id: string
+          montant_benefice?: number
+          reunion_id: string
+          statut?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          date_benefice_prevue?: string
+          id?: string
+          membre_id?: string
+          montant_benefice?: number
+          reunion_id?: string
+          statut?: string
+          updated_at?: string
         }
         Relationships: []
       }

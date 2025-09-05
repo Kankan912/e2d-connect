@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { Mail, Lock, User, Phone } from "lucide-react";
-import logoE2D from "@/assets/logo-e2d.png";
+import logoE2D from "/lovable-uploads/e2d-logo-main.png";
 
 export default function AuthForm() {
   const [isLoading, setIsLoading] = useState(false);
@@ -67,8 +67,8 @@ export default function AuthForm() {
         <CardHeader className="text-center pb-6">
           <div className="mx-auto mb-4">
             <img 
-              src={logoE2D} 
-              alt="Logo E2D" 
+              src="/lovable-uploads/e2d-logo-main.png" 
+              alt="Logo E2D Association" 
               className="h-16 w-auto mx-auto"
               onError={(e) => {
                 const target = e.target as HTMLImageElement;
