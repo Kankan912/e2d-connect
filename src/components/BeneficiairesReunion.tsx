@@ -46,19 +46,26 @@ export default function BeneficiairesReunion({ reunionId, open, onOpenChange }: 
     try {
       const { data, error } = await supabase
         .from('reunion_beneficiaires')
-        .select(`
-          *,
-          membre:membre_id (
-            nom,
-            prenom,
-            email
-          )
-        `)
+        .select('*')
         .eq('reunion_id', reunionId)
         .order('date_benefice_prevue');
 
       if (error) throw error;
-      setBeneficiaires(data || []);
+
+      let enriched = (data || []) as any[];
+      if (enriched.length > 0) {
+        const ids = enriched.map((b) => b.membre_id);
+        const { data: membres, error: memErr } = await supabase
+          .from('membres')
+          .select('id, nom, prenom, email')
+          .in('id', ids);
+        if (!memErr && membres) {
+          const map = new Map(membres.map((m) => [m.id, m]));
+          enriched = enriched.map((b) => ({ ...b, membre: map.get(b.membre_id) }));
+        }
+      }
+
+      setBeneficiaires(enriched as unknown as Beneficiaire[]);
     } catch (error: any) {
       toast({
         title: "Erreur",
@@ -76,33 +83,21 @@ export default function BeneficiairesReunion({ reunionId, open, onOpenChange }: 
       // Récupérer les membres avec leurs cotisations récentes
       const { data: cotisations, error } = await supabase
         .from('cotisations')
-        .select(`
-          membre_id,
-          montant,
-          date_paiement,
-          membres (
-            id,
-            nom,
-            prenom,
-            email
-          )
-        `)
+        .select('membre_id, montant, date_paiement')
         .eq('statut', 'paye')
         .order('date_paiement', { ascending: false });
 
       if (error) throw error;
 
-      // Calculer les bénéficiaires selon leurs cotisations
-      const membresUniques = new Map();
-      cotisations?.forEach((cot) => {
+      const membresUniques = new Map<string, { membre_id: string; totalCotisations: number }>();
+      cotisations?.forEach((cot: any) => {
         if (!membresUniques.has(cot.membre_id)) {
           membresUniques.set(cot.membre_id, {
             membre_id: cot.membre_id,
-            membre: cot.membres,
-            totalCotisations: cot.montant
+            totalCotisations: cot.montant,
           });
         } else {
-          const existing = membresUniques.get(cot.membre_id);
+          const existing = membresUniques.get(cot.membre_id)!;
           existing.totalCotisations += cot.montant;
         }
       });

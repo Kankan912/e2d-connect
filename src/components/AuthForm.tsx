@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { Mail, Lock, User, Phone } from "lucide-react";
-import logoE2D from "/lovable-uploads/e2d-logo-main.png";
+
 
 export default function AuthForm() {
   const [isLoading, setIsLoading] = useState(false);
