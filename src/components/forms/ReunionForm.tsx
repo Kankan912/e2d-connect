@@ -97,11 +97,11 @@ export default function ReunionForm({ onSuccess, initialData }: ReunionFormProps
       statut: data.statut,
     };
     
-    // Supprimer heure_reunion car elle est intégrée dans date_reunion
-    delete (formattedData as any).heure_reunion;
-    
-    // Gérer les invitations (pour l'instant on les stock comme metadata ou dans une table séparée)
-    console.log('Invités sélectionnés:', data.invites_ids);
+  // Supprimer heure_reunion car elle est intégrée dans date_reunion
+  delete (formattedData as any).heure_reunion;
+  
+  // Gérer les invitations - envoi automatique à tous les membres
+  console.log('Lieu membre sélectionné:', data.lieu_membre_id);
     
     const operation = async () => {
       if (initialData?.id) {
@@ -204,44 +204,39 @@ export default function ReunionForm({ onSuccess, initialData }: ReunionFormProps
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="lieu_description">Lieu</Label>
-            <Input
-              id="lieu_description"
-              placeholder="Ex: Salle communale, Domicile..."
-              {...form.register('lieu_description')}
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="lieu_membre_id">Membre qui reçoit la réunion</Label>
+              <Select 
+                value={form.watch('lieu_membre_id') || ''} 
+                onValueChange={(value) => form.setValue('lieu_membre_id', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner un membre" />
+                </SelectTrigger>
+                <SelectContent>
+                  {membres.map((membre) => (
+                    <SelectItem key={membre.id} value={membre.id}>
+                      {membre.prenom} {membre.nom}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="lieu_description">Lieu (optionnel)</Label>
+              <Input
+                id="lieu_description"
+                placeholder="Ex: Salle communale, Domicile..."
+                {...form.register('lieu_description')}
+              />
+            </div>
           </div>
 
-          {/* Section invitation des membres */}
-          <div className="space-y-2">
-            <Label>Membres à inviter</Label>
-            <div className="max-h-32 overflow-y-auto border rounded-md p-3 space-y-2">
-              {membres.map((membre) => (
-                <div key={membre.id} className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id={`membre-${membre.id}`}
-                    checked={form.watch('invites_ids').includes(membre.id)}
-                    onChange={(e) => {
-                      const currentInvites = form.watch('invites_ids');
-                      if (e.target.checked) {
-                        form.setValue('invites_ids', [...currentInvites, membre.id]);
-                      } else {
-                        form.setValue('invites_ids', currentInvites.filter(id => id !== membre.id));
-                      }
-                    }}
-                    className="rounded"
-                  />
-                  <label htmlFor={`membre-${membre.id}`} className="text-sm">
-                    {membre.prenom} {membre.nom}
-                  </label>
-                </div>
-              ))}
-              {membres.length === 0 && (
-                <p className="text-sm text-muted-foreground">Aucun membre trouvé</p>
-              )}
-            </div>
+          <div className="bg-blue-50 p-3 rounded-md">
+            <p className="text-sm text-blue-700">
+              ℹ️ Les notifications de réunion seront envoyées automatiquement à tous les membres actifs.
+            </p>
           </div>
 
           <div className="space-y-2">
