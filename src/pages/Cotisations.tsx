@@ -12,6 +12,7 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   CreditCard, 
   Plus, 
@@ -57,23 +58,25 @@ interface TypeCotisation {
 }
 
 export default function Cotisations() {
-  const [cotisations, setCotisations] = useState<Cotisation[]>([]);
-  const [typesCotisations, setTypesCotisations] = useState<TypeCotisation[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [showForm, setShowForm] = useState(false);
-  const [showTypeForm, setShowTypeForm] = useState(false);
-  const [showConfigForm, setShowConfigForm] = useState(false);
-  const [showBeneficiaires, setShowBeneficiaires] = useState(false);
-  const [selectedReunionId, setSelectedReunionId] = useState<string>("");
-  const [typeToEdit, setTypeToEdit] = useState<TypeCotisation | null>(null);
-  const { toast } = useToast();
-  const navigate = useNavigate();
+const [cotisations, setCotisations] = useState<Cotisation[]>([]);
+const [typesCotisations, setTypesCotisations] = useState<TypeCotisation[]>([]);
+const [loading, setLoading] = useState(true);
+const [searchTerm, setSearchTerm] = useState("");
+const [showForm, setShowForm] = useState(false);
+const [showTypeForm, setShowTypeForm] = useState(false);
+const [showConfigForm, setShowConfigForm] = useState(false);
+const [showBeneficiaires, setShowBeneficiaires] = useState(false);
+const [selectedReunionId, setSelectedReunionId] = useState<string>("");
+const [reunions, setReunions] = useState<Array<{ id: string; sujet: string | null; date_reunion: string }>>([]);
+const [typeToEdit, setTypeToEdit] = useState<TypeCotisation | null>(null);
+const { toast } = useToast();
+const navigate = useNavigate();
 
-  useEffect(() => {
-    loadCotisations();
-    loadTypesCotisations();
-  }, []);
+useEffect(() => {
+  loadCotisations();
+  loadTypesCotisations();
+  loadReunions();
+}, []);
 
   const loadCotisations = async () => {
     try {
@@ -111,7 +114,21 @@ export default function Cotisations() {
     } catch (error: any) {
       console.error('Erreur lors du chargement des types:', error);
     }
-  };
+};
+
+const loadReunions = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('reunions')
+      .select('id, sujet, date_reunion')
+      .order('date_reunion', { ascending: false })
+      .limit(50);
+    if (error) throw error;
+    setReunions(data || []);
+  } catch (error) {
+    console.error('Erreur chargement réunions:', error);
+  }
+};
 
   const filteredCotisations = cotisations.filter(cotisation =>
     `${cotisation.membre?.nom} ${cotisation.membre?.prenom}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -205,33 +222,44 @@ export default function Cotisations() {
         title="Gestion des Cotisations"
         subtitle="Suivi des cotisations et contributions"
       />
-      <div className="flex justify-end">
-        <div className="flex gap-2">
-          <Button 
-            variant="outline"
-            onClick={() => navigate("/cotisations-grid")}
-          >
-            Vue Grille
-          </Button>
-              <Button 
-                className="bg-gradient-to-r from-primary to-secondary"
-                onClick={() => setShowForm(true)}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Nouvelle cotisation
-              </Button>
-              <Button 
-                variant="outline"
-                onClick={() => {
-                  // Simuler une réunion pour l'exemple - dans la vraie app, ça viendrait d'une sélection
-                  setSelectedReunionId("demo-reunion-id");
-                  setShowBeneficiaires(true);
-                }}
-              >
-                Bénéficiaires Réunion
-              </Button>
-        </div>
-      </div>
+<div className="flex justify-end">
+  <div className="flex gap-2 items-center">
+    <div className="w-64">
+      <Select value={selectedReunionId} onValueChange={(v) => setSelectedReunionId(v)}>
+        <SelectTrigger>
+          <SelectValue placeholder="Sélectionner une réunion" />
+        </SelectTrigger>
+        <SelectContent>
+          {reunions.map(r => (
+            <SelectItem key={r.id} value={r.id}>
+              {new Date(r.date_reunion).toLocaleDateString('fr-FR')} - {r.sujet || 'Réunion'}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+    <Button 
+      variant="outline"
+      disabled={!selectedReunionId}
+      onClick={() => setShowBeneficiaires(true)}
+    >
+      Bénéficiaires Réunion
+    </Button>
+    <Button 
+      className="bg-gradient-to-r from-primary to-secondary"
+      onClick={() => setShowForm(true)}
+    >
+      <Plus className="w-4 h-4 mr-2" />
+      Nouvelle cotisation
+    </Button>
+    <Button 
+      variant="outline"
+      onClick={() => navigate("/cotisations-grid")}
+    >
+      Vue Grille
+    </Button>
+  </div>
+</div>
 
       {/* Stats Cards */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
@@ -427,13 +455,13 @@ export default function Cotisations() {
         }}
       />
 
-      {selectedReunionId && (
-        <BeneficiairesReunion
-          reunionId={selectedReunionId}
-          open={showBeneficiaires}
-          onOpenChange={setShowBeneficiaires}
-        />
-      )}
+{selectedReunionId && (
+  <BeneficiairesReunion
+    reunionId={selectedReunionId}
+    open={showBeneficiaires}
+    onOpenChange={setShowBeneficiaires}
+  />
+)}
     </div>
   );
 }

@@ -14,14 +14,14 @@ import LogoHeader from '@/components/LogoHeader';
 interface MatchStatistics {
   id: string;
   match_id: string;
+  match_type: 'e2d' | 'phoenix';
   player_name: string;
   goals: number;
   yellow_cards: number;
   red_cards: number;
   man_of_match: boolean;
-  match_date: string;
-  opponent_team: string;
-  team_type: 'e2d' | 'phoenix';
+  created_at: string;
+  updated_at: string;
 }
 
 interface Match {
@@ -38,6 +38,8 @@ export default function StatistiquesMatchs() {
   const [matches, setMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [memberOptions, setMemberOptions] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     match_id: '',
     player_name: '',
@@ -52,66 +54,81 @@ export default function StatistiquesMatchs() {
     loadData();
   }, []);
 
-  const loadData = async () => {
-    try {
-      // Charger les matchs E2D et Phoenix
-      const [e2dMatches, phoenixMatches] = await Promise.all([
-        supabase.from('sport_e2d_matchs').select('*').order('date_match', { ascending: false }),
-        supabase.from('sport_phoenix_matchs').select('*').order('date_match', { ascending: false })
-      ]);
+const loadData = async () => {
+  try {
+    const [e2dMatches, phoenixMatches, statsRes, membresRes, phoenixAdhRes] = await Promise.all([
+      supabase.from('sport_e2d_matchs').select('*').order('date_match', { ascending: false }),
+      supabase.from('sport_phoenix_matchs').select('*').order('date_match', { ascending: false }),
+      supabase.from('match_statistics').select('*').order('created_at', { ascending: false }),
+      supabase.from('membres').select('nom, prenom, est_membre_e2d, est_adherent_phoenix').eq('statut', 'actif'),
+      supabase.from('phoenix_adherents').select('id, membre:membre_id(nom, prenom)')
+    ]);
 
-      const allMatches: Match[] = [
-        ...(e2dMatches.data || []).map(m => ({ 
-          ...m, 
-          type: 'e2d' as const,
-          score_e2d: m.score_e2d 
-        })),
-        ...(phoenixMatches.data || []).map(m => ({ 
-          ...m, 
-          type: 'phoenix' as const,
-          score_phoenix: m.score_phoenix 
-        }))
-      ];
+    const allMatches: Match[] = [
+      ...(e2dMatches.data || []).map(m => ({ 
+        ...m, 
+        type: 'e2d' as const,
+        score_e2d: m.score_e2d 
+      })),
+      ...(phoenixMatches.data || []).map(m => ({ 
+        ...m, 
+        type: 'phoenix' as const,
+        score_phoenix: m.score_phoenix 
+      }))
+    ];
 
-      setMatches(allMatches);
+    setMatches(allMatches);
+    setStatistics(statsRes.data || []);
 
-      // Pour l'instant, on simule les statistiques (en attendant la création de la table)
-      setStatistics([]);
-    } catch (error) {
-      console.error('Erreur chargement données:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    const memberSet = new Set<string>();
+    (membresRes.data || []).forEach((m: any) => {
+      if (m.est_membre_e2d || m.est_adherent_phoenix) {
+        memberSet.add(`${m.prenom} ${m.nom}`);
+      }
+    });
+    (phoenixAdhRes.data || []).forEach((a: any) => {
+      if (a.membre) memberSet.add(`${a.membre.prenom} ${a.membre.nom}`);
+    });
+    setMemberOptions(Array.from(memberSet).sort());
+  } catch (error) {
+    console.error('Erreur chargement données:', error);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    try {
-      // TODO: Sauvegarder dans la table match_statistics (à créer)
-      console.log('Statistiques à sauvegarder:', formData);
-      
-      toast({
-        title: "Succès",
-        description: "Statistiques enregistrées (simulation)",
-      });
-      
-      setShowForm(false);
-      setFormData({
-        match_id: '',
-        player_name: '',
-        goals: 0,
-        yellow_cards: 0,
-        red_cards: 0,
-        man_of_match: false
-      });
-    } catch (error) {
-      toast({
-        title: "Erreur", 
-        description: "Erreur lors de l'enregistrement",
-        variant: "destructive"
-      });
-    }
+try {
+  const selectedMatch = matches.find(m => m.id === formData.match_id);
+  if (!selectedMatch) throw new Error('Veuillez sélectionner un match');
+
+  const payload = {
+    match_id: formData.match_id,
+    match_type: selectedMatch.type,
+    player_name: formData.player_name,
+    goals: formData.goals,
+    yellow_cards: formData.yellow_cards,
+    red_cards: formData.red_cards,
+    man_of_match: formData.man_of_match,
+  };
+
+  if (editingId) {
+    const { error } = await supabase.from('match_statistics').update(payload).eq('id', editingId);
+    if (error) throw error;
+  } else {
+    const { error } = await supabase.from('match_statistics').insert([payload]);
+    if (error) throw error;
+  }
+  await loadData();
+  toast({ title: "Succès", description: editingId ? "Statistiques mises à jour" : "Statistiques enregistrées" });
+  setShowForm(false);
+  setEditingId(null);
+  setFormData({ match_id: '', player_name: '', goals: 0, yellow_cards: 0, red_cards: 0, man_of_match: false });
+} catch (error) {
+  toast({ title: "Erreur", description: "Erreur lors de l'enregistrement", variant: "destructive" });
+}
   };
 
   const getTopScorers = () => {
@@ -178,15 +195,21 @@ export default function StatistiquesMatchs() {
                   </Select>
                 </div>
                 
-                <div className="space-y-2">
-                  <Label>Nom du joueur</Label>
-                  <Input
-                    value={formData.player_name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, player_name: e.target.value }))}
-                    placeholder="Nom du joueur"
-                    required
-                  />
-                </div>
+<div className="space-y-2">
+  <Label>Joueur (adhérents sport)</Label>
+  <Select value={formData.player_name} onValueChange={(value) => 
+    setFormData(prev => ({ ...prev, player_name: value }))
+  }>
+    <SelectTrigger>
+      <SelectValue placeholder="Sélectionner un joueur" />
+    </SelectTrigger>
+    <SelectContent>
+      {memberOptions.map(name => (
+        <SelectItem key={name} value={name}>{name}</SelectItem>
+      ))}
+    </SelectContent>
+  </Select>
+</div>
               </div>
 
               <div className="grid grid-cols-4 gap-4">
@@ -345,55 +368,82 @@ export default function StatistiquesMatchs() {
                 <TableHead>Buts</TableHead>
                 <TableHead>Cartons J.</TableHead>
                 <TableHead>Cartons R.</TableHead>
-                <TableHead>Homme du Match</TableHead>
+<TableHead>Homme du Match</TableHead>
+<TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {statistics.map((stat) => (
-                <TableRow key={stat.id}>
-                  <TableCell className="font-medium">{stat.player_name}</TableCell>
-                  <TableCell>
-                    {stat.team_type.toUpperCase()} vs {stat.opponent_team}
-                  </TableCell>
-                  <TableCell>
-                    {new Date(stat.match_date).toLocaleDateString('fr-FR')}
-                  </TableCell>
-                  <TableCell>
-                    {stat.goals > 0 && (
-                      <Badge variant="default">
-                        <Target className="h-3 w-3 mr-1" />
-                        {stat.goals}
-                      </Badge>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {stat.yellow_cards > 0 && (
-                      <Badge className="bg-yellow-500 text-white">
-                        {stat.yellow_cards}
-                      </Badge>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {stat.red_cards > 0 && (
-                      <Badge className="bg-red-500 text-white">
-                        {stat.red_cards}
-                      </Badge>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {stat.man_of_match && (
-                      <Star className="h-4 w-4 text-yellow-500" />
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
-              {statistics.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                    Aucune statistique enregistrée
-                  </TableCell>
-                </TableRow>
-              )}
+{statistics.map((stat) => {
+  const match = matches.find(m => m.id === stat.match_id);
+  return (
+    <TableRow key={stat.id}>
+      <TableCell className="font-medium">{stat.player_name}</TableCell>
+      <TableCell>
+        {(match?.type || stat.team_type).toUpperCase()} vs {match ? (match as any).equipe_adverse : stat.opponent_team}
+      </TableCell>
+      <TableCell>
+        {match ? new Date((match as any).date_match).toLocaleDateString('fr-FR') : new Date(stat.match_date).toLocaleDateString('fr-FR')}
+      </TableCell>
+      <TableCell>
+        {stat.goals > 0 && (
+          <Badge variant="default">
+            <Target className="h-3 w-3 mr-1" />
+            {stat.goals}
+          </Badge>
+        )}
+      </TableCell>
+      <TableCell>
+        {stat.yellow_cards > 0 && (
+          <Badge className="bg-yellow-500 text-white">
+            {stat.yellow_cards}
+          </Badge>
+        )}
+      </TableCell>
+      <TableCell>
+        {stat.red_cards > 0 && (
+          <Badge className="bg-red-500 text-white">
+            {stat.red_cards}
+          </Badge>
+        )}
+      </TableCell>
+      <TableCell>
+        {stat.man_of_match && (
+          <Star className="h-4 w-4 text-yellow-500" />
+        )}
+      </TableCell>
+      <TableCell>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={() => {
+            setEditingId(stat.id);
+            setShowForm(true);
+            setFormData({
+              match_id: stat.match_id,
+              player_name: stat.player_name,
+              goals: stat.goals,
+              yellow_cards: stat.yellow_cards,
+              red_cards: stat.red_cards,
+              man_of_match: stat.man_of_match,
+            });
+          }}>Éditer</Button>
+          <Button size="sm" variant="destructive" onClick={async () => {
+            const { error } = await supabase.from('match_statistics').delete().eq('id', stat.id);
+            if (!error) {
+              toast({ title: 'Supprimé' });
+              loadData();
+            }
+          }}>Supprimer</Button>
+        </div>
+      </TableCell>
+    </TableRow>
+  );
+})}
+{statistics.length === 0 && (
+  <TableRow>
+    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+      Aucune statistique enregistrée
+    </TableCell>
+  </TableRow>
+)}
             </TableBody>
           </Table>
         </CardContent>

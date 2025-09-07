@@ -334,6 +334,45 @@ export type Database = {
         }
         Relationships: []
       }
+      match_statistics: {
+        Row: {
+          created_at: string
+          goals: number
+          id: string
+          man_of_match: boolean
+          match_id: string
+          match_type: string
+          player_name: string
+          red_cards: number
+          updated_at: string
+          yellow_cards: number
+        }
+        Insert: {
+          created_at?: string
+          goals?: number
+          id?: string
+          man_of_match?: boolean
+          match_id: string
+          match_type: string
+          player_name: string
+          red_cards?: number
+          updated_at?: string
+          yellow_cards?: number
+        }
+        Update: {
+          created_at?: string
+          goals?: number
+          id?: string
+          man_of_match?: boolean
+          match_id?: string
+          match_type?: string
+          player_name?: string
+          red_cards?: number
+          updated_at?: string
+          yellow_cards?: number
+        }
+        Relationships: []
+      }
       membres: {
         Row: {
           created_at: string | null

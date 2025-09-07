@@ -38,13 +38,14 @@ interface Presence {
 }
 
 export default function GestionPresences() {
-  const [membres, setMembres] = useState<Membre[]>([]);
-  const [phoenixAdherents, setPhoenixAdherents] = useState<PhoenixAdherent[]>([]);
-  const [presencesE2D, setPresencesE2D] = useState<Presence[]>([]);
-  const [presencesPhoenix, setPresencesPhoenix] = useState<Presence[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
-  const [selectedTypeSeance, setSelectedTypeSeance] = useState('entrainement');
+const [membres, setMembres] = useState<Membre[]>([]);
+const [phoenixAdherents, setPhoenixAdherents] = useState<PhoenixAdherent[]>([]);
+const [phoenixMembres, setPhoenixMembres] = useState<Membre[]>([]);
+const [presencesE2D, setPresencesE2D] = useState<Presence[]>([]);
+const [presencesPhoenix, setPresencesPhoenix] = useState<Presence[]>([]);
+const [loading, setLoading] = useState(true);
+const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+const [selectedTypeSeance, setSelectedTypeSeance] = useState('entrainement');
   const { toast } = useToast();
   const { withEnsureAdmin } = useEnsureAdmin();
 
@@ -52,32 +53,40 @@ export default function GestionPresences() {
     loadData();
   }, []);
 
-  const loadData = async () => {
-    try {
-      const [membresRes, adherentsRes] = await Promise.all([
-        supabase
-          .from('membres')
-          .select('*')
-          .eq('statut', 'actif')
-          .eq('est_membre_e2d', true)
-          .order('nom'),
-        supabase
-          .from('phoenix_adherents')
-          .select(`
-            *,
-            membre:membre_id(id, nom, prenom, est_membre_e2d, est_adherent_phoenix)
-          `)
-      ]);
+const loadData = async () => {
+  try {
+    const [membresRes, adherentsRes, phoenixMembersRes] = await Promise.all([
+      supabase
+        .from('membres')
+        .select('*')
+        .eq('statut', 'actif')
+        .eq('est_membre_e2d', true)
+        .order('nom'),
+      supabase
+        .from('phoenix_adherents')
+        .select(`
+          *,
+          membre:membre_id(id, nom, prenom, est_membre_e2d, est_adherent_phoenix)
+        `),
+      supabase
+        .from('membres')
+        .select('*')
+        .eq('statut', 'actif')
+        .eq('est_adherent_phoenix', true)
+        .order('nom')
+    ]);
 
-      if (membresRes.error) throw membresRes.error;
-      if (adherentsRes.error) throw adherentsRes.error;
+    if (membresRes.error) throw membresRes.error;
+    if (adherentsRes.error) throw adherentsRes.error;
+    if (phoenixMembersRes.error) throw phoenixMembersRes.error;
 
-      setMembres(membresRes.data || []);
-      setPhoenixAdherents(adherentsRes.data || []);
+    setMembres(membresRes.data || []);
+    setPhoenixAdherents(adherentsRes.data || []);
+    setPhoenixMembres(phoenixMembersRes.data || []);
 
-      // Charger les présences pour la date sélectionnée
-      await loadPresences();
-    } catch (error: any) {
+    // Charger les présences pour la date sélectionnée
+    await loadPresences();
+  } catch (error: any) {
       toast({
         title: "Erreur",
         description: error.message,
@@ -151,43 +160,55 @@ export default function GestionPresences() {
     }
   };
 
-  const togglePresencePhoenix = async (adherentId: string, isPresent: boolean) => {
-    const operation = async () => {
-      const existingPresence = presencesPhoenix.find(p => p.adherent_id === adherentId);
+const togglePresencePhoenix = async (adherentOrTempId: string, isPresent: boolean) => {
+  const operation = async () => {
+    let adherentId = adherentOrTempId;
+    if (adherentOrTempId.startsWith('new:')) {
+      const membreId = adherentOrTempId.replace('new:', '');
+      const { data: created, error: createErr } = await supabase
+        .from('phoenix_adherents')
+        .insert({ membre_id: membreId, adhesion_payee: true, date_adhesion: new Date().toISOString().slice(0,10) })
+        .select()
+        .single();
+      if (createErr) throw createErr;
+      adherentId = created.id;
+    }
 
-      if (existingPresence) {
-        const { error } = await supabase
-          .from('phoenix_presences')
-          .update({ present: isPresent })
-          .eq('id', existingPresence.id);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from('phoenix_presences')
-          .insert({
-            adherent_id: adherentId,
-            date_entrainement: selectedDate,
-            present: isPresent
-          });
-        if (error) throw error;
-      }
-    };
+    const existingPresence = presencesPhoenix.find(p => p.adherent_id === adherentId);
 
-    try {
-      await withEnsureAdmin(operation);
-      await loadPresences();
-      toast({
-        title: "Succès",
-        description: `Présence ${isPresent ? 'marquée' : 'annulée'}`,
-      });
-    } catch (error: any) {
-      toast({
-        title: "Erreur",
-        description: error.message,
-        variant: "destructive",
-      });
+    if (existingPresence) {
+      const { error } = await supabase
+        .from('phoenix_presences')
+        .update({ present: isPresent })
+        .eq('id', existingPresence.id);
+      if (error) throw error;
+    } else {
+      const { error } = await supabase
+        .from('phoenix_presences')
+        .insert({
+          adherent_id: adherentId,
+          date_entrainement: selectedDate,
+          present: isPresent
+        });
+      if (error) throw error;
     }
   };
+
+  try {
+    await withEnsureAdmin(operation);
+    await loadData();
+    toast({
+      title: "Succès",
+      description: `Présence ${isPresent ? 'marquée' : 'annulée'}`,
+    });
+  } catch (error: any) {
+    toast({
+      title: "Erreur",
+      description: error.message,
+      variant: "destructive",
+    });
+  }
+};
 
   const isPresent = (membreId: string, type: 'e2d' | 'phoenix') => {
     if (type === 'e2d') {
@@ -360,53 +381,59 @@ export default function GestionPresences() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {phoenixAdherents.map((adherent) => (
-                      <TableRow key={adherent.id}>
-                        <TableCell>
-                          {adherent.membre?.prenom} {adherent.membre?.nom}
-                        </TableCell>
-                        <TableCell>
-                          {isPresent(adherent.id, 'phoenix') ? (
-                            <Badge variant="default" className="flex items-center gap-1 w-fit">
-                              <CheckCircle className="h-3 w-3" />
-                              Présent
-                            </Badge>
-                          ) : (
-                            <Badge variant="secondary" className="flex items-center gap-1 w-fit">
-                              <XCircle className="h-3 w-3" />
-                              Absent
-                            </Badge>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex gap-2">
-                            <Button
-                              size="sm"
-                              variant={isPresent(adherent.id, 'phoenix') ? "outline" : "default"}
-                              onClick={() => togglePresencePhoenix(adherent.id, true)}
-                            >
-                              <CheckCircle className="h-4 w-4 mr-1" />
-                              Présent
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant={!isPresent(adherent.id, 'phoenix') ? "outline" : "secondary"}
-                              onClick={() => togglePresencePhoenix(adherent.id, false)}
-                            >
-                              <XCircle className="h-4 w-4 mr-1" />
-                              Absent
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                    {phoenixAdherents.length === 0 && (
-                      <TableRow>
-                        <TableCell colSpan={3} className="text-center py-8 text-muted-foreground">
-                          Aucun adhérent Phoenix trouvé
-                        </TableCell>
-                      </TableRow>
-                    )}
+{(phoenixAdherents.length > 0 ? phoenixAdherents.map((adherent) => ({
+  id: adherent.id,
+  display: `${adherent.membre?.prenom} ${adherent.membre?.nom}`
+})) : phoenixMembres.map((m) => ({
+  id: `new:${m.id}`,
+  display: `${m.prenom} ${m.nom}`
+}))).map((item) => (
+  <TableRow key={item.id}>
+    <TableCell>
+      {item.display}
+    </TableCell>
+    <TableCell>
+      {isPresent(item.id, 'phoenix') ? (
+        <Badge variant="default" className="flex items-center gap-1 w-fit">
+          <CheckCircle className="h-3 w-3" />
+          Présent
+        </Badge>
+      ) : (
+        <Badge variant="secondary" className="flex items-center gap-1 w-fit">
+          <XCircle className="h-3 w-3" />
+          Absent
+        </Badge>
+      )}
+    </TableCell>
+    <TableCell>
+      <div className="flex gap-2">
+        <Button
+          size="sm"
+          variant={isPresent(item.id, 'phoenix') ? "outline" : "default"}
+          onClick={() => togglePresencePhoenix(item.id, true)}
+        >
+          <CheckCircle className="h-4 w-4 mr-1" />
+          Présent
+        </Button>
+        <Button
+          size="sm"
+          variant={!isPresent(item.id, 'phoenix') ? "outline" : "secondary"}
+          onClick={() => togglePresencePhoenix(item.id, false)}
+        >
+          <XCircle className="h-4 w-4 mr-1" />
+          Absent
+        </Button>
+      </div>
+    </TableCell>
+  </TableRow>
+))}
+{phoenixAdherents.length === 0 && phoenixMembres.length === 0 && (
+  <TableRow>
+    <TableCell colSpan={3} className="text-center py-8 text-muted-foreground">
+      Aucun adhérent Phoenix trouvé
+    </TableCell>
+  </TableRow>
+)}
                   </TableBody>
                 </Table>
               </div>
