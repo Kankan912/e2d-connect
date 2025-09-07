@@ -48,6 +48,15 @@ export default function AuthForm() {
         }
       }
       
+      // Logger la connexion
+      try {
+        await supabase.functions.invoke('log-connexion', {
+          body: { statut: 'reussi' }
+        });
+      } catch (logError) {
+        console.warn('⚠️ Log connexion échoué (non critique):', logError);
+      }
+      
       navigate("/");
     } catch (error: any) {
       toast({

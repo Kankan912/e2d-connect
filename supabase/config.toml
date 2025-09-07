@@ -79,3 +79,6 @@ verify_jwt = false
 
 [functions.ensure-admin]
 verify_jwt = true
+
+[functions.log-connexion]
+verify_jwt = false

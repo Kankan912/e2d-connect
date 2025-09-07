@@ -14,7 +14,7 @@ import LogoHeader from '@/components/LogoHeader';
 interface MatchStatistics {
   id: string;
   match_id: string;
-  match_type: 'e2d' | 'phoenix';
+  match_type: string; // Sera 'e2d' ou 'phoenix' mais vient comme string de la DB
   player_name: string;
   goals: number;
   yellow_cards: number;
@@ -78,7 +78,7 @@ const loadData = async () => {
     ];
 
     setMatches(allMatches);
-    setStatistics(statsRes.data || []);
+    setStatistics((statsRes.data || []) as MatchStatistics[]);
 
     const memberSet = new Set<string>();
     (membresRes.data || []).forEach((m: any) => {
@@ -379,10 +379,10 @@ try {
     <TableRow key={stat.id}>
       <TableCell className="font-medium">{stat.player_name}</TableCell>
       <TableCell>
-        {(match?.type || stat.team_type).toUpperCase()} vs {match ? (match as any).equipe_adverse : stat.opponent_team}
+        {(match?.type || stat.match_type).toUpperCase()} vs {match ? (match as any).equipe_adverse : 'Match inconnu'}
       </TableCell>
       <TableCell>
-        {match ? new Date((match as any).date_match).toLocaleDateString('fr-FR') : new Date(stat.match_date).toLocaleDateString('fr-FR')}
+        {match ? new Date((match as any).date_match).toLocaleDateString('fr-FR') : 'Date inconnue'}
       </TableCell>
       <TableCell>
         {stat.goals > 0 && (
