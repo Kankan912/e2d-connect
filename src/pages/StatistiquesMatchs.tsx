@@ -45,6 +45,7 @@ export default function StatistiquesMatchs() {
     match_id: '',
     player_name: '',
     goals: 0,
+    assists: 0,
     yellow_cards: 0,
     red_cards: 0,
     man_of_match: false
@@ -110,6 +111,7 @@ try {
     match_type: selectedMatch.type,
     player_name: formData.player_name,
     goals: formData.goals,
+    assists: formData.assists,
     yellow_cards: formData.yellow_cards,
     red_cards: formData.red_cards,
     man_of_match: formData.man_of_match,
@@ -126,7 +128,7 @@ try {
   toast({ title: "Succès", description: editingId ? "Statistiques mises à jour" : "Statistiques enregistrées" });
   setShowForm(false);
   setEditingId(null);
-  setFormData({ match_id: '', player_name: '', goals: 0, yellow_cards: 0, red_cards: 0, man_of_match: false });
+  setFormData({ match_id: '', player_name: '', goals: 0, assists: 0, yellow_cards: 0, red_cards: 0, man_of_match: false });
 } catch (error) {
   toast({ title: "Erreur", description: "Erreur lors de l'enregistrement", variant: "destructive" });
 }
@@ -213,7 +215,7 @@ try {
 </div>
               </div>
 
-              <div className="grid grid-cols-4 gap-4">
+              <div className="grid grid-cols-5 gap-4">
                 <div className="space-y-2">
                   <Label>Buts</Label>
                   <Input
@@ -221,6 +223,16 @@ try {
                     min="0"
                     value={formData.goals}
                     onChange={(e) => setFormData(prev => ({ ...prev, goals: parseInt(e.target.value) || 0 }))}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label>Passes décisives</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    value={formData.assists}
+                    onChange={(e) => setFormData(prev => ({ ...prev, assists: parseInt(e.target.value) || 0 }))}
                   />
                 </div>
                 
@@ -270,7 +282,7 @@ try {
       )}
 
       {/* Statistiques globales */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Buts</CardTitle>
@@ -279,6 +291,18 @@ try {
           <CardContent>
             <div className="text-2xl font-bold">
               {statistics.reduce((sum, s) => sum + s.goals, 0)}
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Passes décisives</CardTitle>
+            <Target className="h-4 w-4 text-blue-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {statistics.reduce((sum, s) => sum + s.assists, 0)}
             </div>
           </CardContent>
         </Card>
@@ -367,10 +391,11 @@ try {
                 <TableHead>Match</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead>Buts</TableHead>
+                <TableHead>Passes décisives</TableHead>
                 <TableHead>Cartons J.</TableHead>
                 <TableHead>Cartons R.</TableHead>
-<TableHead>Homme du Match</TableHead>
-<TableHead>Actions</TableHead>
+                <TableHead>Homme du Match</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -390,6 +415,13 @@ try {
           <Badge variant="default">
             <Target className="h-3 w-3 mr-1" />
             {stat.goals}
+          </Badge>
+        )}
+      </TableCell>
+      <TableCell>
+        {stat.assists > 0 && (
+          <Badge className="bg-blue-500 text-white">
+            {stat.assists}
           </Badge>
         )}
       </TableCell>
@@ -421,6 +453,7 @@ try {
               match_id: stat.match_id,
               player_name: stat.player_name,
               goals: stat.goals,
+              assists: stat.assists,
               yellow_cards: stat.yellow_cards,
               red_cards: stat.red_cards,
               man_of_match: stat.man_of_match,
@@ -440,7 +473,7 @@ try {
 })}
               {statistics.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
                     Aucune statistique enregistrée
                   </TableCell>
                 </TableRow>
