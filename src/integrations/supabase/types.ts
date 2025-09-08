@@ -852,6 +852,7 @@ export type Database = {
           id: string
           membre_id: string
           montant: number
+          montant_paye: number | null
           motif: string | null
           statut: string
           type_sanction_id: string
@@ -862,6 +863,7 @@ export type Database = {
           id?: string
           membre_id: string
           montant: number
+          montant_paye?: number | null
           motif?: string | null
           statut?: string
           type_sanction_id: string
@@ -872,6 +874,7 @@ export type Database = {
           id?: string
           membre_id?: string
           montant?: number
+          montant_paye?: number | null
           motif?: string | null
           statut?: string
           type_sanction_id?: string
@@ -1182,6 +1185,10 @@ export type Database = {
     Functions: {
       get_current_user_role: {
         Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      get_sanction_status: {
+        Args: { montant_paye: number; montant_total: number }
         Returns: string
       }
       has_role: {

@@ -34,6 +34,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 interface Sanction {
   id: string;
   montant: number;
+  montant_paye?: number;
   date_sanction: string;
   statut: string;
   motif: string;
@@ -116,13 +117,20 @@ export default function Sanctions() {
     </Card>
   );
 
-  const getStatutBadge = (statut: string) => {
+  const getStatutBadge = (statut: string, montant: number, montantPaye: number = 0) => {
     switch (statut) {
       case 'paye':
         return (
           <Badge className="bg-success text-success-foreground">
             <CheckCircle className="w-3 h-3 mr-1" />
             Payé
+          </Badge>
+        );
+      case 'partiel':
+        return (
+          <Badge className="bg-warning text-warning-foreground">
+            <Clock className="w-3 h-3 mr-1" />
+            Partiel ({montantPaye.toLocaleString()}/{montant.toLocaleString()})
           </Badge>
         );
       case 'impaye':
@@ -294,7 +302,7 @@ export default function Sanctions() {
                     </TableCell>
                     
                     <TableCell>
-                      {getStatutBadge(sanction.statut)}
+                      {getStatutBadge(sanction.statut, sanction.montant, sanction.montant_paye || 0)}
                     </TableCell>
                     
                     <TableCell className="text-muted-foreground">
@@ -302,7 +310,7 @@ export default function Sanctions() {
                     </TableCell>
                     
                     <TableCell>
-                      {sanction.statut === 'impaye' && (
+                      {(sanction.statut === 'impaye' || sanction.statut === 'partiel') && (
                         <Button
                           size="sm"
                           variant="outline"
@@ -310,7 +318,7 @@ export default function Sanctions() {
                           className="text-success border-success hover:bg-success/10"
                         >
                           <CreditCard className="w-4 h-4 mr-1" />
-                          Payer
+                          {sanction.statut === 'partiel' ? 'Payer reliquat' : 'Payer'}
                         </Button>
                       )}
                     </TableCell>
@@ -342,6 +350,7 @@ export default function Sanctions() {
             <PaymentSanctionForm
               sanctionId={selectedSanction.id}
               montantTotal={selectedSanction.montant}
+              montantPaye={selectedSanction.montant_paye || 0}
               onSuccess={handlePaymentSuccess}
               onCancel={() => setShowPaymentForm(false)}
             />
