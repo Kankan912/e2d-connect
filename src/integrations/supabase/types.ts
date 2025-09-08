@@ -95,6 +95,42 @@ export type Database = {
         }
         Relationships: []
       }
+      beneficiaires_config: {
+        Row: {
+          actif: boolean
+          created_at: string
+          description: string | null
+          id: string
+          mode_calcul: string
+          montant_fixe: number | null
+          nom: string
+          pourcentage_cotisations: number | null
+          updated_at: string
+        }
+        Insert: {
+          actif?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          mode_calcul?: string
+          montant_fixe?: number | null
+          nom: string
+          pourcentage_cotisations?: number | null
+          updated_at?: string
+        }
+        Update: {
+          actif?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          mode_calcul?: string
+          montant_fixe?: number | null
+          nom?: string
+          pourcentage_cotisations?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       configurations: {
         Row: {
           cle: string
@@ -694,6 +730,7 @@ export type Database = {
       }
       reunion_beneficiaires: {
         Row: {
+          config_id: string | null
           created_at: string
           date_benefice_prevue: string
           id: string
@@ -704,6 +741,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          config_id?: string | null
           created_at?: string
           date_benefice_prevue: string
           id?: string
@@ -714,6 +752,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          config_id?: string | null
           created_at?: string
           date_benefice_prevue?: string
           id?: string
@@ -724,6 +763,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "reunion_beneficiaires_config_id_fkey"
+            columns: ["config_id"]
+            isOneToOne: false
+            referencedRelation: "beneficiaires_config"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "reunion_beneficiaires_membre_id_fkey"
             columns: ["membre_id"]
