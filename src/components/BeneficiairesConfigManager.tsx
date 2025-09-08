@@ -36,7 +36,8 @@ export default function BeneficiairesConfigManager() {
     montant_fixe: 0,
     mode_calcul: 'pourcentage',
     actif: true,
-    type_beneficiaire: 'aides'
+    type_beneficiaire: 'aides',
+    membre_id: ''
   });
 
   const { toast } = useToast();
@@ -56,6 +57,21 @@ export default function BeneficiairesConfigManager() {
     },
   });
 
+  // Charger les membres et adhérents pour la sélection
+  const { data: membres = [] } = useQuery({
+    queryKey: ['membres-adherents'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('membres')
+        .select('id, nom, prenom, est_membre_e2d, est_adherent_phoenix')
+        .eq('statut', 'actif')
+        .order('nom');
+      
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
   const resetForm = () => {
     setFormData({
       nom: '',
@@ -64,7 +80,8 @@ export default function BeneficiairesConfigManager() {
       montant_fixe: 0,
       mode_calcul: 'pourcentage',
       actif: true,
-      type_beneficiaire: 'aides'
+      type_beneficiaire: 'aides',
+      membre_id: ''
     });
     setEditingConfig(null);
   };
@@ -116,7 +133,8 @@ export default function BeneficiairesConfigManager() {
       montant_fixe: config.montant_fixe || 0,
       mode_calcul: config.mode_calcul,
       actif: config.actif,
-      type_beneficiaire: config.type_beneficiaire || 'aides'
+      type_beneficiaire: config.type_beneficiaire || 'aides',
+      membre_id: (config as any).membre_id || ''
     });
     setShowDialog(true);
   };
@@ -195,13 +213,41 @@ export default function BeneficiairesConfigManager() {
               
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <Label htmlFor="nom">Nom *</Label>
+                  <Label htmlFor="membre_id">Bénéficiaire *</Label>
+                  <Select 
+                    value={formData.membre_id} 
+                    onValueChange={(value) => {
+                      setFormData(prev => ({ ...prev, membre_id: value }));
+                      // Auto-remplir le nom avec le membre sélectionné
+                      const membre = membres.find(m => m.id === value);
+                      if (membre) {
+                        setFormData(prev => ({ ...prev, nom: `${membre.prenom} ${membre.nom}` }));
+                      }
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sélectionnez un membre/adhérent" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {membres.map((membre) => (
+                        <SelectItem key={membre.id} value={membre.id}>
+                          {membre.prenom} {membre.nom}
+                          {membre.est_membre_e2d && " (Membre E2D)"}
+                          {membre.est_adherent_phoenix && " (Adhérent Phoenix)"}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="nom">Nom d'affichage</Label>
                   <Input
                     id="nom"
                     value={formData.nom}
                     onChange={(e) => setFormData(prev => ({ ...prev, nom: e.target.value }))}
-                    placeholder="Ex: Bénéficiaire principal"
-                    required
+                    placeholder="Généré automatiquement"
+                    readOnly
                   />
                 </div>
 

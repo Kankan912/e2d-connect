@@ -99,6 +99,7 @@ function App() {
                   <Route path="/membre-cotisation-config" element={<MembreCotisationConfig />} />
                   <Route path="/prets" element={<Prets />} />
                   <Route path="/sanctions" element={<Sanctions />} />
+                  <Route path="/epargnes" element={<Epargnes />} />
                   <Route path="/aides" element={<Aides />} />
                   <Route path="/reunions" element={<Reunions />} />
                   <Route path="/presence-reunions" element={<PresenceReunions />} />

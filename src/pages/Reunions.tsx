@@ -30,6 +30,7 @@ import CompteRenduForm from "@/components/forms/CompteRenduForm";
 import LogoHeader from "@/components/LogoHeader";
 import { useBackNavigation } from "@/hooks/useBackNavigation";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { useQuery } from "@tanstack/react-query";
 
 interface Reunion {
   id: string;
@@ -52,6 +53,29 @@ export default function Reunions() {
   const [editingReunion, setEditingReunion] = useState<Reunion | null>(null);
   const { toast } = useToast();
   const { goBack, BackIcon } = useBackNavigation();
+
+  // Composant pour afficher le nom du bénéficiaire
+  const BeneficiaireName = ({ beneficiaireId }: { beneficiaireId: string }) => {
+    const { data: membre } = useQuery({
+      queryKey: ['membre', beneficiaireId],
+      queryFn: async () => {
+        const { data, error } = await supabase
+          .from('membres')
+          .select('nom, prenom')
+          .eq('id', beneficiaireId)
+          .single();
+        if (error) throw error;
+        return data;
+      },
+      enabled: !!beneficiaireId
+    });
+
+    return (
+      <span className="text-sm">
+        {membre ? `${membre.prenom} ${membre.nom}` : 'Chargement...'}
+      </span>
+    );
+  };
 
   useEffect(() => {
     loadReunions();
@@ -315,7 +339,11 @@ export default function Reunions() {
                     </TableCell>
                     
                     <TableCell>
-                      <span className="text-muted-foreground text-sm">À configurer</span>
+                      {reunion.beneficiaire_id ? (
+                        <BeneficiaireName beneficiaireId={reunion.beneficiaire_id} />
+                      ) : (
+                        <span className="text-muted-foreground text-sm">Non défini</span>
+                      )}
                     </TableCell>
                     
                     <TableCell>
