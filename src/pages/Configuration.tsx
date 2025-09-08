@@ -2,11 +2,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Settings, Users, Shield, Database } from "lucide-react";
+import { Settings, Users, Shield, Database, DollarSign } from "lucide-react";
 import AdminCreateAccount from "@/components/AdminCreateAccount";
 import BackupManager from "@/components/BackupManager";
 import RolePermissionsManager from "@/components/RolePermissionsManager";
 import RoleManager from "@/components/RoleManager";
+import BeneficiairesConfigManager from "@/components/BeneficiairesConfigManager";
 import LogoHeader from "@/components/LogoHeader";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -73,7 +74,7 @@ export default function Configuration() {
 
       {/* Configuration Tabs */}
       <Tabs defaultValue="users" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="users" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
             Utilisateurs
@@ -81,6 +82,10 @@ export default function Configuration() {
           <TabsTrigger value="permissions" className="flex items-center gap-2">
             <Shield className="h-4 w-4" />
             Permissions
+          </TabsTrigger>
+          <TabsTrigger value="beneficiaires" className="flex items-center gap-2">
+            <DollarSign className="h-4 w-4" />
+            Bénéficiaires
           </TabsTrigger>
           <TabsTrigger value="backup" className="flex items-center gap-2">
             <Database className="h-4 w-4" />
@@ -148,6 +153,10 @@ export default function Configuration() {
             <RoleManager />
             <RolePermissionsManager />
           </div>
+        </TabsContent>
+
+        <TabsContent value="beneficiaires" className="space-y-6">
+          <BeneficiairesConfigManager />
         </TabsContent>
 
         <TabsContent value="backup" className="space-y-6">

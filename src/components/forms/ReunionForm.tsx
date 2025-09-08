@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
@@ -21,9 +22,8 @@ const reunionSchema = z.object({
   lieu_membre_id: z.string().optional(),
   lieu_description: z.string().optional(),
   ordre_du_jour: z.string().optional(),
-  beneficiaire_id: z.string().optional(),
+  beneficiaires_configs: z.array(z.string()).default([]),
   statut: z.enum(['planifie', 'en_cours', 'termine', 'reporte', 'annule']).default('planifie'),
-  invites_ids: z.array(z.string()).default([]),
 });
 
 type ReunionFormData = z.infer<typeof reunionSchema>;
@@ -41,11 +41,20 @@ interface Membre {
   prenom: string;
 }
 
+interface BeneficiaireConfig {
+  id: string;
+  nom: string;
+  description: string;
+  mode_calcul: string;
+  actif: boolean;
+}
+
 export default function ReunionForm({ onSuccess, initialData }: ReunionFormProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { withEnsureAdmin } = useEnsureAdmin();
   const [membres, setMembres] = useState<Membre[]>([]);
+  const [beneficiairesConfigs, setBeneficiairesConfigs] = useState<BeneficiaireConfig[]>([]);
 
   const form = useForm<ReunionFormData>({
     resolver: zodResolver(reunionSchema),
@@ -57,14 +66,14 @@ export default function ReunionForm({ onSuccess, initialData }: ReunionFormProps
       lieu_membre_id: initialData?.lieu_membre_id || '',
       lieu_description: initialData?.lieu_description || '',
       ordre_du_jour: initialData?.ordre_du_jour || '',
-      beneficiaire_id: initialData?.beneficiaire_id || '',
+      beneficiaires_configs: initialData?.beneficiaires_configs || [],
       statut: initialData?.statut || 'planifie',
-      invites_ids: initialData?.invites_ids || [],
     },
   });
 
   useEffect(() => {
     fetchMembres();
+    fetchBeneficiairesConfigs();
   }, []);
 
   const fetchMembres = async () => {
@@ -78,6 +87,20 @@ export default function ReunionForm({ onSuccess, initialData }: ReunionFormProps
       setMembres(data || []);
     } catch (error) {
       console.error('Erreur chargement membres:', error);
+    }
+  };
+
+  const fetchBeneficiairesConfigs = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('beneficiaires_config')
+        .select('id, nom, description, mode_calcul, actif')
+        .eq('actif', true)
+        .order('nom');
+      if (error) throw error;
+      setBeneficiairesConfigs(data || []);
+    } catch (error) {
+      console.error('Erreur chargement configurations bénéficiaires:', error);
     }
   };
 
@@ -96,9 +119,6 @@ export default function ReunionForm({ onSuccess, initialData }: ReunionFormProps
         : null,
       lieu_description: data.lieu_description,
       ordre_du_jour: data.ordre_du_jour,
-      beneficiaire_id: data.beneficiaire_id && data.beneficiaire_id.trim() !== '' 
-        ? data.beneficiaire_id 
-        : null,
       statut: data.statut,
     };
     
@@ -109,17 +129,28 @@ export default function ReunionForm({ onSuccess, initialData }: ReunionFormProps
   console.log('Lieu membre sélectionné:', data.lieu_membre_id);
     
     const operation = async () => {
+      let reunionId;
+      
       if (initialData?.id) {
         const { error } = await supabase
           .from('reunions')
           .update(formattedData)
           .eq('id', initialData.id);
         if (error) throw error;
+        reunionId = initialData.id;
       } else {
-        const { error } = await supabase
+        const { data: newReunion, error } = await supabase
           .from('reunions')
-          .insert([formattedData]);
+          .insert([formattedData])
+          .select('id')
+          .single();
         if (error) throw error;
+        reunionId = newReunion.id;
+      }
+
+      // Créer les bénéficiaires automatiquement si des configurations sont sélectionnées
+      if (data.beneficiaires_configs.length > 0 && reunionId) {
+        await creerBeneficiairesAutomatiques(reunionId, data.beneficiaires_configs);
       }
     };
 
@@ -145,6 +176,76 @@ export default function ReunionForm({ onSuccess, initialData }: ReunionFormProps
         description: error.message || "Impossible d'enregistrer la réunion",
         variant: "destructive",
       });
+    }
+  };
+
+  const creerBeneficiairesAutomatiques = async (reunionId: string, configIds: string[]) => {
+    try {
+      // Récupérer les configurations sélectionnées
+      const { data: configs, error: configError } = await supabase
+        .from('beneficiaires_config')
+        .select('*')
+        .in('id', configIds);
+      
+      if (configError) throw configError;
+
+      // Récupérer les cotisations récentes pour le calcul
+      const { data: cotisations, error: cotisationsError } = await supabase
+        .from('cotisations')
+        .select('membre_id, montant, date_paiement')
+        .eq('statut', 'paye')
+        .order('date_paiement', { ascending: false });
+
+      if (cotisationsError) throw cotisationsError;
+
+      // Calculer les montants pour chaque membre selon les configurations
+      const membresUniques = new Map<string, { membre_id: string; totalCotisations: number }>();
+      cotisations?.forEach((cot: any) => {
+        if (!membresUniques.has(cot.membre_id)) {
+          membresUniques.set(cot.membre_id, {
+            membre_id: cot.membre_id,
+            totalCotisations: cot.montant,
+          });
+        } else {
+          const existing = membresUniques.get(cot.membre_id)!;
+          existing.totalCotisations += cot.montant;
+        }
+      });
+
+      // Créer les bénéficiaires pour chaque configuration
+      const beneficiaires = [];
+      for (const config of configs) {
+        for (const [_, membre] of membresUniques) {
+          let montant = 0;
+          
+          if (config.mode_calcul === 'pourcentage') {
+            montant = Math.round(membre.totalCotisations * (config.pourcentage_cotisations / 100));
+          } else if (config.mode_calcul === 'fixe') {
+            montant = config.montant_fixe;
+          }
+
+          if (montant > 0) {
+            beneficiaires.push({
+              reunion_id: reunionId,
+              membre_id: membre.membre_id,
+              config_id: config.id,
+              montant_benefice: montant,
+              date_benefice_prevue: new Date().toISOString().split('T')[0],
+              statut: 'prevu'
+            });
+          }
+        }
+      }
+
+      if (beneficiaires.length > 0) {
+        const { error: insertError } = await supabase
+          .from('reunion_beneficiaires')
+          .insert(beneficiaires);
+        
+        if (insertError) throw insertError;
+      }
+    } catch (error) {
+      console.error('Erreur création bénéficiaires automatiques:', error);
     }
   };
 
@@ -254,23 +355,40 @@ export default function ReunionForm({ onSuccess, initialData }: ReunionFormProps
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="beneficiaire_id">Bénéficiaire (optionnel)</Label>
-            <Select 
-              value={form.watch('beneficiaire_id') || ''} 
-              onValueChange={(value) => form.setValue('beneficiaire_id', value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Sélectionner un bénéficiaire" />
-              </SelectTrigger>
-              <SelectContent>
-                {membres.map((membre) => (
-                  <SelectItem key={membre.id} value={membre.id}>
-                    {membre.prenom} {membre.nom}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="space-y-3">
+            <Label>Configurations de bénéficiaires</Label>
+            <div className="grid grid-cols-1 gap-2 max-h-32 overflow-y-auto border rounded-md p-2">
+              {beneficiairesConfigs.map((config) => (
+                <div key={config.id} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`config-${config.id}`}
+                    checked={form.watch('beneficiaires_configs').includes(config.id)}
+                    onCheckedChange={(checked) => {
+                      const current = form.watch('beneficiaires_configs');
+                      if (checked) {
+                        form.setValue('beneficiaires_configs', [...current, config.id]);
+                      } else {
+                        form.setValue('beneficiaires_configs', current.filter(id => id !== config.id));
+                      }
+                    }}
+                  />
+                  <Label htmlFor={`config-${config.id}`} className="text-sm cursor-pointer">
+                    <span className="font-medium">{config.nom}</span>
+                    {config.description && (
+                      <span className="text-muted-foreground"> - {config.description}</span>
+                    )}
+                  </Label>
+                </div>
+              ))}
+              {beneficiairesConfigs.length === 0 && (
+                <p className="text-sm text-muted-foreground">
+                  Aucune configuration active. Ajoutez-en dans Configuration &gt; Bénéficiaires.
+                </p>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Les bénéficiaires seront calculés automatiquement selon les configurations sélectionnées.
+            </p>
           </div>
 
           <div className="space-y-2">
