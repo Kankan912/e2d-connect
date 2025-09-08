@@ -336,6 +336,7 @@ export type Database = {
       }
       match_statistics: {
         Row: {
+          assists: number
           created_at: string
           goals: number
           id: string
@@ -348,6 +349,7 @@ export type Database = {
           yellow_cards: number
         }
         Insert: {
+          assists?: number
           created_at?: string
           goals?: number
           id?: string
@@ -360,6 +362,7 @@ export type Database = {
           yellow_cards?: number
         }
         Update: {
+          assists?: number
           created_at?: string
           goals?: number
           id?: string
@@ -739,6 +742,7 @@ export type Database = {
       }
       reunions: {
         Row: {
+          beneficiaire_id: string | null
           compte_rendu_url: string | null
           created_at: string
           date_reunion: string
@@ -751,6 +755,7 @@ export type Database = {
           type_reunion: string | null
         }
         Insert: {
+          beneficiaire_id?: string | null
           compte_rendu_url?: string | null
           created_at?: string
           date_reunion: string
@@ -763,6 +768,7 @@ export type Database = {
           type_reunion?: string | null
         }
         Update: {
+          beneficiaire_id?: string | null
           compte_rendu_url?: string | null
           created_at?: string
           date_reunion?: string
@@ -778,6 +784,13 @@ export type Database = {
           {
             foreignKeyName: "fk_reunions_lieu_membre"
             columns: ["lieu_membre_id"]
+            isOneToOne: false
+            referencedRelation: "membres"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reunions_beneficiaire_id_fkey"
+            columns: ["beneficiaire_id"]
             isOneToOne: false
             referencedRelation: "membres"
             referencedColumns: ["id"]

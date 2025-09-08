@@ -19,12 +19,16 @@ import {
   MapPin,
   Clock,
   FileText,
-  Users
+  Users,
+  Edit,
+  Trash2
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import ReunionForm from "@/components/forms/ReunionForm";
+import CompteRenduForm from "@/components/forms/CompteRenduForm";
 import LogoHeader from "@/components/LogoHeader";
+import { useBackNavigation } from "@/hooks/useBackNavigation";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 interface Reunion {
@@ -38,6 +42,10 @@ interface Reunion {
     nom: string;
     prenom: string;
   } | null;
+  beneficiaire: {
+    nom: string;
+    prenom: string;
+  } | null;
 }
 
 export default function Reunions() {
@@ -45,7 +53,11 @@ export default function Reunions() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [showForm, setShowForm] = useState(false);
+  const [showCompteRenduForm, setShowCompteRenduForm] = useState(false);
+  const [selectedReunion, setSelectedReunion] = useState<Reunion | null>(null);
+  const [editingReunion, setEditingReunion] = useState<Reunion | null>(null);
   const { toast } = useToast();
+  const { goBack, BackIcon } = useBackNavigation();
 
   useEffect(() => {
     loadReunions();
@@ -57,7 +69,8 @@ export default function Reunions() {
         .from('reunions')
         .select(`
           *,
-          lieu_membre:membres(nom, prenom)
+          lieu_membre:membres!reunions_lieu_membre_id_fkey(nom, prenom),
+          beneficiaire:membres!reunions_beneficiaire_id_fkey(nom, prenom)
         `)
         .order('date_reunion', { ascending: false });
 
@@ -66,7 +79,7 @@ export default function Reunions() {
         throw error;
       }
       
-      setReunions(data || []);
+      setReunions((data || []) as any);
     } catch (error: any) {
       console.error('Erreur lors du chargement des réunions:', error);
       toast({
@@ -77,6 +90,40 @@ export default function Reunions() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleEdit = (reunion: Reunion) => {
+    setEditingReunion(reunion);
+    setShowForm(true);
+  };
+
+  const handleDelete = async (reunionId: string) => {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer cette réunion ?')) return;
+    try {
+      const { error } = await supabase.from('reunions').delete().eq('id', reunionId);
+      if (error) throw error;
+      toast({ title: "Succès", description: "Réunion supprimée avec succès" });
+      loadReunions();
+    } catch (error: any) {
+      toast({ title: "Erreur", description: "Impossible de supprimer la réunion: " + error.message, variant: "destructive" });
+    }
+  };
+
+  const handleCompteRendu = (reunion: Reunion) => {
+    setSelectedReunion(reunion);
+    setShowCompteRenduForm(true);
+  };
+
+  const handleFormSuccess = () => {
+    setShowForm(false);
+    setEditingReunion(null);
+    loadReunions();
+  };
+
+  const handleCompteRenduSuccess = () => {
+    setShowCompteRenduForm(false);
+    setSelectedReunion(null);
+    loadReunions();
   };
 
   const filteredReunions = reunions.filter(reunion =>
@@ -176,10 +223,16 @@ export default function Reunions() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <LogoHeader 
-          title="Gestion des Réunions"
-          subtitle="Planification et suivi des réunions"
-        />
+        <div className="flex items-center gap-4">
+          <Button variant="outline" size="sm" onClick={goBack}>
+            <BackIcon className="w-4 h-4 mr-2" />
+            Retour
+          </Button>
+          <LogoHeader 
+            title="Gestion des Réunions"
+            subtitle="Planification et suivi des réunions"
+          />
+        </div>
         <Button 
           className="bg-gradient-to-r from-primary to-secondary"
           onClick={() => setShowForm(true)}
@@ -244,9 +297,11 @@ export default function Reunions() {
                 <TableRow>
                   <TableHead>Date & Heure</TableHead>
                   <TableHead>Statut</TableHead>
+                  <TableHead>Bénéficiaire</TableHead>
                   <TableHead>Ordre du jour</TableHead>
                   <TableHead>Lieu</TableHead>
                   <TableHead>Compte-rendu</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -268,6 +323,16 @@ export default function Reunions() {
                     
                     <TableCell>
                       {getStatutBadge(reunion.statut)}
+                    </TableCell>
+                    
+                    <TableCell>
+                      {reunion.beneficiaire ? (
+                        <p className="text-sm font-medium">
+                          {reunion.beneficiaire.prenom} {reunion.beneficiaire.nom}
+                        </p>
+                      ) : (
+                        <span className="text-muted-foreground text-sm">Non défini</span>
+                      )}
                     </TableCell>
                     
                     <TableCell>
@@ -294,24 +359,57 @@ export default function Reunions() {
                     
                     <TableCell>
                       {reunion.compte_rendu_url ? (
-                        <Button variant="outline" size="sm" asChild>
-                          <a href={reunion.compte_rendu_url} target="_blank" rel="noopener noreferrer">
-                            <FileText className="w-4 h-4 mr-1" />
-                            Voir
-                          </a>
-                        </Button>
+                        reunion.compte_rendu_url === 'generated' ? (
+                          <Badge className="bg-success text-success-foreground">
+                            <FileText className="w-3 h-3 mr-1" />
+                            Disponible
+                          </Badge>
+                        ) : (
+                          <Button variant="outline" size="sm" asChild>
+                            <a href={reunion.compte_rendu_url} target="_blank" rel="noopener noreferrer">
+                              <FileText className="w-4 h-4 mr-1" />
+                              Voir
+                            </a>
+                          </Button>
+                        )
                       ) : (
-                        <span className="text-muted-foreground text-sm">
-                          Non disponible
-                        </span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleCompteRendu(reunion)}
+                          className="text-primary"
+                        >
+                          <Plus className="w-4 h-4 mr-1" />
+                          Ajouter
+                        </Button>
                       )}
+                    </TableCell>
+                    
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEdit(reunion)}
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDelete(reunion.id)}
+                          className="text-destructive hover:bg-destructive/10"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
                 
                 {filteredReunions.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                       {searchTerm ? "Aucune réunion trouvée" : "Aucune réunion planifiée"}
                     </TableCell>
                   </TableRow>
@@ -325,10 +423,22 @@ export default function Reunions() {
       <Dialog open={showForm} onOpenChange={setShowForm}>
         <DialogContent className="sm:max-w-[600px]">
           <ReunionForm
-            open={showForm}
-            onOpenChange={setShowForm}
-            onSuccess={loadReunions}
+            initialData={editingReunion as any}
+            onSuccess={handleFormSuccess}
           />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showCompteRenduForm} onOpenChange={setShowCompteRenduForm}>
+        <DialogContent className="sm:max-w-[700px]">
+          {selectedReunion && (
+            <CompteRenduForm
+              reunionId={selectedReunion.id}
+              ordreJour={selectedReunion.ordre_du_jour}
+              onSuccess={handleCompteRenduSuccess}
+              onCancel={() => setShowCompteRenduForm(false)}
+            />
+          )}
         </DialogContent>
       </Dialog>
     </div>

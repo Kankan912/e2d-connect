@@ -17,6 +17,7 @@ interface MatchStatistics {
   match_type: string; // Sera 'e2d' ou 'phoenix' mais vient comme string de la DB
   player_name: string;
   goals: number;
+  assists: number;
   yellow_cards: number;
   red_cards: number;
   man_of_match: boolean;
@@ -437,13 +438,13 @@ try {
     </TableRow>
   );
 })}
-{statistics.length === 0 && (
-  <TableRow>
-    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-      Aucune statistique enregistrée
-    </TableCell>
-  </TableRow>
-)}
+              {statistics.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                    Aucune statistique enregistrée
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </CardContent>

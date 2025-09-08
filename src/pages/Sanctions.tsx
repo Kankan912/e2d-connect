@@ -20,12 +20,16 @@ import {
   Calendar,
   CheckCircle,
   Clock,
-  XCircle
+  XCircle,
+  CreditCard
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import SanctionForm from "@/components/forms/SanctionForm";
+import PaymentSanctionForm from "@/components/forms/PaymentSanctionForm";
 import LogoHeader from "@/components/LogoHeader";
+import { useBackNavigation } from "@/hooks/useBackNavigation";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 interface Sanction {
   id: string;
@@ -48,7 +52,10 @@ export default function Sanctions() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [showForm, setShowForm] = useState(false);
+  const [showPaymentForm, setShowPaymentForm] = useState(false);
+  const [selectedSanction, setSelectedSanction] = useState<Sanction | null>(null);
   const { toast } = useToast();
+  const { goBack, BackIcon } = useBackNavigation();
 
   useEffect(() => {
     loadSanctions();
@@ -137,6 +144,17 @@ export default function Sanctions() {
     }
   };
 
+  const handlePayment = (sanction: Sanction) => {
+    setSelectedSanction(sanction);
+    setShowPaymentForm(true);
+  };
+
+  const handlePaymentSuccess = () => {
+    setShowPaymentForm(false);
+    setSelectedSanction(null);
+    loadSanctions();
+  };
+
   if (loading) {
     return (
       <div className="space-y-6">
@@ -170,10 +188,16 @@ export default function Sanctions() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <LogoHeader 
-          title="Gestion des Sanctions"
-          subtitle="Suivi des sanctions et pénalités"
-        />
+        <div className="flex items-center gap-4">
+          <Button variant="outline" size="sm" onClick={goBack}>
+            <BackIcon className="w-4 h-4 mr-2" />
+            Retour
+          </Button>
+          <LogoHeader 
+            title="Gestion des Sanctions"
+            subtitle="Suivi des sanctions et pénalités"
+          />
+        </div>
         <Button 
           className="bg-gradient-to-r from-primary to-secondary"
           onClick={() => setShowForm(true)}
@@ -242,6 +266,7 @@ export default function Sanctions() {
                   <TableHead>Date</TableHead>
                   <TableHead>Statut</TableHead>
                   <TableHead>Motif</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -275,12 +300,26 @@ export default function Sanctions() {
                     <TableCell className="text-muted-foreground">
                       {sanction.motif || "-"}
                     </TableCell>
+                    
+                    <TableCell>
+                      {sanction.statut === 'impaye' && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handlePayment(sanction)}
+                          className="text-success border-success hover:bg-success/10"
+                        >
+                          <CreditCard className="w-4 h-4 mr-1" />
+                          Payer
+                        </Button>
+                      )}
+                    </TableCell>
                   </TableRow>
                 ))}
                 
                 {filteredSanctions.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                       {searchTerm ? "Aucune sanction trouvée" : "Aucune sanction enregistrée"}
                     </TableCell>
                   </TableRow>
@@ -296,6 +335,19 @@ export default function Sanctions() {
         onOpenChange={setShowForm}
         onSuccess={loadSanctions}
       />
+
+      <Dialog open={showPaymentForm} onOpenChange={setShowPaymentForm}>
+        <DialogContent className="sm:max-w-[500px]">
+          {selectedSanction && (
+            <PaymentSanctionForm
+              sanctionId={selectedSanction.id}
+              montantTotal={selectedSanction.montant}
+              onSuccess={handlePaymentSuccess}
+              onCancel={() => setShowPaymentForm(false)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

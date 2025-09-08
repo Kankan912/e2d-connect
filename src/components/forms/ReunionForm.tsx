@@ -21,6 +21,7 @@ const reunionSchema = z.object({
   lieu_membre_id: z.string().optional(),
   lieu_description: z.string().optional(),
   ordre_du_jour: z.string().optional(),
+  beneficiaire_id: z.string().optional(),
   statut: z.enum(['planifie', 'en_cours', 'termine', 'reporte', 'annule']).default('planifie'),
   invites_ids: z.array(z.string()).default([]),
 });
@@ -56,6 +57,7 @@ export default function ReunionForm({ onSuccess, initialData }: ReunionFormProps
       lieu_membre_id: initialData?.lieu_membre_id || '',
       lieu_description: initialData?.lieu_description || '',
       ordre_du_jour: initialData?.ordre_du_jour || '',
+      beneficiaire_id: initialData?.beneficiaire_id || '',
       statut: initialData?.statut || 'planifie',
       invites_ids: initialData?.invites_ids || [],
     },
@@ -94,6 +96,9 @@ export default function ReunionForm({ onSuccess, initialData }: ReunionFormProps
         : null,
       lieu_description: data.lieu_description,
       ordre_du_jour: data.ordre_du_jour,
+      beneficiaire_id: data.beneficiaire_id && data.beneficiaire_id.trim() !== '' 
+        ? data.beneficiaire_id 
+        : null,
       statut: data.statut,
     };
     
@@ -247,6 +252,25 @@ export default function ReunionForm({ onSuccess, initialData }: ReunionFormProps
               rows={4}
               {...form.register('ordre_du_jour')}
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="beneficiaire_id">Bénéficiaire (optionnel)</Label>
+            <Select 
+              value={form.watch('beneficiaire_id') || ''} 
+              onValueChange={(value) => form.setValue('beneficiaire_id', value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionner un bénéficiaire" />
+              </SelectTrigger>
+              <SelectContent>
+                {membres.map((membre) => (
+                  <SelectItem key={membre.id} value={membre.id}>
+                    {membre.prenom} {membre.nom}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
