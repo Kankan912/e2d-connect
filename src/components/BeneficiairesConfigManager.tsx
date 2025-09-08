@@ -15,28 +15,28 @@ import { useToast } from "@/hooks/use-toast";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEnsureAdmin } from "@/hooks/useEnsureAdmin";
 
-interface BeneficiaireConfig {
-  id: string;
+interface BeneficiairesConfig {
+  id?: string;
   nom: string;
-  description: string;
-  pourcentage_cotisations: number;
-  montant_fixe: number;
-  mode_calcul: string; // Changé en string pour compatibilité Supabase
+  description?: string;
+  mode_calcul: 'pourcentage' | 'montant_fixe';
+  pourcentage_cotisations?: number;
+  montant_fixe?: number;
   actif: boolean;
-  created_at: string;
-  updated_at: string;
+  type_beneficiaire: 'aides' | 'cotisations' | 'epargnes';
 }
 
 export default function BeneficiairesConfigManager() {
   const [showDialog, setShowDialog] = useState(false);
-  const [editingConfig, setEditingConfig] = useState<BeneficiaireConfig | null>(null);
+  const [editingConfig, setEditingConfig] = useState<BeneficiairesConfig | null>(null);
   const [formData, setFormData] = useState({
     nom: '',
     description: '',
     pourcentage_cotisations: 10,
     montant_fixe: 0,
     mode_calcul: 'pourcentage',
-    actif: true
+    actif: true,
+    type_beneficiaire: 'aides'
   });
 
   const { toast } = useToast();
@@ -63,7 +63,8 @@ export default function BeneficiairesConfigManager() {
       pourcentage_cotisations: 10,
       montant_fixe: 0,
       mode_calcul: 'pourcentage',
-      actif: true
+      actif: true,
+      type_beneficiaire: 'aides'
     });
     setEditingConfig(null);
   };
@@ -106,15 +107,16 @@ export default function BeneficiairesConfigManager() {
     }
   };
 
-  const handleEdit = (config: BeneficiaireConfig) => {
+  const handleEdit = (config: BeneficiairesConfig) => {
     setEditingConfig(config);
     setFormData({
       nom: config.nom,
       description: config.description || '',
-      pourcentage_cotisations: config.pourcentage_cotisations,
-      montant_fixe: config.montant_fixe,
+      pourcentage_cotisations: config.pourcentage_cotisations || 10,
+      montant_fixe: config.montant_fixe || 0,
       mode_calcul: config.mode_calcul,
-      actif: config.actif
+      actif: config.actif,
+      type_beneficiaire: config.type_beneficiaire || 'aides'
     });
     setShowDialog(true);
   };
@@ -215,6 +217,23 @@ export default function BeneficiairesConfigManager() {
                 </div>
 
                 <div>
+                  <Label htmlFor="type_beneficiaire">Type de bénéficiaire</Label>
+                  <Select 
+                    value={formData.type_beneficiaire} 
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, type_beneficiaire: value as any }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="aides">Bénéficiaires d'aides (Membres + Adhérents)</SelectItem>
+                      <SelectItem value="cotisations">Bénéficiaires de cotisations (Membres seulement)</SelectItem>
+                      <SelectItem value="epargnes">Bénéficiaires d'épargnes (Membres seulement)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
                   <Label htmlFor="mode_calcul">Mode de calcul</Label>
                   <Select 
                     value={formData.mode_calcul} 
@@ -291,7 +310,7 @@ export default function BeneficiairesConfigManager() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {configs.map((config) => (
+              {configs.map((config: any) => (
                 <TableRow key={config.id}>
                   <TableCell>
                     <div>

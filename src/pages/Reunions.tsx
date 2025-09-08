@@ -38,14 +38,8 @@ interface Reunion {
   ordre_du_jour: string;
   lieu_description: string;
   compte_rendu_url: string;
-  lieu_membre: {
-    nom: string;
-    prenom: string;
-  } | null;
-  beneficiaire: {
-    nom: string;
-    prenom: string;
-  } | null;
+  lieu_membre_id?: string;
+  beneficiaire_id?: string;
 }
 
 export default function Reunions() {
@@ -67,11 +61,7 @@ export default function Reunions() {
     try {
       const { data, error } = await supabase
         .from('reunions')
-        .select(`
-          *,
-          lieu_membre:membres!reunions_lieu_membre_id_fkey(nom, prenom),
-          beneficiaire:membres!reunions_beneficiaire_id_fkey(nom, prenom)
-        `)
+        .select(`*`)
         .order('date_reunion', { ascending: false });
 
       if (error) {
@@ -128,8 +118,7 @@ export default function Reunions() {
 
   const filteredReunions = reunions.filter(reunion =>
     reunion.ordre_du_jour?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    reunion.lieu_description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    `${reunion.lieu_membre?.nom} ${reunion.lieu_membre?.prenom}`.toLowerCase().includes(searchTerm.toLowerCase())
+    reunion.lieu_description?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const StatCard = ({ 
@@ -326,13 +315,7 @@ export default function Reunions() {
                     </TableCell>
                     
                     <TableCell>
-                      {reunion.beneficiaire ? (
-                        <p className="text-sm font-medium">
-                          {reunion.beneficiaire.prenom} {reunion.beneficiaire.nom}
-                        </p>
-                      ) : (
-                        <span className="text-muted-foreground text-sm">Non défini</span>
-                      )}
+                      <span className="text-muted-foreground text-sm">À configurer</span>
                     </TableCell>
                     
                     <TableCell>
@@ -347,11 +330,6 @@ export default function Reunions() {
                         <div>
                           {reunion.lieu_description && (
                             <p className="text-sm">{reunion.lieu_description}</p>
-                          )}
-                          {reunion.lieu_membre && (
-                            <p className="text-xs text-muted-foreground">
-                              Chez {reunion.lieu_membre.nom} {reunion.lieu_membre.prenom}
-                            </p>
                           )}
                         </div>
                       </div>

@@ -786,6 +786,51 @@ export type Database = {
           },
         ]
       }
+      reunion_presences: {
+        Row: {
+          created_at: string
+          date_presence: string
+          id: string
+          membre_id: string
+          notes: string | null
+          present: boolean
+          reunion_id: string
+        }
+        Insert: {
+          created_at?: string
+          date_presence?: string
+          id?: string
+          membre_id: string
+          notes?: string | null
+          present?: boolean
+          reunion_id: string
+        }
+        Update: {
+          created_at?: string
+          date_presence?: string
+          id?: string
+          membre_id?: string
+          notes?: string | null
+          present?: boolean
+          reunion_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reunion_presences_membre_id_fkey"
+            columns: ["membre_id"]
+            isOneToOne: false
+            referencedRelation: "membres"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reunion_presences_reunion_id_fkey"
+            columns: ["reunion_id"]
+            isOneToOne: false
+            referencedRelation: "reunions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reunions: {
         Row: {
           beneficiaire_id: string | null
@@ -1229,6 +1274,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      calculate_total_pret_amount: {
+        Args: {
+          montant_initial: number
+          reconductions?: number
+          taux_interet: number
+        }
+        Returns: number
+      }
       get_current_user_role: {
         Args: Record<PropertyKey, never>
         Returns: string

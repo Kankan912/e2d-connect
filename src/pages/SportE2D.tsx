@@ -150,17 +150,14 @@ export default function SportE2D() {
           <span className="text-sm">Voir les résultats</span>
         </Button>
 
-        <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate("/sport-e2d")}>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Finances</p>
-                <p className="text-2xl font-bold">Gérer</p>
-              </div>
-              <Settings className="h-8 w-8 text-green-500" />
-            </div>
-          </CardContent>
-        </Card>
+        <Button 
+          className="h-full min-h-[120px] flex flex-col items-center justify-center"
+          variant="outline"
+          onClick={() => window.open('/sport-e2d-finances', '_blank')}
+        >
+          <Settings className="h-8 w-8 mb-2" />
+          <span className="text-sm">Gérer les finances</span>
+        </Button>
       </div>
 
       {/* Derniers matchs */}

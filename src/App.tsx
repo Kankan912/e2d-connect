@@ -32,6 +32,9 @@ import MembreCotisationConfig from "./pages/MembreCotisationConfig";
 import MembreFiche from "./pages/MembreFiche";
 import ConfigurationGenerale from "./pages/ConfigurationGenerale";
 import StatistiquesMatchs from "./pages/StatistiquesMatchs";
+import PresenceReunions from "./pages/PresenceReunions";
+import Sport from "./pages/Sport";
+import SportE2DFinances from "./pages/SportE2DFinances";
 import NotFound from "./pages/NotFound";
 import ErrorBoundary from "./components/ErrorBoundary";
 
@@ -96,19 +99,21 @@ function App() {
                   <Route path="/membre-cotisation-config" element={<MembreCotisationConfig />} />
                   <Route path="/prets" element={<Prets />} />
                   <Route path="/sanctions" element={<Sanctions />} />
-                  <Route path="/epargnes" element={<Epargnes />} />
                   <Route path="/aides" element={<Aides />} />
                   <Route path="/reunions" element={<Reunions />} />
-                  <Route path="/sport/statistiques" element={<StatistiquesMatchs />} />
-                  <Route path="/sport-e2d" element={<SportE2D />} />
-                  <Route path="/sport-phoenix" element={<SportPhoenix />} />
-                  <Route path="/calendrier-sportif" element={<CalendrierSportif />} />
-                  <Route path="/calendrier" element={<Navigate to="/calendrier-sportif" replace />} />
-                  <Route path="/match-results" element={<MatchResults />} />
-                  <Route path="/resultats-matchs" element={<Navigate to="/match-results" replace />} />
+                  <Route path="/presence-reunions" element={<PresenceReunions />} />
+                  <Route path="/sport" element={<Sport />} />
+                  <Route path="/sport-e2d-finances" element={<SportE2DFinances />} />
+                  <Route path="/sport/statistiques" element={<Navigate to="/sport" />} />
+                  <Route path="/sport-e2d" element={<Navigate to="/sport" />} />
+                  <Route path="/sport-phoenix" element={<Navigate to="/sport" />} />
+                  <Route path="/calendrier-sportif" element={<Navigate to="/sport" />} />
+                  <Route path="/calendrier" element={<Navigate to="/sport" />} />
+                  <Route path="/match-results" element={<Navigate to="/sport" />} />
+                  <Route path="/resultats-matchs" element={<Navigate to="/sport" />} />
                   <Route path="/eligibilite-gala" element={<EligibiliteGala />} />
-                  <Route path="/gestion-presences" element={<GestionPresences />} />
-                  <Route path="/presences" element={<Navigate to="/gestion-presences" replace />} />
+                  <Route path="/gestion-presences" element={<Navigate to="/sport" />} />
+                  <Route path="/presences" element={<Navigate to="/sport" />} />
                   <Route path="/sport-config" element={<SportConfig />} />
                   <Route path="/historique-connexion" element={<HistoriqueConnexion />} />
                   <Route path="/rapports" element={<Rapports />} />

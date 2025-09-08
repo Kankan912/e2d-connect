@@ -275,6 +275,7 @@ export default function Prets() {
                   <TableHead>Date prêt</TableHead>
                   <TableHead>Échéance</TableHead>
                   <TableHead>Statut</TableHead>
+                  <TableHead>Total Attendu</TableHead>
                   <TableHead>Avaliste</TableHead>
                   <TableHead>Notes</TableHead>
                 </TableRow>
@@ -288,6 +289,9 @@ export default function Prets() {
                     
                     <TableCell className="font-bold text-primary">
                       {Number(pret.montant || 0).toLocaleString()} FCFA
+                      <div className="text-xs text-muted-foreground">
+                        +{(Number(pret.montant || 0) * Number(pret.taux_interet || 0) / 100 * (1 + (pret.reconductions || 0))).toLocaleString()} FCFA intérêt
+                      </div>
                     </TableCell>
                     
                     <TableCell>
@@ -309,6 +313,10 @@ export default function Prets() {
                       {getStatutBadge(pret.statut, pret.echeance)}
                     </TableCell>
                     
+                    <TableCell className="font-bold text-secondary">
+                      {(Number(pret.montant || 0) + (Number(pret.montant || 0) * Number(pret.taux_interet || 0) / 100 * (1 + (pret.reconductions || 0)))).toLocaleString()} FCFA
+                    </TableCell>
+                    
                     <TableCell className="text-muted-foreground">
                       {pret.avaliste ? (
                         `${pret.avaliste.nom} ${pret.avaliste.prenom}`
@@ -325,7 +333,7 @@ export default function Prets() {
                 
                 {filteredPrets.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                       {searchTerm ? "Aucun prêt trouvé" : "Aucun prêt enregistré"}
                     </TableCell>
                   </TableRow>
