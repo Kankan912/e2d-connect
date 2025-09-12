@@ -209,6 +209,33 @@ export type Database = {
           },
         ]
       }
+      cotisations_minimales: {
+        Row: {
+          actif: boolean
+          created_at: string
+          id: string
+          membre_id: string
+          montant_mensuel: number
+          updated_at: string
+        }
+        Insert: {
+          actif?: boolean
+          created_at?: string
+          id?: string
+          membre_id: string
+          montant_mensuel?: number
+          updated_at?: string
+        }
+        Update: {
+          actif?: boolean
+          created_at?: string
+          id?: string
+          membre_id?: string
+          montant_mensuel?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       cotisations_types: {
         Row: {
           created_at: string | null
@@ -370,6 +397,36 @@ export type Database = {
         }
         Relationships: []
       }
+      match_presences: {
+        Row: {
+          created_at: string
+          id: string
+          match_id: string
+          match_type: string
+          membre_id: string
+          notes: string | null
+          present: boolean
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          match_id: string
+          match_type: string
+          membre_id: string
+          notes?: string | null
+          present?: boolean
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          match_id?: string
+          match_type?: string
+          membre_id?: string
+          notes?: string | null
+          present?: boolean
+        }
+        Relationships: []
+      }
       match_statistics: {
         Row: {
           assists: number
@@ -417,6 +474,7 @@ export type Database = {
           created_at: string | null
           date_inscription: string | null
           email: string | null
+          equipe: string | null
           est_adherent_phoenix: boolean | null
           est_membre_e2d: boolean | null
           id: string
@@ -432,6 +490,7 @@ export type Database = {
           created_at?: string | null
           date_inscription?: string | null
           email?: string | null
+          equipe?: string | null
           est_adherent_phoenix?: boolean | null
           est_membre_e2d?: boolean | null
           id?: string
@@ -447,6 +506,7 @@ export type Database = {
           created_at?: string | null
           date_inscription?: string | null
           email?: string | null
+          equipe?: string | null
           est_adherent_phoenix?: boolean | null
           est_membre_e2d?: boolean | null
           id?: string

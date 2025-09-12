@@ -149,7 +149,8 @@ export default function TontineBeneficiairesManager() {
   const totalCotisations = cotisationsMensuelles?.reduce((sum, cotisation) => sum + cotisation.montant_total, 0) || 0;
   const totalAttribue = selectedBeneficiaires.reduce((sum, beneficiaire) => sum + beneficiaire.montant, 0);
   const resteARepartir = totalCotisations - totalAttribue;
-  const isValidRepartition = Math.abs(resteARepartir) < 0.01; // Allow for small rounding differences
+  // Phase 1 Fix: Allow total_attribue <= total_cotisations instead of strict equality
+  const isValidRepartition = totalAttribue <= totalCotisations && totalAttribue > 0;
 
   // Load existing attributions when month/year changes
   useEffect(() => {
@@ -403,7 +404,7 @@ export default function TontineBeneficiairesManager() {
                   <Alert className="border-green-200 bg-green-50">
                     <CheckCircle className="h-4 w-4 text-green-600" />
                     <AlertDescription className="text-green-800">
-                      Répartition équilibrée - prêt à enregistrer
+                      Répartition valide - prêt à enregistrer
                     </AlertDescription>
                   </Alert>
                 )}
@@ -411,7 +412,7 @@ export default function TontineBeneficiairesManager() {
                   <Alert className="border-red-200 bg-red-50">
                     <AlertTriangle className="h-4 w-4 text-red-600" />
                     <AlertDescription className="text-red-800">
-                      La somme attribuée doit égaler le total des cotisations
+                      La somme attribuée ne peut pas dépasser le total des cotisations et doit être supérieure à 0
                     </AlertDescription>
                   </Alert>
                 )}

@@ -19,10 +19,13 @@ import LogoHeader from "@/components/LogoHeader";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import E2DMatchForm from "@/components/forms/E2DMatchForm";
+import MatchDetailsModal from "@/components/MatchDetailsModal";
 
 export default function SportE2D() {
   const navigate = useNavigate();
   const [showMatchForm, setShowMatchForm] = useState(false);
+  const [selectedMatch, setSelectedMatch] = useState<any>(null);
+  const [showMatchDetails, setShowMatchDetails] = useState(false);
 
   const { data: membres } = useQuery({
     queryKey: ['membres'],
@@ -172,7 +175,14 @@ export default function SportE2D() {
           <CardContent>
             <div className="space-y-3">
               {matchs.slice(0, 3).map((match) => (
-                <div key={match.id} className="flex items-center justify-between p-3 border rounded-lg">
+                <div 
+                  key={match.id} 
+                  className="flex items-center justify-between p-3 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
+                  onClick={() => {
+                    setSelectedMatch(match);
+                    setShowMatchDetails(true);
+                  }}
+                >
                   <div>
                     <p className="font-medium">{config?.nom_equipe || 'E2D'} vs {match.equipe_adverse}</p>
                     <p className="text-sm text-muted-foreground">
@@ -202,6 +212,13 @@ export default function SportE2D() {
           // Rafraîchir les données des matchs
           window.location.reload();
         }}
+      />
+
+      <MatchDetailsModal
+        open={showMatchDetails}
+        onOpenChange={setShowMatchDetails}
+        match={selectedMatch}
+        matchType="e2d"
       />
     </div>
   );

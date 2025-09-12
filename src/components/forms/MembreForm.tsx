@@ -42,18 +42,40 @@ export default function MembreForm({ open, onOpenChange, membre, onSuccess }: Me
     statut: "actif",
     est_membre_e2d: true,
     est_adherent_phoenix: false,
-    ...membre
   });
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
+  // Phase 1 Fix: Properly pre-fill form when editing
   useEffect(() => {
     if (open) {
       fetchRoles();
       if (membre?.id) {
         fetchMembreRoles(membre.id);
+        // Pre-fill form data with existing member data
+        setFormData({
+          nom: membre.nom || "",
+          prenom: membre.prenom || "",
+          email: membre.email || "",
+          telephone: membre.telephone || "",
+          statut: membre.statut || "actif",
+          est_membre_e2d: membre.est_membre_e2d ?? true,
+          est_adherent_phoenix: membre.est_adherent_phoenix ?? false,
+        });
+      } else {
+        // Reset form for new member
+        setFormData({
+          nom: "",
+          prenom: "",
+          email: "",
+          telephone: "",
+          statut: "actif",
+          est_membre_e2d: true,
+          est_adherent_phoenix: false,
+        });
+        setSelectedRoles([]);
       }
     }
   }, [open, membre?.id]);

@@ -82,9 +82,20 @@ export default function Membres() {
     }
   };
 
+  // Phase 1 Fix: Link cotisations to past meetings with red indicator for missing cotisations
   const loadCotisationsStatus = async (membresData: Membre[]) => {
     try {
       const statusMap = new Map<string, CotisationStatus>();
+      
+      // Get completed meetings to validate cotisations against
+      const { data: reunionsTerminees } = await supabase
+        .from('reunions')
+        .select('date_reunion')
+        .eq('statut', 'terminee')
+        .lt('date_reunion', new Date().toISOString())
+        .order('date_reunion', { ascending: false });
+
+      const reunionsCount = reunionsTerminees?.length || 0;
       
       for (const membre of membresData) {
         const { data: cotisations } = await supabase
@@ -93,13 +104,12 @@ export default function Membres() {
           .eq('membre_id', membre.id)
           .order('date_paiement', { ascending: false });
 
-        const total = cotisations?.length || 0;
         const payees = cotisations?.filter(c => c.statut === 'paye').length || 0;
-        const pourcentage = total > 0 ? (payees / total) * 100 : 0;
+        const pourcentage = reunionsCount > 0 ? (payees / reunionsCount) * 100 : 100;
         const dernierePaie = cotisations?.find(c => c.statut === 'paye')?.date_paiement;
 
         statusMap.set(membre.id, {
-          total,
+          total: reunionsCount,
           payees,
           pourcentage,
           dernierePaie
@@ -259,7 +269,14 @@ export default function Membres() {
                   const getCotisationsBadge = () => {
                     if (!cotisationStatus) return <Badge variant="outline">-</Badge>;
                     
-                    if (cotisationStatus.pourcentage >= 80) {
+                    // Red for overdue cotisations (based on completed meetings)
+                    if (cotisationStatus.payees < cotisationStatus.total) {
+                      return (
+                        <Badge className="bg-destructive text-destructive-foreground">
+                          {cotisationStatus.pourcentage.toFixed(0)}% - En retard
+                        </Badge>
+                      );
+                    } else if (cotisationStatus.pourcentage >= 80) {
                       return (
                         <Badge className="bg-success text-success-foreground">
                           {cotisationStatus.pourcentage.toFixed(0)}%
@@ -330,7 +347,7 @@ export default function Membres() {
                           {getCotisationsBadge()}
                           {cotisationStatus && (
                             <div className="text-xs text-muted-foreground">
-                              {cotisationStatus.payees}/{cotisationStatus.total} payées
+                              {cotisationStatus.payees}/{cotisationStatus.total} réunions payées
                               {cotisationStatus.dernierePaie && (
                                 <div>Dernière: {new Date(cotisationStatus.dernierePaie).toLocaleDateString('fr-FR')}</div>
                               )}
