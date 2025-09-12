@@ -7,7 +7,7 @@ import AdminCreateAccount from "@/components/AdminCreateAccount";
 import BackupManager from "@/components/BackupManager";
 import RolePermissionsManager from "@/components/RolePermissionsManager";
 import RoleManager from "@/components/RoleManager";
-import BeneficiairesConfigManager from "@/components/BeneficiairesConfigManager";
+import TontineBeneficiairesManager from "@/components/TontineBeneficiairesManager";
 import LogoHeader from "@/components/LogoHeader";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -83,9 +83,9 @@ export default function Configuration() {
             <Shield className="h-4 w-4" />
             Permissions
           </TabsTrigger>
-          <TabsTrigger value="beneficiaires" className="flex items-center gap-2">
+          <TabsTrigger value="tontine" className="flex items-center gap-2">
             <DollarSign className="h-4 w-4" />
-            Bénéficiaires
+            Tontine
           </TabsTrigger>
           <TabsTrigger value="backup" className="flex items-center gap-2">
             <Database className="h-4 w-4" />
@@ -155,8 +155,8 @@ export default function Configuration() {
           </div>
         </TabsContent>
 
-        <TabsContent value="beneficiaires" className="space-y-6">
-          <BeneficiairesConfigManager />
+        <TabsContent value="tontine" className="space-y-6">
+          <TontineBeneficiairesManager />
         </TabsContent>
 
         <TabsContent value="backup" className="space-y-6">

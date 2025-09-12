@@ -1269,6 +1269,39 @@ export type Database = {
         }
         Relationships: []
       }
+      tontine_attributions: {
+        Row: {
+          annee: number
+          created_at: string
+          id: string
+          membre_id: string
+          mois: number
+          montant_attribue: number
+          total_cotisations_mois: number
+          updated_at: string
+        }
+        Insert: {
+          annee: number
+          created_at?: string
+          id?: string
+          membre_id: string
+          mois: number
+          montant_attribue: number
+          total_cotisations_mois: number
+          updated_at?: string
+        }
+        Update: {
+          annee?: number
+          created_at?: string
+          id?: string
+          membre_id?: string
+          mois?: number
+          montant_attribue?: number
+          total_cotisations_mois?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
