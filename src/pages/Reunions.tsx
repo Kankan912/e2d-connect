@@ -310,6 +310,7 @@ export default function Reunions() {
                 <TableRow>
                   <TableHead>Date & Heure</TableHead>
                   <TableHead>Statut</TableHead>
+                  <TableHead>Membre hôte</TableHead>
                   <TableHead>Bénéficiaire</TableHead>
                   <TableHead>Ordre du jour</TableHead>
                   <TableHead>Lieu</TableHead>
@@ -336,6 +337,14 @@ export default function Reunions() {
                     
                     <TableCell>
                       {getStatutBadge(reunion.statut)}
+                    </TableCell>
+                    
+                    <TableCell>
+                      {reunion.lieu_membre_id ? (
+                        <BeneficiaireName beneficiaireId={reunion.lieu_membre_id} />
+                      ) : (
+                        <span className="text-muted-foreground text-sm">Non défini</span>
+                      )}
                     </TableCell>
                     
                     <TableCell>
@@ -366,17 +375,33 @@ export default function Reunions() {
                     <TableCell>
                       {reunion.compte_rendu_url ? (
                         reunion.compte_rendu_url === 'generated' ? (
-                          <Badge className="bg-success text-success-foreground">
-                            <FileText className="w-3 h-3 mr-1" />
-                            Disponible
-                          </Badge>
+                          <div className="flex gap-2">
+                            <Badge className="bg-success text-success-foreground">
+                              <FileText className="w-3 h-3 mr-1" />
+                              Disponible
+                            </Badge>
+                            <Button variant="outline" size="sm" onClick={() => {
+                              setSelectedReunion(reunion);
+                              setShowCompteRenduForm(true);
+                            }}>
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                          </div>
                         ) : (
-                          <Button variant="outline" size="sm" asChild>
-                            <a href={reunion.compte_rendu_url} target="_blank" rel="noopener noreferrer">
-                              <FileText className="w-4 h-4 mr-1" />
-                              Voir
-                            </a>
-                          </Button>
+                          <div className="flex gap-2">
+                            <Button variant="outline" size="sm" asChild>
+                              <a href={reunion.compte_rendu_url} target="_blank" rel="noopener noreferrer">
+                                <FileText className="w-4 h-4 mr-1" />
+                                Voir
+                              </a>
+                            </Button>
+                            <Button variant="outline" size="sm" onClick={() => {
+                              setSelectedReunion(reunion);
+                              setShowCompteRenduForm(true);
+                            }}>
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                          </div>
                         )
                       ) : (
                         <Button
@@ -415,7 +440,7 @@ export default function Reunions() {
                 
                 {filteredReunions.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                       {searchTerm ? "Aucune réunion trouvée" : "Aucune réunion planifiée"}
                     </TableCell>
                   </TableRow>

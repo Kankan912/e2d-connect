@@ -425,7 +425,15 @@ export type Database = {
           notes?: string | null
           present?: boolean
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_match_presences_membre"
+            columns: ["membre_id"]
+            isOneToOne: false
+            referencedRelation: "membres"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       match_statistics: {
         Row: {
