@@ -433,6 +433,13 @@ export type Database = {
             referencedRelation: "membres"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "fk_match_presences_membre_id"
+            columns: ["membre_id"]
+            isOneToOne: false
+            referencedRelation: "membres"
+            referencedColumns: ["id"]
+          },
         ]
       }
       match_statistics: {

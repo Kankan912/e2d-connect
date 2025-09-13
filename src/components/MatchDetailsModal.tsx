@@ -84,32 +84,21 @@ export default function MatchDetailsModal({
     
     setLoading(true);
     try {
-      // Load match presences - use a simpler approach since we just added the foreign key
+      // Load match presences with member data using the foreign key relationship
       const { data: presencesData, error: presencesError } = await supabase
         .from('match_presences')
-        .select('*, membre_id')
+        .select(`
+          *,
+          membres!fk_match_presences_membre_id (
+            nom,
+            prenom,
+            equipe
+          )
+        `)
         .eq('match_id', match.id)
         .eq('match_type', matchType);
 
       if (presencesError) throw presencesError;
-
-      // Load membre data separately to avoid foreign key issues
-      const membreIds = presencesData?.map(p => p.membre_id) || [];
-      const { data: membresData, error: membresError } = await supabase
-        .from('membres')
-        .select('id, nom, prenom, equipe')
-        .in('id', membreIds);
-
-      if (membresError) throw membresError;
-
-      // Combine presence and membre data
-      const presencesWithMembres = (presencesData || []).map(presence => {
-        const membre = membresData?.find(m => m.id === presence.membre_id);
-        return {
-          ...presence,
-          membres: membre || { nom: 'Inconnu', prenom: '', equipe: undefined }
-        };
-      });
 
       // Load match statistics
       const { data: statisticsData, error: statisticsError } = await supabase
@@ -120,7 +109,7 @@ export default function MatchDetailsModal({
 
       if (statisticsError) throw statisticsError;
 
-      setPresences(presencesWithMembres);
+      setPresences(presencesData || []);
       setStatistics(statisticsData || []);
     } catch (error: any) {
       toast({
