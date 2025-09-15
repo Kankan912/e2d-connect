@@ -35,6 +35,7 @@ import StatistiquesMatchs from "./pages/StatistiquesMatchs";
 import PresenceReunions from "./pages/PresenceReunions";
 import Sport from "./pages/Sport";
 import SportE2DFinances from "./pages/SportE2DFinances";
+import PhoenixAdherents from "./pages/PhoenixAdherents";
 import NotFound from "./pages/NotFound";
 import ErrorBoundary from "./components/ErrorBoundary";
 
@@ -107,7 +108,8 @@ function App() {
                   <Route path="/sport-e2d-finances" element={<SportE2DFinances />} />
                   <Route path="/sport/statistiques" element={<Navigate to="/sport" />} />
                   <Route path="/sport-e2d" element={<Navigate to="/sport" />} />
-                  <Route path="/sport-phoenix" element={<Navigate to="/sport" />} />
+                  <Route path="/sport-phoenix" element={<SportPhoenix />} />
+                  <Route path="/phoenix-adherents" element={<PhoenixAdherents />} />
                   <Route path="/calendrier-sportif" element={<Navigate to="/sport" />} />
                   <Route path="/calendrier" element={<Navigate to="/sport" />} />
                   <Route path="/match-results" element={<Navigate to="/sport" />} />

@@ -24,6 +24,7 @@ interface Membre {
   statut: string;
   est_membre_e2d: boolean;
   est_adherent_phoenix: boolean;
+  equipe?: string;
 }
 
 interface MembreFormProps {
@@ -42,6 +43,7 @@ export default function MembreForm({ open, onOpenChange, membre, onSuccess }: Me
     statut: "actif",
     est_membre_e2d: true,
     est_adherent_phoenix: false,
+    equipe: undefined,
   });
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
@@ -63,6 +65,7 @@ export default function MembreForm({ open, onOpenChange, membre, onSuccess }: Me
           statut: membre.statut || "actif",
           est_membre_e2d: membre.est_membre_e2d ?? true,
           est_adherent_phoenix: membre.est_adherent_phoenix ?? false,
+          equipe: (membre as any).equipe || undefined,
         });
       } else {
         // Reset form for new member
@@ -74,6 +77,7 @@ export default function MembreForm({ open, onOpenChange, membre, onSuccess }: Me
           statut: "actif",
           est_membre_e2d: true,
           est_adherent_phoenix: false,
+          equipe: undefined,
         });
         setSelectedRoles([]);
       }
@@ -162,6 +166,7 @@ export default function MembreForm({ open, onOpenChange, membre, onSuccess }: Me
             statut: formData.statut,
             est_membre_e2d: formData.est_membre_e2d,
             est_adherent_phoenix: formData.est_adherent_phoenix,
+            equipe: formData.equipe,
           })
           .eq('id', membre.id);
         
@@ -177,6 +182,7 @@ export default function MembreForm({ open, onOpenChange, membre, onSuccess }: Me
             statut: formData.statut,
             est_membre_e2d: formData.est_membre_e2d,
             est_adherent_phoenix: formData.est_adherent_phoenix,
+            equipe: formData.equipe,
           }])
           .select()
           .single();
@@ -225,6 +231,7 @@ export default function MembreForm({ open, onOpenChange, membre, onSuccess }: Me
         statut: "actif",
         est_membre_e2d: true,
         est_adherent_phoenix: false,
+        equipe: undefined,
       });
       setSelectedRoles([]);
     } catch (error: any) {
@@ -316,6 +323,27 @@ export default function MembreForm({ open, onOpenChange, membre, onSuccess }: Me
           </div>
           
           <div className="space-y-4">
+            {/* Équipe E2D */}
+            {formData.est_membre_e2d && (
+              <div className="space-y-2">
+                <Label htmlFor="equipe">Équipe E2D</Label>
+                <Select 
+                  value={formData.equipe || ""} 
+                  onValueChange={(value) => 
+                    setFormData(prev => ({ ...prev, equipe: value || undefined }))
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choisir une équipe" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Jaune">Équipe Jaune</SelectItem>
+                    <SelectItem value="Rouge">Équipe Rouge</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            
             {/* Rôles du membre */}
             <div className="space-y-3">
               <Label>Rôles du membre</Label>

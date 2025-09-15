@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -35,13 +35,12 @@ export default function CompteRenduForm({
 }: CompteRenduFormProps) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
 
   const form = useForm<CompteRenduFormData>({
     resolver: zodResolver(compteRenduSchema),
     defaultValues: {
-      sujets: ordreJour 
-        ? ordreJour.split('\n').filter(s => s.trim()).map(s => ({ titre: s.trim(), resolution: '' }))
-        : [{ titre: '', resolution: '' }],
+      sujets: [{ titre: '', resolution: '' }],
     },
   });
 
@@ -49,6 +48,46 @@ export default function CompteRenduForm({
     control: form.control,
     name: "sujets"
   });
+
+  // Phase 1 Fix: Load existing compte-rendu data for editing
+  useEffect(() => {
+    const loadExistingData = async () => {
+      try {
+        const { data: existingReports, error } = await supabase
+          .from('rapports_seances')
+          .select('sujet, resolution')
+          .eq('reunion_id', reunionId);
+
+        if (error) throw error;
+
+        if (existingReports && existingReports.length > 0) {
+          // Pre-fill with existing data
+          setIsEditing(true);
+          form.reset({
+            sujets: existingReports.map(report => ({
+              titre: report.sujet,
+              resolution: report.resolution
+            }))
+          });
+        } else if (ordreJour) {
+          // Pre-fill with order of the day if no existing reports
+          form.reset({
+            sujets: ordreJour.split('\n').filter(s => s.trim()).map(s => ({ titre: s.trim(), resolution: '' }))
+          });
+        }
+      } catch (error) {
+        console.error('Error loading existing compte-rendu:', error);
+        // Fallback to order of the day
+        if (ordreJour) {
+          form.reset({
+            sujets: ordreJour.split('\n').filter(s => s.trim()).map(s => ({ titre: s.trim(), resolution: '' }))
+          });
+        }
+      }
+    };
+
+    loadExistingData();
+  }, [reunionId, ordreJour, form]);
 
   const onSubmit = async (data: CompteRenduFormData) => {
     setIsSubmitting(true);
@@ -104,7 +143,9 @@ export default function CompteRenduForm({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Ajouter le compte-rendu</CardTitle>
+        <CardTitle>
+          {isEditing ? "Modifier le compte-rendu" : "Ajouter le compte-rendu"}
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
