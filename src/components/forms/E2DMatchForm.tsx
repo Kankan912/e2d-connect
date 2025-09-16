@@ -133,16 +133,28 @@ export default function E2DMatchForm({ open, onOpenChange, onSuccess }: E2DMatch
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="equipe_adverse">Équipe adversaire *</Label>
-            <Input
-              id="equipe_adverse"
-              placeholder="Ex: FC Étoiles, AS Victoire..."
-              value={formData.equipe_adverse}
-              onChange={(e) => setFormData(prev => ({ ...prev, equipe_adverse: e.target.value }))}
-              required
-            />
-          </div>
+            <div className="space-y-2">
+              <Label htmlFor="equipe_adverse">Équipe adversaire *</Label>
+              <Select 
+                value={formData.equipe_adverse} 
+                onValueChange={(value) => setFormData(prev => ({ ...prev, equipe_adverse: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner l'équipe..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Équipe Jaune">Équipe Jaune</SelectItem>
+                  <SelectItem value="Équipe Rouge">Équipe Rouge</SelectItem>
+                  <SelectItem value="Autre équipe">Autre équipe externe</SelectItem>
+                </SelectContent>
+              </Select>
+              {formData.equipe_adverse === "Autre équipe" && (
+                <Input
+                  placeholder="Nom de l'équipe adverse..."
+                  onChange={(e) => setFormData(prev => ({ ...prev, equipe_adverse: e.target.value }))}
+                />
+              )}
+            </div>
 
           <div className="space-y-2">
             <Label htmlFor="lieu">Lieu</Label>

@@ -24,6 +24,7 @@ import MatchResults from "./MatchResults";
 import StatistiquesMatchs from "./StatistiquesMatchs";
 import SportE2D from "./SportE2D";
 import SportPhoenix from "./SportPhoenix";
+import SportEquipes from "./SportEquipes";
 
 export default function Sport() {
   const navigate = useNavigate();
@@ -253,6 +254,10 @@ export default function Sport() {
             <Activity className="w-4 h-4" />
             Phoenix
           </TabsTrigger>
+          <TabsTrigger value="equipes" className="flex items-center gap-1">
+            <Target className="w-4 w-4" />
+            Équipes E2D
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="presences" className="mt-6">
@@ -277,6 +282,10 @@ export default function Sport() {
 
         <TabsContent value="phoenix" className="mt-6">
           <SportPhoenix />
+        </TabsContent>
+
+        <TabsContent value="equipes" className="mt-6">
+          <SportEquipes />
         </TabsContent>
       </Tabs>
     </div>
