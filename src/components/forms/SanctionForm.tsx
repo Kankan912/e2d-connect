@@ -182,21 +182,26 @@ export default function SanctionForm({ open, onOpenChange, onSuccess }: Sanction
             </Select>
           </div>
           
-          <div className="space-y-2">
-            <Label htmlFor="type">Type de sanction *</Label>
-            <Select value={formData.type_sanction_id} onValueChange={handleTypeChange}>
-              <SelectTrigger>
-                <SelectValue placeholder="Sélectionner un type" />
-              </SelectTrigger>
-              <SelectContent>
-                {typesSanctions.map((type) => (
-                  <SelectItem key={type.id} value={type.id}>
-                    {type.nom} ({type.categorie}) - {type.montant?.toLocaleString()} FCFA
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+            <div className="space-y-2">
+              <Label htmlFor="type">Type de sanction *</Label>
+              <Select value={formData.type_sanction_id} onValueChange={handleTypeChange}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner un type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {typesSanctions.map((type) => (
+                    <SelectItem key={type.id} value={type.id}>
+                      <div className="flex flex-col">
+                        <span>{type.nom}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {type.categorie} - {type.montant?.toLocaleString()} FCFA
+                        </span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">

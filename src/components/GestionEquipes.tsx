@@ -66,7 +66,9 @@ export default function GestionEquipes() {
         const { error } = await supabase
           .from('membres')
           .update({
-            equipe: playerForm.equipe
+            equipe: playerForm.equipe,
+            equipe_e2d: selectedTeam === 'e2d' ? playerForm.equipe : null,
+            equipe_phoenix: selectedTeam === 'phoenix' ? playerForm.equipe : null
           })
           .eq('id', editingPlayer.id);
 
@@ -243,17 +245,17 @@ export default function GestionEquipes() {
                   className="flex items-center justify-between p-3 border rounded-lg"
                 >
                   <div className="space-y-1">
-                    <div className="flex items-center gap-3">
-                      <span className="font-medium">{player.prenom} {player.nom}</span>
-                    </div>
-                    <div className="flex gap-2">
-                      <Badge className={
-                        player.equipe === 'jaune' ? 'bg-yellow-100 text-yellow-800' : 
-                        player.equipe === 'rouge' ? 'bg-red-100 text-red-800' : 
-                        'bg-gray-100 text-gray-800'
-                      }>
-                        {player.equipe ? `Équipe ${player.equipe}` : 'Sans équipe'}
-                      </Badge>
+            <div className="flex items-center gap-3">
+              <span className="font-medium">{player.prenom} {player.nom}</span>
+            </div>
+            <div className="flex gap-2">
+              <Badge className={
+                (selectedTeam === 'e2d' ? player.equipe : player.equipe) === 'jaune' ? 'bg-yellow-100 text-yellow-800' : 
+                (selectedTeam === 'e2d' ? player.equipe : player.equipe) === 'rouge' ? 'bg-red-100 text-red-800' : 
+                'bg-gray-100 text-gray-800'
+              }>
+                {(selectedTeam === 'e2d' ? player.equipe : player.equipe) ? `Équipe ${(selectedTeam === 'e2d' ? player.equipe : player.equipe)}` : 'Sans équipe'}
+              </Badge>
                       <Badge variant="outline">
                         {player.telephone}
                       </Badge>

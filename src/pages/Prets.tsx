@@ -21,12 +21,16 @@ import {
   CheckCircle,
   Clock,
   AlertTriangle,
-  TrendingUp
+  TrendingUp,
+  RefreshCw
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useRealtimeUpdates } from "@/hooks/useRealtimeUpdates";
 import PretForm from "@/components/forms/PretForm";
 import LogoHeader from "@/components/LogoHeader";
+import PretPaymentModal from "@/components/modals/PretPaymentModal";
+import PretReconductionModal from "@/components/modals/PretReconductionModal";
 
 interface Pret {
   id: string;
@@ -52,6 +56,9 @@ export default function Prets() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [showForm, setShowForm] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showReconductionModal, setShowReconductionModal] = useState(false);
+  const [selectedPretId, setSelectedPretId] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -103,64 +110,21 @@ export default function Prets() {
     }
   };
 
-  const handlePayment = async (pretId: string) => {
-    try {
-      const { error } = await supabase
-        .from('prets')
-        .update({ statut: 'rembourse' })
-        .eq('id', pretId);
+  // Activer les mises à jour temps réel
+  useRealtimeUpdates({
+    table: 'prets',
+    onUpdate: loadPrets,
+    enabled: true
+  });
 
-      if (error) throw error;
-
-      toast({
-        title: "Paiement enregistré",
-        description: "Le prêt a été marqué comme remboursé",
-      });
-      
-      loadPrets();
-    } catch (error: any) {
-      toast({
-        title: "Erreur",
-        description: "Impossible d'enregistrer le paiement",
-        variant: "destructive",
-      });
-    }
+  const handlePayment = (pretId: string) => {
+    setSelectedPretId(pretId);
+    setShowPaymentModal(true);
   };
 
-  const handleReconduction = async (pretId: string) => {
-    try {
-      // Get current reconductions count first
-      const { data: currentPret } = await supabase
-        .from('prets')
-        .select('reconductions')
-        .eq('id', pretId)
-        .single();
-
-      const newReconductions = (currentPret?.reconductions || 0) + 1;
-
-      const { error } = await supabase
-        .from('prets')
-        .update({ 
-          reconductions: newReconductions,
-          statut: 'reconduit'
-        })
-        .eq('id', pretId);
-
-      if (error) throw error;
-
-      toast({
-        title: "Reconduction effectuée",
-        description: "Le prêt a été reconduit avec succès",
-      });
-      
-      loadPrets();
-    } catch (error: any) {
-      toast({
-        title: "Erreur",
-        description: "Impossible de reconduire le prêt",
-        variant: "destructive",
-      });
-    }
+  const handleReconduction = (pretId: string) => {
+    setSelectedPretId(pretId);
+    setShowReconductionModal(true);
   };
 
   const filteredPrets = prets.filter(pret =>
@@ -395,7 +359,9 @@ export default function Prets() {
                         variant="outline"
                         onClick={() => handlePayment(pret.id)}
                         disabled={pret.statut !== 'en_cours'}
+                        className="bg-success/10 hover:bg-success/20 text-success border-success/20"
                       >
+                        <CheckCircle className="w-4 h-4 mr-1" />
                         Payer
                       </Button>
                       <Button 
@@ -404,6 +370,7 @@ export default function Prets() {
                         onClick={() => handleReconduction(pret.id)}
                         disabled={pret.statut !== 'en_cours'}
                       >
+                        <RefreshCw className="w-4 h-4 mr-1" />
                         Reconduire
                       </Button>
                     </TableCell>
@@ -426,6 +393,21 @@ export default function Prets() {
       <PretForm
         open={showForm}
         onOpenChange={setShowForm}
+        onSuccess={loadPrets}
+      />
+
+      {/* Modales de paiement et reconduction */}
+      <PretPaymentModal
+        open={showPaymentModal}
+        onOpenChange={setShowPaymentModal}
+        pretId={selectedPretId}
+        onSuccess={loadPrets}
+      />
+      
+      <PretReconductionModal
+        open={showReconductionModal}
+        onOpenChange={setShowReconductionModal}
+        pretId={selectedPretId}
         onSuccess={loadPrets}
       />
     </div>

@@ -54,6 +54,7 @@ interface Pret {
   date_pret: string;
   echeance: string;
   taux_interet: number;
+  reconductions: number;
 }
 
 export default function MembreFiche() {
@@ -328,31 +329,39 @@ export default function MembreFiche() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {prets.map((pret) => {
-                  const StatutIcon = getStatutIcon(pret.statut);
-                  return (
-                    <div key={pret.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div>
-                        <h4 className="font-medium">Prêt - {pret.taux_interet}%</h4>
-                        <p className="text-sm text-muted-foreground">
-                          {new Date(pret.date_pret).toLocaleDateString('fr-FR')} → {new Date(pret.echeance).toLocaleDateString('fr-FR')}
+            <div className="space-y-4">
+              {prets.map((pret) => {
+                const StatutIcon = getStatutIcon(pret.statut);
+                return (
+                  <div key={pret.id} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div>
+                      <h4 className="font-medium">Prêt - {pret.taux_interet}%</h4>
+                      <p className="text-sm text-muted-foreground">
+                        {new Date(pret.date_pret).toLocaleDateString('fr-FR')} → {new Date(pret.echeance).toLocaleDateString('fr-FR')}
+                      </p>
+                      {pret.reconductions > 0 && (
+                        <p className="text-xs text-warning">
+                          {pret.reconductions} reconduction(s)
                         </p>
-                      </div>
-                      <div className="text-right">
-                        <div className="font-bold text-primary">{pret.montant.toLocaleString()} FCFA</div>
-                        <Badge className={`mt-1 bg-${getStatutColor(pret.statut, pret.echeance)}`}>
-                          <StatutIcon className="w-3 h-3 mr-1" />
-                          {pret.statut}
-                        </Badge>
-                      </div>
+                      )}
                     </div>
-                  );
-                })}
-                {prets.length === 0 && (
-                  <p className="text-center text-muted-foreground py-8">Aucun prêt enregistré</p>
-                )}
-              </div>
+                    <div className="text-right">
+                      <div className="font-bold text-primary">{pret.montant.toLocaleString()} FCFA</div>
+                      <div className="text-xs text-muted-foreground">
+                        +{(pret.montant * pret.taux_interet / 100 * (1 + pret.reconductions)).toLocaleString()} FCFA intérêts
+                      </div>
+                      <Badge className={`mt-1 bg-${getStatutColor(pret.statut, pret.echeance)}`}>
+                        <StatutIcon className="w-3 h-3 mr-1" />
+                        {pret.statut === 'en_cours' && new Date(pret.echeance) < new Date() ? 'En retard' : pret.statut}
+                      </Badge>
+                    </div>
+                  </div>
+                );
+              })}
+              {prets.length === 0 && (
+                <p className="text-center text-muted-foreground py-8">Aucun prêt enregistré</p>
+              )}
+            </div>
             </CardContent>
           </Card>
         </TabsContent>

@@ -490,6 +490,8 @@ export type Database = {
           date_inscription: string | null
           email: string | null
           equipe: string | null
+          equipe_e2d: string | null
+          equipe_phoenix: string | null
           est_adherent_phoenix: boolean | null
           est_membre_e2d: boolean | null
           id: string
@@ -506,6 +508,8 @@ export type Database = {
           date_inscription?: string | null
           email?: string | null
           equipe?: string | null
+          equipe_e2d?: string | null
+          equipe_phoenix?: string | null
           est_adherent_phoenix?: boolean | null
           est_membre_e2d?: boolean | null
           id?: string
@@ -522,6 +526,8 @@ export type Database = {
           date_inscription?: string | null
           email?: string | null
           equipe?: string | null
+          equipe_e2d?: string | null
+          equipe_phoenix?: string | null
           est_adherent_phoenix?: boolean | null
           est_membre_e2d?: boolean | null
           id?: string
