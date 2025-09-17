@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   FileText, 
   Calendar, 
@@ -21,6 +23,12 @@ interface Reunion {
   statut: string;
 }
 
+interface RapportSeance {
+  id: string;
+  sujet: string;
+  resolution: string | null;
+}
+
 interface CompteRenduViewerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -34,7 +42,37 @@ export default function CompteRenduViewer({
   reunion, 
   onEdit 
 }: CompteRenduViewerProps) {
+  const [rapports, setRapports] = useState<RapportSeance[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
   if (!reunion) return null;
+
+  useEffect(() => {
+    const loadRapports = async () => {
+      if (!reunion?.id) return;
+      
+      setIsLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('rapports_seances')
+          .select('id, sujet, resolution')
+          .eq('reunion_id', reunion.id)
+          .order('created_at');
+
+        if (error) throw error;
+        setRapports(data || []);
+      } catch (error) {
+        console.error('Erreur lors du chargement des rapports:', error);
+        setRapports([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (open) {
+      loadRapports();
+    }
+  }, [reunion?.id, open]);
 
   const handleDownload = () => {
     if (reunion.compte_rendu_url && reunion.compte_rendu_url !== 'generated') {
@@ -42,7 +80,7 @@ export default function CompteRenduViewer({
     }
   };
 
-  const hasCompteRendu = reunion.compte_rendu_url && reunion.compte_rendu_url !== '';
+  const hasCompteRendu = rapports.length > 0;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -92,28 +130,65 @@ export default function CompteRenduViewer({
             </CardContent>
           </Card>
 
-          {/* Compte-rendu Status */}
+          {/* Compte-rendu Content */}
           <Card>
-            <CardHeader>
-              <CardTitle>État du compte-rendu</CardTitle>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>Compte-rendu de la réunion</CardTitle>
+              <div className="flex items-center gap-2">
+                {hasCompteRendu ? (
+                  <Badge className="bg-success text-success-foreground">
+                    <FileText className="h-3 w-3 mr-1" />
+                    Disponible
+                  </Badge>
+                ) : (
+                  <Badge variant="secondary">
+                    <FileText className="h-3 w-3 mr-1" />
+                    Non disponible
+                  </Badge>
+                )}
+              </div>
             </CardHeader>
             <CardContent>
-              {hasCompteRendu ? (
+              {isLoading ? (
+                <div className="text-center py-4 text-muted-foreground">
+                  Chargement du compte-rendu...
+                </div>
+              ) : hasCompteRendu ? (
                 <div className="space-y-4">
-                  <div className="flex items-center gap-2">
-                    <Badge className="bg-success text-success-foreground">
-                      <FileText className="h-3 w-3 mr-1" />
-                      Disponible
-                    </Badge>
+                  <div className="rounded-lg border">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="w-16">#</TableHead>
+                          <TableHead>Sujet traité</TableHead>
+                          <TableHead>Résolution / Décision</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {rapports.map((rapport, index) => (
+                          <TableRow key={rapport.id}>
+                            <TableCell className="font-medium">
+                              {index + 1}
+                            </TableCell>
+                            <TableCell className="font-medium">
+                              {rapport.sujet}
+                            </TableCell>
+                            <TableCell>
+                              {rapport.resolution || 'Aucune résolution enregistrée'}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
                   </div>
                   
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 pt-2">
                     <Button onClick={onEdit} variant="outline">
                       <Edit className="h-4 w-4 mr-2" />
-                      Modifier
+                      Modifier le compte-rendu
                     </Button>
                     
-                    {reunion.compte_rendu_url !== 'generated' && (
+                    {reunion.compte_rendu_url && reunion.compte_rendu_url !== 'generated' && (
                       <Button onClick={handleDownload} variant="outline">
                         <Download className="h-4 w-4 mr-2" />
                         Télécharger
@@ -122,12 +197,9 @@ export default function CompteRenduViewer({
                   </div>
                 </div>
               ) : (
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2">
-                    <Badge variant="secondary">
-                      <FileText className="h-3 w-3 mr-1" />
-                      Non disponible
-                    </Badge>
+                <div className="text-center py-8 space-y-4">
+                  <div className="text-muted-foreground">
+                    Aucun compte-rendu disponible pour cette réunion
                   </div>
                   
                   <Button onClick={onEdit}>
