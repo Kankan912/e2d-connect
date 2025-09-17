@@ -687,3 +687,5 @@ export const TableauBordDirection: React.FC = () => {
     </div>
   );
 };
+
+export default TableauBordDirection;
