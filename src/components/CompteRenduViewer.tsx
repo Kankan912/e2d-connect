@@ -45,8 +45,6 @@ export default function CompteRenduViewer({
   const [rapports, setRapports] = useState<RapportSeance[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  if (!reunion) return null;
-
   useEffect(() => {
     const loadRapports = async () => {
       if (!reunion?.id) return;
@@ -81,6 +79,8 @@ export default function CompteRenduViewer({
   };
 
   const hasCompteRendu = rapports.length > 0;
+
+  if (!reunion) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
