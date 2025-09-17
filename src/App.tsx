@@ -36,6 +36,7 @@ import PresenceReunions from "./pages/PresenceReunions";
 import Sport from "./pages/Sport";
 import SportE2DFinances from "./pages/SportE2DFinances";
 import PhoenixAdherents from "./pages/PhoenixAdherents";
+import Analytics from "./pages/Analytics";
 import NotFound from "./pages/NotFound";
 import ErrorBoundary from "./components/ErrorBoundary";
 
@@ -120,6 +121,7 @@ function App() {
                   <Route path="/sport-config" element={<SportConfig />} />
                   <Route path="/historique-connexion" element={<HistoriqueConnexion />} />
                   <Route path="/rapports" element={<Rapports />} />
+                  <Route path="/analytics" element={<Analytics />} />
                   <Route path="/configuration" element={<Configuration />} />
                   <Route path="/configuration-generale" element={<ConfigurationGenerale />} />
                   <Route path="/statistiques-matchs" element={<StatistiquesMatchs />} />

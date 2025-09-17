@@ -103,6 +103,66 @@ export default function Prets() {
     }
   };
 
+  const handlePayment = async (pretId: string) => {
+    try {
+      const { error } = await supabase
+        .from('prets')
+        .update({ statut: 'rembourse' })
+        .eq('id', pretId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Paiement enregistré",
+        description: "Le prêt a été marqué comme remboursé",
+      });
+      
+      loadPrets();
+    } catch (error: any) {
+      toast({
+        title: "Erreur",
+        description: "Impossible d'enregistrer le paiement",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleReconduction = async (pretId: string) => {
+    try {
+      // Get current reconductions count first
+      const { data: currentPret } = await supabase
+        .from('prets')
+        .select('reconductions')
+        .eq('id', pretId)
+        .single();
+
+      const newReconductions = (currentPret?.reconductions || 0) + 1;
+
+      const { error } = await supabase
+        .from('prets')
+        .update({ 
+          reconductions: newReconductions,
+          statut: 'reconduit'
+        })
+        .eq('id', pretId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Reconduction effectuée",
+        description: "Le prêt a été reconduit avec succès",
+      });
+      
+      loadPrets();
+    } catch (error: any) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de reconduire le prêt",
+        variant: "destructive",
+      });
+    }
+  };
+
   const filteredPrets = prets.filter(pret =>
     `${pret.membre?.nom} ${pret.membre?.prenom}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
     pret.notes?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -278,6 +338,7 @@ export default function Prets() {
                   <TableHead>Total Attendu</TableHead>
                   <TableHead>Avaliste</TableHead>
                   <TableHead>Notes</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -328,12 +389,30 @@ export default function Prets() {
                     <TableCell className="text-muted-foreground max-w-xs truncate">
                       {pret.notes || "-"}
                     </TableCell>
+                    <TableCell className="space-x-2">
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => handlePayment(pret.id)}
+                        disabled={pret.statut !== 'en_cours'}
+                      >
+                        Payer
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => handleReconduction(pret.id)}
+                        disabled={pret.statut !== 'en_cours'}
+                      >
+                        Reconduire
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 ))}
                 
                 {filteredPrets.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
                       {searchTerm ? "Aucun prêt trouvé" : "Aucun prêt enregistré"}
                     </TableCell>
                   </TableRow>

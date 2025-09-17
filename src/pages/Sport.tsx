@@ -19,9 +19,10 @@ import { useBackNavigation } from "@/hooks/useBackNavigation";
 
 // Import existing sport components
 import GestionPresences from "./GestionPresences";
-import CalendrierSportif from "./CalendrierSportif";
+import CalendrierSportifUnifie from "@/components/CalendrierSportifUnifie";
 import MatchResults from "./MatchResults";
-import StatistiquesMatchs from "./StatistiquesMatchs";
+import StatsMatchDetaillee from "@/components/StatsMatchDetaillee";
+import ClassementJoueurs from "@/components/ClassementJoueurs";
 import SportE2D from "./SportE2D";
 import SportPhoenix from "./SportPhoenix";
 import SportEquipes from "./SportEquipes";
@@ -229,7 +230,7 @@ export default function Sport() {
 
       {/* Onglets de navigation */}
       <Tabs defaultValue="presences" className="w-full">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="presences" className="flex items-center gap-1">
             <Users className="w-4 h-4" />
             Présences
@@ -246,6 +247,10 @@ export default function Sport() {
             <TrendingUp className="w-4 h-4" />
             Statistiques
           </TabsTrigger>
+          <TabsTrigger value="classements" className="flex items-center gap-1">
+            <Trophy className="w-4 h-4" />
+            Classements
+          </TabsTrigger>
           <TabsTrigger value="e2d" className="flex items-center gap-1">
             <Target className="w-4 h-4" />
             E2D
@@ -255,7 +260,7 @@ export default function Sport() {
             Phoenix
           </TabsTrigger>
           <TabsTrigger value="equipes" className="flex items-center gap-1">
-            <Target className="w-4 w-4" />
+            <Target className="w-4 h-4" />
             Équipes E2D
           </TabsTrigger>
         </TabsList>
@@ -265,7 +270,7 @@ export default function Sport() {
         </TabsContent>
 
         <TabsContent value="calendrier" className="mt-6">
-          <CalendrierSportif />
+          <CalendrierSportifUnifie />
         </TabsContent>
 
         <TabsContent value="resultats" className="mt-6">
@@ -273,7 +278,11 @@ export default function Sport() {
         </TabsContent>
 
         <TabsContent value="statistiques" className="mt-6">
-          <StatistiquesMatchs />
+          <StatsMatchDetaillee />
+        </TabsContent>
+
+        <TabsContent value="classements" className="mt-6">
+          <ClassementJoueurs />
         </TabsContent>
 
         <TabsContent value="e2d" className="mt-6">

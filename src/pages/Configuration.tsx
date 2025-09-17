@@ -8,6 +8,7 @@ import BackupManager from "@/components/BackupManager";
 import RolePermissionsManager from "@/components/RolePermissionsManager";
 import RoleManager from "@/components/RoleManager";
 import TontineBeneficiairesManager from "@/components/TontineBeneficiairesManager";
+import { SystemeNotifications } from "@/components/SystemeNotifications";
 import LogoHeader from "@/components/LogoHeader";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -74,7 +75,7 @@ export default function Configuration() {
 
       {/* Configuration Tabs */}
       <Tabs defaultValue="users" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="users" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
             Utilisateurs
@@ -82,6 +83,10 @@ export default function Configuration() {
           <TabsTrigger value="permissions" className="flex items-center gap-2">
             <Shield className="h-4 w-4" />
             Permissions
+          </TabsTrigger>
+          <TabsTrigger value="notifications" className="flex items-center gap-2">
+            <Settings className="h-4 w-4" />
+            Notifications
           </TabsTrigger>
           <TabsTrigger value="tontine" className="flex items-center gap-2">
             <DollarSign className="h-4 w-4" />
@@ -153,6 +158,10 @@ export default function Configuration() {
             <RoleManager />
             <RolePermissionsManager />
           </div>
+        </TabsContent>
+
+        <TabsContent value="notifications" className="space-y-6">
+          <SystemeNotifications />
         </TabsContent>
 
         <TabsContent value="tontine" className="space-y-6">

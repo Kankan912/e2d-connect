@@ -1,6 +1,6 @@
-import DynamicDashboard from "@/components/DynamicDashboard";
+import { TableauBordDirection } from "@/components/TableauBordDirection";
 
 export default function Index() {
-  return <DynamicDashboard />;
+  return <TableauBordDirection />;
 }
 
