@@ -298,43 +298,50 @@ export const ExportRapports: React.FC = () => {
           case 'prets':
             const pretsRes = await supabase
               .from('prets')
-              .select(`
-                *,
-                membres!prets_membre_id_fkey(nom, prenom)
-              `)
+              .select('*')
               .gte('created_at', startDate.toISOString())
               .lte('created_at', endDate.toISOString());
 
-            if (pretsRes.data) {
+            // Fetch members separately to avoid join issues
+            const pretsMembresRes = await supabase
+              .from('membres')
+              .select('id, nom, prenom');
+
+            if (pretsRes.data && pretsMembresRes.data) {
+              const membresMap = new Map(pretsMembresRes.data.map(m => [m.id, m]));
               const total = pretsRes.data.reduce((sum, item) => sum + Number(item.montant), 0);
+              
               data.prets = {
                 stats: {
                   total,
                   nombre: pretsRes.data.length,
                   moyenne: pretsRes.data.length > 0 ? total / pretsRes.data.length : 0
                 },
-                details: pretsRes.data.map(item => ({
-                  Date: new Date(item.date_pret).toLocaleDateString('fr-FR'),
-                  Membre: `${item.membres?.prenom} ${item.membres?.nom}`,
-                  Montant: item.montant,
-                  'Taux Intérêt': item.taux_interet + '%',
-                  Échéance: new Date(item.echeance).toLocaleDateString('fr-FR'),
-                  Statut: item.statut
-                }))
+                details: pretsRes.data.map(item => {
+                  const membre = membresMap.get(item.membre_id);
+                  return {
+                    Date: new Date(item.date_pret).toLocaleDateString('fr-FR'),
+                    Membre: membre ? `${membre.prenom} ${membre.nom}` : 'Membre inconnu',
+                    Montant: item.montant,
+                    'Taux Intérêt': item.taux_interet + '%',
+                    Échéance: new Date(item.echeance).toLocaleDateString('fr-FR'),
+                    Statut: item.statut
+                  };
+                })
               };
             }
             break;
 
           case 'membres':
-            const membresRes = await supabase.from('membres').select('*');
-            if (membresRes.data) {
+            const allMembresRes = await supabase.from('membres').select('*');
+            if (allMembresRes.data) {
               data.membres = {
                 stats: {
-                  total: membresRes.data.length,
-                  actifs: membresRes.data.filter(m => m.statut === 'actif').length,
-                  inactifs: membresRes.data.filter(m => m.statut === 'inactif').length
+                  total: allMembresRes.data.length,
+                  actifs: allMembresRes.data.filter(m => m.statut === 'actif').length,
+                  inactifs: allMembresRes.data.filter(m => m.statut === 'inactif').length
                 },
-                details: membresRes.data.map(item => ({
+                details: allMembresRes.data.map(item => ({
                   Nom: item.nom,
                   Prénom: item.prenom,
                   Téléphone: item.telephone,
