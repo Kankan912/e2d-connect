@@ -105,8 +105,6 @@ export default function ReunionForm({ onSuccess, initialData }: ReunionFormProps
   };
 
   const onSubmit = async (data: ReunionFormData) => {
-    console.log('📝 Soumission réunion:', data);
-    
     // Préparer les données avec gestion des UUID vides
     const formattedData = {
       type_reunion: data.type_reunion,
@@ -126,8 +124,6 @@ export default function ReunionForm({ onSuccess, initialData }: ReunionFormProps
   delete (formattedData as any).heure_reunion;
   
   // Gérer les invitations - envoi automatique à tous les membres
-  console.log('Lieu membre sélectionné:', data.lieu_membre_id);
-    
     const operation = async () => {
       let reunionId;
       
@@ -157,7 +153,6 @@ export default function ReunionForm({ onSuccess, initialData }: ReunionFormProps
     try {
       await withEnsureAdmin(operation);
       
-      console.log('✅ Réunion sauvegardée');
       toast({
         title: "Succès",
         description: initialData?.id ? "Réunion mise à jour" : "Réunion créée avec succès",

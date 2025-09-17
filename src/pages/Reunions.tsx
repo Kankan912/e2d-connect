@@ -12,6 +12,7 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Calendar, 
   Plus, 
@@ -21,12 +22,15 @@ import {
   FileText,
   Users,
   Edit,
-  Trash2
+  Trash2,
+  CalendarDays
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import ReunionForm from "@/components/forms/ReunionForm";
 import CompteRenduForm from "@/components/forms/CompteRenduForm";
+import CompteRenduViewer from "@/components/CompteRenduViewer";
+import CalendrierBeneficiaires from "@/components/CalendrierBeneficiaires";
 import LogoHeader from "@/components/LogoHeader";
 import { useBackNavigation } from "@/hooks/useBackNavigation";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -49,6 +53,7 @@ export default function Reunions() {
   const [searchTerm, setSearchTerm] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [showCompteRenduForm, setShowCompteRenduForm] = useState(false);
+  const [showCompteRenduViewer, setShowCompteRenduViewer] = useState(false);
   const [selectedReunion, setSelectedReunion] = useState<Reunion | null>(null);
   const [editingReunion, setEditingReunion] = useState<Reunion | null>(null);
   const { toast } = useToast();
@@ -126,6 +131,11 @@ export default function Reunions() {
   const handleCompteRendu = (reunion: Reunion) => {
     setSelectedReunion(reunion);
     setShowCompteRenduForm(true);
+  };
+
+  const handleViewCompteRendu = (reunion: Reunion) => {
+    setSelectedReunion(reunion);
+    setShowCompteRenduViewer(true);
   };
 
   const handleFormSuccess = () => {
@@ -283,173 +293,196 @@ export default function Reunions() {
         />
       </div>
 
-      {/* Liste des réunions */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
-              Calendrier des Réunions
-            </CardTitle>
-            <div className="relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Rechercher..."
-                className="pl-10 w-64"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-          </div>
-        </CardHeader>
-        
-        <CardContent>
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Date & Heure</TableHead>
-                  <TableHead>Statut</TableHead>
-                  <TableHead>Membre hôte</TableHead>
-                  <TableHead>Bénéficiaire</TableHead>
-                  <TableHead>Ordre du jour</TableHead>
-                  <TableHead>Lieu</TableHead>
-                  <TableHead>Compte-rendu</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredReunions.map((reunion) => (
-                  <TableRow key={reunion.id} className="hover:bg-muted/50">
-                    <TableCell className="font-medium">
-                      <div>
-                        <p className="font-semibold">
-                          {new Date(reunion.date_reunion).toLocaleDateString('fr-FR')}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {new Date(reunion.date_reunion).toLocaleTimeString('fr-FR', { 
-                            hour: '2-digit', 
-                            minute: '2-digit' 
-                          })}
-                        </p>
-                      </div>
-                    </TableCell>
-                    
-                    <TableCell>
-                      {getStatutBadge(reunion.statut)}
-                    </TableCell>
-                    
-                    <TableCell>
-                      {reunion.lieu_membre_id ? (
-                        <BeneficiaireName beneficiaireId={reunion.lieu_membre_id} />
-                      ) : (
-                        <span className="text-muted-foreground text-sm">Non défini</span>
-                      )}
-                    </TableCell>
-                    
-                    <TableCell>
-                      {reunion.beneficiaire_id ? (
-                        <BeneficiaireName beneficiaireId={reunion.beneficiaire_id} />
-                      ) : (
-                        <span className="text-muted-foreground text-sm">Non défini</span>
-                      )}
-                    </TableCell>
-                    
-                    <TableCell>
-                      <p className="text-sm">
-                        {reunion.ordre_du_jour || "Non défini"}
-                      </p>
-                    </TableCell>
-                    
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <MapPin className="w-4 h-4 text-muted-foreground" />
-                        <div>
-                          {reunion.lieu_description && (
-                            <p className="text-sm">{reunion.lieu_description}</p>
+      {/* Tabs pour Réunions et Bénéficiaires */}
+      <Tabs defaultValue="reunions" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="reunions" className="flex items-center gap-2">
+            <Calendar className="w-4 h-4" />
+            Réunions
+          </TabsTrigger>
+          <TabsTrigger value="beneficiaires" className="flex items-center gap-2">
+            <CalendarDays className="w-4 h-4" />
+            Bénéficiaires
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="reunions">
+          {/* Liste des réunions */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <Calendar className="h-5 w-5" />
+                  Calendrier des Réunions
+                </CardTitle>
+                <div className="relative">
+                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Rechercher..."
+                    className="pl-10 w-64"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+              </div>
+            </CardHeader>
+            
+            <CardContent>
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Date & Heure</TableHead>
+                      <TableHead>Statut</TableHead>
+                      <TableHead>Membre hôte</TableHead>
+                      <TableHead>Bénéficiaire</TableHead>
+                      <TableHead>Ordre du jour</TableHead>
+                      <TableHead>Lieu</TableHead>
+                      <TableHead>Compte-rendu</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredReunions.map((reunion) => (
+                      <TableRow key={reunion.id} className="hover:bg-muted/50">
+                        <TableCell className="font-medium">
+                          <div>
+                            <p className="font-semibold">
+                              {new Date(reunion.date_reunion).toLocaleDateString('fr-FR')}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              {new Date(reunion.date_reunion).toLocaleTimeString('fr-FR', { 
+                                hour: '2-digit', 
+                                minute: '2-digit' 
+                              })}
+                            </p>
+                          </div>
+                        </TableCell>
+                        
+                        <TableCell>
+                          {getStatutBadge(reunion.statut)}
+                        </TableCell>
+                        
+                        <TableCell>
+                          {reunion.lieu_membre_id ? (
+                            <BeneficiaireName beneficiaireId={reunion.lieu_membre_id} />
+                          ) : (
+                            <span className="text-muted-foreground text-sm">Non défini</span>
                           )}
-                        </div>
-                      </div>
-                    </TableCell>
-                    
-                    <TableCell>
-                      {reunion.compte_rendu_url ? (
-                        reunion.compte_rendu_url === 'generated' ? (
+                        </TableCell>
+                        
+                        <TableCell>
+                          {reunion.beneficiaire_id ? (
+                            <BeneficiaireName beneficiaireId={reunion.beneficiaire_id} />
+                          ) : (
+                            <span className="text-muted-foreground text-sm">Non défini</span>
+                          )}
+                        </TableCell>
+                        
+                        <TableCell>
+                          <p className="text-sm">
+                            {reunion.ordre_du_jour || "Non défini"}
+                          </p>
+                        </TableCell>
+                        
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            <MapPin className="w-4 h-4 text-muted-foreground" />
+                            <div>
+                              {reunion.lieu_description && (
+                                <p className="text-sm">{reunion.lieu_description}</p>
+                              )}
+                            </div>
+                          </div>
+                        </TableCell>
+                        
+                        <TableCell>
+                          {reunion.compte_rendu_url ? (
+                            reunion.compte_rendu_url === 'generated' ? (
+                              <div className="flex gap-2">
+                                <Badge className="bg-success text-success-foreground">
+                                  <FileText className="w-3 h-3 mr-1" />
+                                  Disponible
+                                </Badge>
+                                <Button variant="outline" size="sm" onClick={() => handleViewCompteRendu(reunion)}>
+                                  <FileText className="w-4 h-4" />
+                                </Button>
+                                <Button variant="outline" size="sm" onClick={() => {
+                                  setSelectedReunion(reunion);
+                                  setShowCompteRenduForm(true);
+                                }}>
+                                  <Edit className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            ) : (
+                              <div className="flex gap-2">
+                                <Button variant="outline" size="sm" asChild>
+                                  <a href={reunion.compte_rendu_url} target="_blank" rel="noopener noreferrer">
+                                    <FileText className="w-4 h-4 mr-1" />
+                                    Voir
+                                  </a>
+                                </Button>
+                                <Button variant="outline" size="sm" onClick={() => {
+                                  setSelectedReunion(reunion);
+                                  setShowCompteRenduForm(true);
+                                }}>
+                                  <Edit className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            )
+                          ) : (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleCompteRendu(reunion)}
+                              className="text-primary"
+                            >
+                              <Plus className="w-4 h-4 mr-1" />
+                              Ajouter
+                            </Button>
+                          )}
+                        </TableCell>
+                        
+                        <TableCell>
                           <div className="flex gap-2">
-                            <Badge className="bg-success text-success-foreground">
-                              <FileText className="w-3 h-3 mr-1" />
-                              Disponible
-                            </Badge>
-                            <Button variant="outline" size="sm" onClick={() => {
-                              setSelectedReunion(reunion);
-                              setShowCompteRenduForm(true);
-                            }}>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleEdit(reunion)}
+                            >
                               <Edit className="w-4 h-4" />
                             </Button>
-                          </div>
-                        ) : (
-                          <div className="flex gap-2">
-                            <Button variant="outline" size="sm" asChild>
-                              <a href={reunion.compte_rendu_url} target="_blank" rel="noopener noreferrer">
-                                <FileText className="w-4 h-4 mr-1" />
-                                Voir
-                              </a>
-                            </Button>
-                            <Button variant="outline" size="sm" onClick={() => {
-                              setSelectedReunion(reunion);
-                              setShowCompteRenduForm(true);
-                            }}>
-                              <Edit className="w-4 h-4" />
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDelete(reunion.id)}
+                              className="text-destructive hover:bg-destructive/10"
+                            >
+                              <Trash2 className="w-4 h-4" />
                             </Button>
                           </div>
-                        )
-                      ) : (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleCompteRendu(reunion)}
-                          className="text-primary"
-                        >
-                          <Plus className="w-4 h-4 mr-1" />
-                          Ajouter
-                        </Button>
-                      )}
-                    </TableCell>
+                        </TableCell>
+                      </TableRow>
+                    ))}
                     
-                    <TableCell>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleEdit(reunion)}
-                        >
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDelete(reunion.id)}
-                          className="text-destructive hover:bg-destructive/10"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                
-                {filteredReunions.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                      {searchTerm ? "Aucune réunion trouvée" : "Aucune réunion planifiée"}
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+                    {filteredReunions.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                          {searchTerm ? "Aucune réunion trouvée" : "Aucune réunion planifiée"}
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="beneficiaires">
+          <CalendrierBeneficiaires />
+        </TabsContent>
+      </Tabs>
 
       <Dialog open={showForm} onOpenChange={setShowForm}>
         <DialogContent className="sm:max-w-[600px]">
@@ -472,6 +505,17 @@ export default function Reunions() {
           )}
         </DialogContent>
       </Dialog>
+
+      <CompteRenduViewer
+        open={showCompteRenduViewer}
+        onOpenChange={setShowCompteRenduViewer}
+        reunion={selectedReunion}
+        onEdit={() => {
+          setShowCompteRenduViewer(false);
+          setSelectedReunion(selectedReunion);
+          setShowCompteRenduForm(true);
+        }}
+      />
     </div>
   );
 }

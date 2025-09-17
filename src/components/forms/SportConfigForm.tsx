@@ -67,9 +67,13 @@ export default function SportConfigForm() {
           duree_adhesion_mois: phoenixRes.data.duree_adhesion_mois || 12
         });
       }
-    } catch (error: any) {
-      console.log("Configurations non trouvées, utilisation des valeurs par défaut");
-    }
+      } catch (error: any) {
+        toast({
+          title: "Erreur",
+          description: "Configurations non trouvées, utilisation des valeurs par défaut",
+          variant: "destructive",
+        });
+      }
   };
 
   const saveE2DConfig = async () => {

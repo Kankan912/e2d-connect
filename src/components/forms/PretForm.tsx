@@ -107,8 +107,6 @@ export default function PretForm({ open, onOpenChange, onSuccess, initialData }:
   };
 
   const onSubmit = async (data: PretFormData) => {
-    console.log('📝 Soumission prêt:', data);
-    
     const operation = async () => {
       const pretData = {
         membre_id: data.membre_id,
@@ -138,7 +136,6 @@ export default function PretForm({ open, onOpenChange, onSuccess, initialData }:
     try {
       await withEnsureAdmin(operation);
       
-      console.log('✅ Prêt sauvegardé');
       toast({
         title: "Succès",
         description: initialData?.id ? "Prêt mis à jour" : "Prêt créé avec succès",

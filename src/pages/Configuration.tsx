@@ -23,7 +23,11 @@ export default function Configuration() {
     queryFn: async () => {
       const { data, error } = await supabase.rpc('get_current_user_role');
       if (error) {
-        console.warn('Impossible de récupérer le rôle:', error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de récupérer le rôle",
+          variant: "destructive",
+        });
         return null;
       }
       return data;
@@ -34,17 +38,14 @@ export default function Configuration() {
   const handleEnsureAdmin = async () => {
     setEnsureAdminLoading(true);
     try {
-      console.log('🔧 Correction des accès administrateur...');
       const { error } = await supabase.functions.invoke('ensure-admin');
       if (error) {
-        console.error('❌ Échec ensure-admin:', error);
         toast({
           title: "Échec",
           description: `Erreur: ${error.message}`,
           variant: "destructive",
         });
       } else {
-        console.log('✅ Rôle administrateur initialisé');
         toast({
           title: "Succès",
           description: "Rôle administrateur initialisé. Réessayez votre action.",
@@ -53,7 +54,6 @@ export default function Configuration() {
         setTimeout(() => window.location.reload(), 1500);
       }
     } catch (error: any) {
-      console.error('❌ Erreur ensure-admin:', error);
       toast({
         title: "Erreur",
         description: error.message || "Une erreur inattendue s'est produite",

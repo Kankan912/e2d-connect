@@ -83,8 +83,6 @@ export default function CotisationForm({ onSuccess, initialData }: CotisationFor
   }, [selectedType, form, initialData?.id]);
 
   const onSubmit = async (data: CotisationFormData) => {
-    console.log('💳 Soumission cotisation:', data);
-    
     const operation = async () => {
       const payload = {
         ...data,
@@ -108,7 +106,6 @@ export default function CotisationForm({ onSuccess, initialData }: CotisationFor
     try {
       await withEnsureAdmin(operation);
       
-      console.log('✅ Cotisation sauvegardée');
       toast({
         title: "Succès",
         description: initialData?.id ? "Cotisation mise à jour" : "Cotisation enregistrée avec succès",

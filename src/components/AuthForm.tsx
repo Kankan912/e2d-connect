@@ -40,11 +40,18 @@ export default function AuthForm() {
       
       // Appeler ensure-admin après connexion si c'est l'admin
       if (email === 'admin@e2d.com') {
-        try {
-          await supabase.functions.invoke('ensure-admin');
-          console.log('✅ Admin bootstrap effectué');
-        } catch (adminError) {
-          console.warn('⚠️ Admin bootstrap échoué (non critique):', adminError);
+    try {
+      await supabase.functions.invoke('ensure-admin');
+      toast({
+        title: "Succès",
+        description: "Admin bootstrap effectué",
+      });
+    } catch (adminError) {
+      toast({
+        title: "Avertissement",
+        description: "Admin bootstrap échoué (non critique)",
+        variant: "destructive",
+      });
         }
       }
       
