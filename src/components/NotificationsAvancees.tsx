@@ -169,7 +169,7 @@ export const NotificationsAvancees: React.FC = () => {
       const envoisFormatted: NotificationEnvoi[] = (data || []).map(envoi => ({
         id: envoi.id,
         campagne_id: envoi.campagne_id,
-        canal: envoi.canal as 'email' | 'sms' | 'push',
+        canal: envoi.canal as 'email' | 'push' | 'sms',
         statut: envoi.statut as 'en_attente' | 'envoye' | 'lu' | 'erreur',
         date_envoi: envoi.date_envoi,
         date_lecture: envoi.date_lecture,

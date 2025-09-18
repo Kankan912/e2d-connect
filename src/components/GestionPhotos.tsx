@@ -34,13 +34,10 @@ interface Membre {
   statut: string;
 }
 
-interface PhotoMembre {
-  id: string;
-  nom: string;
-  prenom: string;
-  email?: string;
-  photo_url?: string;
-  statut: string;
+interface PhotoMembre extends Membre {
+  photo_size?: number;
+  photo_last_modified?: string;
+  photo_type?: string;
   photo_info?: {
     size: number;
     lastModified: string;
@@ -73,8 +70,6 @@ export const GestionPhotos: React.FC = () => {
       // Enrichir avec les informations des photos si disponibles
       const membresEnriches = await Promise.all(
         (data || []).map(async (membre) => {
-          let photoInfo = null;
-          
           if (membre.photo_url) {
             try {
               // Extraire le nom du fichier de l'URL
@@ -82,15 +77,15 @@ export const GestionPhotos: React.FC = () => {
               if (fileName) {
                 const { data: fileData, error: fileError } = await supabase.storage
                   .from('membre-photos')
-                  .list(membre.id, {
-                    search: fileName
-                  });
+                  .list('', { search: fileName });
 
                 if (!fileError && fileData && fileData.length > 0) {
-                  photoInfo = {
-                    size: fileData[0].metadata?.size || 0,
-                    lastModified: fileData[0].updated_at || fileData[0].created_at,
-                    type: fileData[0].metadata?.mimetype || 'image/jpeg'
+                  const file = fileData[0];
+                  return {
+                    ...membre,
+                    photo_size: file.metadata?.size,
+                    photo_last_modified: file.updated_at,
+                    photo_type: file.metadata?.mimetype
                   };
                 }
               }
@@ -98,11 +93,7 @@ export const GestionPhotos: React.FC = () => {
               console.error('Erreur chargement info photo:', error);
             }
           }
-
-          return {
-            ...membre,
-            photo_info: photoInfo
-          };
+          return membre;
         })
       );
 

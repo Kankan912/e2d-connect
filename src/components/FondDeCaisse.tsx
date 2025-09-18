@@ -74,28 +74,27 @@ export const FondDeCaisse: React.FC = () => {
   const { toast } = useToast();
 
   const loadMembres = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('membres')
-        .select('id, nom, prenom')
-        .eq('statut', 'actif')
-        .order('nom');
-
-      if (error) throw error;
-      setMembres(data || []);
-    } catch (error) {
-      console.error('Erreur chargement membres:', error);
+    const { data, error } = await supabase
+      .from('membres')
+      .select('id, nom, prenom, email')
+      .eq('statut', 'actif');
+    
+    if (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de charger les membres",
+        variant: "destructive",
+      });
+      return;
     }
+    
+    setMembres(data || []);
   };
 
   const loadData = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-
-      // Charger opérations du jour
-      const startDate = startOfDay(new Date(selectedDate));
-      const endDate = endOfDay(new Date(selectedDate));
-
+      // Charger les opérations du jour avec les noms des membres
       const { data: operationsData, error: operationsError } = await supabase
         .from('fond_caisse_operations')
         .select(`
@@ -103,68 +102,58 @@ export const FondDeCaisse: React.FC = () => {
           beneficiaire:membres!beneficiaire_id(nom, prenom),
           operateur:membres!operateur_id(nom, prenom)
         `)
-        .gte('date_operation', startDate.toISOString())
-        .lte('date_operation', endDate.toISOString())
+        .eq('date_operation', selectedDate)
         .order('created_at', { ascending: false });
 
-      if (operationsError) throw operationsError;
-
-      const operationsFormatted: FondOperation[] = (operationsData || []).map(op => ({
-        id: op.id,
-        date_operation: op.date_operation,
-        type_operation: op.type_operation as 'entree' | 'sortie',
-        montant: op.montant,
-        libelle: op.libelle,
-        beneficiaire_id: op.beneficiaire_id,
-        notes: op.notes,
-        created_at: op.created_at,
-        beneficiaire_nom: op.beneficiaire ? `${op.beneficiaire.nom} ${op.beneficiaire.prenom}` : '',
-        operateur_nom: op.operateur ? `${op.operateur.nom} ${op.operateur.prenom}` : ''
-      }));
-
-      setOperationsJour(operationsFormatted);
-
-      // Vérifier si la journée est clôturée
-      const { data: clotureData, error: clotureError } = await supabase
-        .from('fond_caisse_clotures')
-        .select('*')
-        .eq('date_cloture', selectedDate)
-        .maybeSingle();
-
-      if (clotureError && clotureError.code !== 'PGRST116') {
-        throw clotureError;
+      if (operationsError) {
+        console.error('Erreur opérations:', operationsError);
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger les opérations",
+          variant: "destructive",
+        });
+        return;
       }
 
-      setEstCloture(!!clotureData);
+      const formattedOperations = operationsData?.map(op => ({
+        ...op,
+        type_operation: op.type_operation as 'entree' | 'sortie',
+        beneficiaire_nom: op.beneficiaire ? `${op.beneficiaire.nom} ${op.beneficiaire.prenom}` : 'N/A',
+        operateur_nom: op.operateur ? `${op.operateur.nom} ${op.operateur.prenom}` : 'N/A'
+      })) || [];
 
-      // Calculer le solde
+      setOperationsJour(formattedOperations);
+
+      // Calculer le solde et vérifier la clôture
       await calculerSolde();
-
-      // Charger historique des clôtures
+      
+      // Charger l'historique des clôtures récentes
       const { data: cloturesData, error: cloturesError } = await supabase
         .from('fond_caisse_clotures')
         .select(`
           *,
-          cloture_par:membres!cloture_par(nom, prenom)
+          cloture_par_membre:membres!cloture_par(nom, prenom)
         `)
         .order('date_cloture', { ascending: false })
         .limit(10);
 
-      if (cloturesError) throw cloturesError;
-
-      const cloturesFormatted = (cloturesData || []).map(cloture => ({
-        ...cloture,
-        cloture_par_nom: cloture.cloture_par ? `${cloture.cloture_par.nom} ${cloture.cloture_par.prenom}` : ''
-      }));
-
-      setClotures(cloturesFormatted);
+      if (cloturesError) {
+        console.error('Erreur clôtures:', cloturesError);
+      } else {
+        const formattedClotures = cloturesData?.map(cloture => ({
+          ...cloture,
+          cloture_par_nom: cloture.cloture_par_membre ? 
+            `${cloture.cloture_par_membre.nom} ${cloture.cloture_par_membre.prenom}` : 'N/A'
+        })) || [];
+        setClotures(formattedClotures);
+      }
 
     } catch (error) {
-      console.error('Erreur chargement données:', error);
+      console.error('Erreur lors du chargement:', error);
       toast({
         title: "Erreur",
-        description: "Impossible de charger les données du fond de caisse",
-        variant: "destructive"
+        description: "Erreur lors du chargement des données",
+        variant: "destructive",
       });
     } finally {
       setLoading(false);

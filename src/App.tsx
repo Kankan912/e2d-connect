@@ -38,6 +38,9 @@ import SportE2DFinances from "./pages/SportE2DFinances";
 import PhoenixAdherents from "./pages/PhoenixAdherents";
 import Analytics from "./pages/Analytics";
 import NotFound from "./pages/NotFound";
+import FondCaissePage from "./pages/FondCaisse";
+import GestionPhotosPage from "./pages/GestionPhotosPage";
+import NotificationsAvanceesPage from "./pages/NotificationsAvanceesPage";
 import ErrorBoundary from "./components/ErrorBoundary";
 
 const queryClient = new QueryClient({
@@ -96,6 +99,7 @@ function App() {
                   <Route path="/membres" element={<Membres />} />
                   <Route path="/membres-wrapped" element={<MembresWrapped />} />
                   <Route path="/membre/:id" element={<MembreFiche />} />
+                  <Route path="/membres/photos" element={<GestionPhotosPage />} />
                   <Route path="/cotisations" element={<Cotisations />} />
                   <Route path="/cotisations-grid" element={<CotisationsGrid />} />
                   <Route path="/membre-cotisation-config" element={<MembreCotisationConfig />} />
@@ -105,6 +109,8 @@ function App() {
                   <Route path="/aides" element={<Aides />} />
                   <Route path="/reunions" element={<Reunions />} />
                   <Route path="/presence-reunions" element={<PresenceReunions />} />
+                  <Route path="/tresorerie/fond-caisse" element={<FondCaissePage />} />
+                  <Route path="/notifications/avancees" element={<NotificationsAvanceesPage />} />
                   <Route path="/sport" element={<Sport />} />
                   <Route path="/sport-e2d-finances" element={<SportE2DFinances />} />
                   <Route path="/sport/statistiques" element={<Navigate to="/sport" />} />
