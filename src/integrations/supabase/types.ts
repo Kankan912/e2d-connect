@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      activites_membres: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          membre_id: string
+          metadata: Json | null
+          montant: number | null
+          reference_id: string | null
+          reference_table: string | null
+          type_activite: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          membre_id: string
+          metadata?: Json | null
+          montant?: number | null
+          reference_id?: string | null
+          reference_table?: string | null
+          type_activite: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          membre_id?: string
+          metadata?: Json | null
+          montant?: number | null
+          reference_id?: string | null
+          reference_table?: string | null
+          type_activite?: string
+        }
+        Relationships: []
+      }
       aides: {
         Row: {
           beneficiaire_id: string
@@ -370,6 +406,90 @@ export type Database = {
         }
         Relationships: []
       }
+      fond_caisse_clotures: {
+        Row: {
+          cloture_par: string
+          created_at: string
+          date_cloture: string
+          ecart: number | null
+          id: string
+          notes: string | null
+          solde_ouverture: number
+          solde_reel: number
+          solde_theorique: number
+          total_entrees: number
+          total_sorties: number
+        }
+        Insert: {
+          cloture_par: string
+          created_at?: string
+          date_cloture: string
+          ecart?: number | null
+          id?: string
+          notes?: string | null
+          solde_ouverture?: number
+          solde_reel?: number
+          solde_theorique?: number
+          total_entrees?: number
+          total_sorties?: number
+        }
+        Update: {
+          cloture_par?: string
+          created_at?: string
+          date_cloture?: string
+          ecart?: number | null
+          id?: string
+          notes?: string | null
+          solde_ouverture?: number
+          solde_reel?: number
+          solde_theorique?: number
+          total_entrees?: number
+          total_sorties?: number
+        }
+        Relationships: []
+      }
+      fond_caisse_operations: {
+        Row: {
+          beneficiaire_id: string | null
+          created_at: string
+          date_operation: string
+          id: string
+          justificatif_url: string | null
+          libelle: string
+          montant: number
+          notes: string | null
+          operateur_id: string
+          type_operation: string
+          updated_at: string
+        }
+        Insert: {
+          beneficiaire_id?: string | null
+          created_at?: string
+          date_operation?: string
+          id?: string
+          justificatif_url?: string | null
+          libelle: string
+          montant: number
+          notes?: string | null
+          operateur_id: string
+          type_operation: string
+          updated_at?: string
+        }
+        Update: {
+          beneficiaire_id?: string | null
+          created_at?: string
+          date_operation?: string
+          id?: string
+          justificatif_url?: string | null
+          libelle?: string
+          montant?: number
+          notes?: string | null
+          operateur_id?: string
+          type_operation?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       historique_connexion: {
         Row: {
           date_connexion: string
@@ -619,6 +739,63 @@ export type Database = {
           },
         ]
       }
+      notifications_campagnes: {
+        Row: {
+          created_at: string
+          created_by: string
+          date_envoi_prevue: string | null
+          date_envoi_reelle: string | null
+          description: string | null
+          destinataires: Json
+          id: string
+          nb_destinataires: number | null
+          nb_envoyes: number | null
+          nb_erreurs: number | null
+          nom: string
+          statut: string
+          template_contenu: string
+          template_sujet: string
+          type_campagne: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          date_envoi_prevue?: string | null
+          date_envoi_reelle?: string | null
+          description?: string | null
+          destinataires?: Json
+          id?: string
+          nb_destinataires?: number | null
+          nb_envoyes?: number | null
+          nb_erreurs?: number | null
+          nom: string
+          statut?: string
+          template_contenu: string
+          template_sujet: string
+          type_campagne: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          date_envoi_prevue?: string | null
+          date_envoi_reelle?: string | null
+          description?: string | null
+          destinataires?: Json
+          id?: string
+          nb_destinataires?: number | null
+          nb_envoyes?: number | null
+          nb_erreurs?: number | null
+          nom?: string
+          statut?: string
+          template_contenu?: string
+          template_sujet?: string
+          type_campagne?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       notifications_config: {
         Row: {
           actif: boolean
@@ -651,6 +828,53 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      notifications_envois: {
+        Row: {
+          campagne_id: string
+          canal: string
+          created_at: string
+          date_envoi: string | null
+          date_lecture: string | null
+          erreur_message: string | null
+          id: string
+          membre_id: string
+          metadata: Json | null
+          statut: string
+        }
+        Insert: {
+          campagne_id: string
+          canal: string
+          created_at?: string
+          date_envoi?: string | null
+          date_lecture?: string | null
+          erreur_message?: string | null
+          id?: string
+          membre_id: string
+          metadata?: Json | null
+          statut?: string
+        }
+        Update: {
+          campagne_id?: string
+          canal?: string
+          created_at?: string
+          date_envoi?: string | null
+          date_lecture?: string | null
+          erreur_message?: string | null
+          id?: string
+          membre_id?: string
+          metadata?: Json | null
+          statut?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_envois_campagne_id_fkey"
+            columns: ["campagne_id"]
+            isOneToOne: false
+            referencedRelation: "notifications_campagnes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       phoenix_adherents: {
         Row: {
