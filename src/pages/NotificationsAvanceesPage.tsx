@@ -2,7 +2,7 @@ import React from 'react';
 import { NotificationsAvancees } from '@/components/NotificationsAvancees';
 import LogoHeader from '@/components/LogoHeader';
 
-const NotificationsAvanceesPage: React.FC = () => {
+export const NotificationsAvanceesPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-background">
       <LogoHeader />
