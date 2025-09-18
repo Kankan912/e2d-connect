@@ -19,7 +19,10 @@ import {
   HandHeart,
   AlertTriangle,
   Calendar,
-  Activity
+  Activity,
+  Wallet,
+  Camera,
+  Bell
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -33,12 +36,15 @@ interface LayoutProps {
 const menuItems = [
   { id: "dashboard", label: "Tableau de bord", icon: Home, path: "/" },
   { id: "membres", label: "Membres E2D", icon: Users, path: "/membres" },
+  { id: "photos", label: "Photos Membres", icon: Camera, path: "/gestion-photos" },
   { id: "cotisations", label: "Cotisations", icon: CreditCard, path: "/cotisations" },
   { id: "prets", label: "Prêts", icon: Banknote, path: "/prets" },
   { id: "epargnes", label: "Épargnes", icon: PiggyBank, path: "/epargnes" },
+  { id: "fond-caisse", label: "Fond de Caisse", icon: Wallet, path: "/fond-caisse" },
   { id: "aides", label: "Aides", icon: HandHeart, path: "/aides" },
   { id: "sanctions", label: "Sanctions", icon: AlertTriangle, path: "/sanctions" },
   { id: "reunions", label: "Réunions", icon: Calendar, path: "/reunions" },
+  { id: "notifications", label: "Notifications", icon: Bell, path: "/notifications-avancees" },
   { id: "sport", label: "Sport", icon: Trophy, path: "/sport" },
   { id: "historique", label: "Historique Connexions", icon: FileText, path: "/historique-connexion" },
   { id: "eligibilite", label: "Éligibilité Gala", icon: Trophy, path: "/eligibilite-gala" },

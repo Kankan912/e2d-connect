@@ -18,6 +18,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import LogoHeader from "@/components/LogoHeader";
+import { HistoriqueMembre } from "@/components/HistoriqueMembre";
 
 interface MembreDetail {
   id: string;
@@ -237,10 +238,11 @@ export default function MembreFiche() {
 
       {/* Onglets détaillés */}
       <Tabs defaultValue="cotisations" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="cotisations">Cotisations</TabsTrigger>
           <TabsTrigger value="epargnes">Épargnes</TabsTrigger>
           <TabsTrigger value="prets">Prêts</TabsTrigger>
+          <TabsTrigger value="historique">Historique</TabsTrigger>
           <TabsTrigger value="resume">Résumé</TabsTrigger>
         </TabsList>
 
@@ -364,6 +366,10 @@ export default function MembreFiche() {
             </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="historique" className="space-y-4">
+          <HistoriqueMembre membreId={id!} />
         </TabsContent>
 
         <TabsContent value="resume" className="space-y-4">
