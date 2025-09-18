@@ -48,7 +48,15 @@ export type Database = {
           reference_table?: string | null
           type_activite?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_activites_membres_membre"
+            columns: ["membre_id"]
+            isOneToOne: false
+            referencedRelation: "membres"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       aides: {
         Row: {
@@ -446,7 +454,15 @@ export type Database = {
           total_entrees?: number
           total_sorties?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_fond_caisse_clotures_cloture_par"
+            columns: ["cloture_par"]
+            isOneToOne: false
+            referencedRelation: "membres"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       fond_caisse_operations: {
         Row: {
@@ -488,7 +504,22 @@ export type Database = {
           type_operation?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_fond_caisse_operations_beneficiaire"
+            columns: ["beneficiaire_id"]
+            isOneToOne: false
+            referencedRelation: "membres"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_fond_caisse_operations_operateur"
+            columns: ["operateur_id"]
+            isOneToOne: false
+            referencedRelation: "membres"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       historique_connexion: {
         Row: {
@@ -794,7 +825,15 @@ export type Database = {
           type_campagne?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_notifications_campagnes_created_by"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "membres"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       notifications_config: {
         Row: {
@@ -867,6 +906,13 @@ export type Database = {
           statut?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_notifications_envois_membre"
+            columns: ["membre_id"]
+            isOneToOne: false
+            referencedRelation: "membres"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "notifications_envois_campagne_id_fkey"
             columns: ["campagne_id"]

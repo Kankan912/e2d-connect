@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -73,31 +73,6 @@ export const FondDeCaisse: React.FC = () => {
 
   const { toast } = useToast();
 
-  const loadData = async () => {
-    // Implementation moved here
-  };
-
-  const loadMembres = async () => {
-    // Implementation moved here  
-  };
-
-  useRealtimeUpdates({
-    table: 'fond_caisse_operations',
-    onUpdate: loadData,
-    enabled: true
-  });
-
-  useRealtimeUpdates({
-    table: 'fond_caisse_clotures',
-    onUpdate: loadData,
-    enabled: true
-  });
-
-  useEffect(() => {
-    loadData();
-    loadMembres();
-  }, [selectedDate]);
-
   const loadMembres = async () => {
     try {
       const { data, error } = await supabase
@@ -134,8 +109,15 @@ export const FondDeCaisse: React.FC = () => {
 
       if (operationsError) throw operationsError;
 
-      const operationsFormatted = (operationsData || []).map(op => ({
-        ...op,
+      const operationsFormatted: FondOperation[] = (operationsData || []).map(op => ({
+        id: op.id,
+        date_operation: op.date_operation,
+        type_operation: op.type_operation as 'entree' | 'sortie',
+        montant: op.montant,
+        libelle: op.libelle,
+        beneficiaire_id: op.beneficiaire_id,
+        notes: op.notes,
+        created_at: op.created_at,
         beneficiaire_nom: op.beneficiaire ? `${op.beneficiaire.nom} ${op.beneficiaire.prenom}` : '',
         operateur_nom: op.operateur ? `${op.operateur.nom} ${op.operateur.prenom}` : ''
       }));
@@ -147,7 +129,7 @@ export const FondDeCaisse: React.FC = () => {
         .from('fond_caisse_clotures')
         .select('*')
         .eq('date_cloture', selectedDate)
-        .single();
+        .maybeSingle();
 
       if (clotureError && clotureError.code !== 'PGRST116') {
         throw clotureError;
@@ -198,7 +180,7 @@ export const FondDeCaisse: React.FC = () => {
         .lt('date_cloture', selectedDate)
         .order('date_cloture', { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
 
       const soldeOuverture = derniereClotureData?.solde_reel || 0;
 
@@ -230,6 +212,23 @@ export const FondDeCaisse: React.FC = () => {
       console.error('Erreur calcul solde:', error);
     }
   };
+
+  useRealtimeUpdates({
+    table: 'fond_caisse_operations',
+    onUpdate: loadData,
+    enabled: true
+  });
+
+  useRealtimeUpdates({
+    table: 'fond_caisse_clotures',
+    onUpdate: loadData,
+    enabled: true
+  });
+
+  useEffect(() => {
+    loadData();
+    loadMembres();
+  }, [selectedDate]);
 
   const ajouterOperation = async () => {
     if (!nouvelleOperation.type_operation || !nouvelleOperation.montant || !nouvelleOperation.libelle) {
@@ -283,7 +282,7 @@ export const FondDeCaisse: React.FC = () => {
 
       loadData();
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erreur ajout opération:', error);
       toast({
         title: "Erreur",
@@ -331,7 +330,7 @@ export const FondDeCaisse: React.FC = () => {
         .lt('date_cloture', selectedDate)
         .order('date_cloture', { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
 
       const soldeOuverture = derniereClotureData?.solde_reel || 0;
       const soldeTheorique = soldeOuverture + totalEntrees - totalSorties;
@@ -360,7 +359,7 @@ export const FondDeCaisse: React.FC = () => {
       setNotesClotture('');
       loadData();
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erreur clôture:', error);
       toast({
         title: "Erreur",

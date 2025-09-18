@@ -69,38 +69,6 @@ export const HistoriqueMembre: React.FC<HistoriqueMembreProps> = ({ membreId }) 
 
   const { toast } = useToast();
 
-  useRealtimeUpdates({
-    table: 'activites_membres',
-    onUpdate: loadActivites,
-    enabled: true
-  });
-
-  useEffect(() => {
-    if (membreId) {
-      loadData();
-    }
-  }, [membreId, filtreType, periodeStats]);
-
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      await Promise.all([
-        loadMembre(),
-        loadActivites(),
-        loadStatistiques()
-      ]);
-    } catch (error) {
-      console.error('Erreur chargement données:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de charger l'historique du membre",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const loadMembre = async () => {
     try {
       const { data, error } = await supabase
@@ -228,6 +196,38 @@ export const HistoriqueMembre: React.FC<HistoriqueMembreProps> = ({ membreId }) 
       console.error('Erreur chargement statistiques:', error);
     }
   };
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      await Promise.all([
+        loadMembre(),
+        loadActivites(),
+        loadStatistiques()
+      ]);
+    } catch (error) {
+      console.error('Erreur chargement données:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de charger l'historique du membre",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useRealtimeUpdates({
+    table: 'activites_membres',
+    onUpdate: loadActivites,
+    enabled: true
+  });
+
+  useEffect(() => {
+    if (membreId) {
+      loadData();
+    }
+  }, [membreId, filtreType, periodeStats]);
 
   const getTypeIcon = (type: string) => {
     switch (type) {

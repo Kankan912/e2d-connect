@@ -18,8 +18,6 @@ import {
   User, 
   Grid3X3, 
   List,
-  RotateCw,
-  Crop,
   Download
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -40,6 +38,7 @@ interface PhotoMembre {
   id: string;
   nom: string;
   prenom: string;
+  email?: string;
   photo_url?: string;
   statut: string;
   photo_info?: {
@@ -59,16 +58,6 @@ export const GestionPhotos: React.FC = () => {
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
-
-  useRealtimeUpdates({
-    table: 'membres',
-    onUpdate: loadMembres,
-    enabled: true
-  });
-
-  useEffect(() => {
-    loadMembres();
-  }, []);
 
   const loadMembres = async () => {
     try {
@@ -129,6 +118,16 @@ export const GestionPhotos: React.FC = () => {
       setLoading(false);
     }
   };
+
+  useRealtimeUpdates({
+    table: 'membres',
+    onUpdate: loadMembres,
+    enabled: true
+  });
+
+  useEffect(() => {
+    loadMembres();
+  }, []);
 
   const handleFileSelect = (membreId: string) => {
     setUploadingId(membreId);
@@ -280,7 +279,7 @@ export const GestionPhotos: React.FC = () => {
 
   const filteredMembres = membres.filter(membre =>
     `${membre.nom} ${membre.prenom}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    membre.email?.toLowerCase().includes(searchTerm.toLowerCase())
+    (membre.email && membre.email.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const membresAvecPhoto = filteredMembres.filter(m => m.photo_url);
@@ -407,7 +406,7 @@ export const GestionPhotos: React.FC = () => {
                     </Avatar>
                     <div>
                       <p className="font-medium">{membre.nom} {membre.prenom}</p>
-                      <p className="text-sm text-muted-foreground">{membre.email}</p>
+                      <p className="text-sm text-muted-foreground">{membre.email || 'Pas d\'email'}</p>
                     </div>
                   </div>
                   <Button
@@ -451,7 +450,7 @@ export const GestionPhotos: React.FC = () => {
                     </Avatar>
                     <div>
                       <p className="font-medium">{membre.nom} {membre.prenom}</p>
-                      <p className="text-sm text-muted-foreground">{membre.email}</p>
+                      <p className="text-sm text-muted-foreground">{membre.email || 'Pas d\'email'}</p>
                       {membre.photo_info && viewMode === 'list' && (
                         <p className="text-xs text-muted-foreground">
                           {formatFileSize(membre.photo_info.size)}

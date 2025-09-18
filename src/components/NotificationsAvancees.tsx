@@ -98,41 +98,6 @@ export const NotificationsAvancees: React.FC = () => {
 
   const { toast } = useToast();
 
-  useRealtimeUpdates({
-    table: 'notifications_campagnes',
-    onUpdate: loadCampagnes,
-    enabled: true
-  });
-
-  useRealtimeUpdates({
-    table: 'notifications_envois',
-    onUpdate: loadEnvoisDetails,
-    enabled: true
-  });
-
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      await Promise.all([
-        loadCampagnes(),
-        loadMembres()
-      ]);
-    } catch (error) {
-      console.error('Erreur chargement données:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de charger les données des notifications",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const loadCampagnes = async () => {
     try {
       const { data, error } = await supabase
@@ -145,9 +110,24 @@ export const NotificationsAvancees: React.FC = () => {
 
       if (error) throw error;
 
-      const campagnesFormatted = (data || []).map(campagne => ({
-        ...campagne,
-        created_by_nom: campagne.created_by ? `${campagne.created_by.nom} ${campagne.created_by.prenom}` : ''
+      const campagnesFormatted: NotificationCampagne[] = (data || []).map(campagne => ({
+        id: campagne.id,
+        nom: campagne.nom,
+        description: campagne.description,
+        type_campagne: campagne.type_campagne as 'rappel_cotisation' | 'reunion' | 'echeance_pret' | 'custom',
+        destinataires: Array.isArray(campagne.destinataires) ? 
+          (campagne.destinataires as any[]).map(d => String(d)) : [],
+        template_sujet: campagne.template_sujet,
+        template_contenu: campagne.template_contenu,
+        date_envoi_prevue: campagne.date_envoi_prevue,
+        date_envoi_reelle: campagne.date_envoi_reelle,
+        statut: campagne.statut as 'brouillon' | 'programme' | 'envoye' | 'annule',
+        nb_destinataires: campagne.nb_destinataires,
+        nb_envoyes: campagne.nb_envoyes,
+        nb_erreurs: campagne.nb_erreurs,
+        created_by_nom: campagne.created_by ? `${campagne.created_by.nom} ${campagne.created_by.prenom}` : '',
+        created_at: campagne.created_at,
+        updated_at: campagne.updated_at
       }));
 
       setCampagnes(campagnesFormatted);
@@ -186,8 +166,14 @@ export const NotificationsAvancees: React.FC = () => {
 
       if (error) throw error;
 
-      const envoisFormatted = (data || []).map(envoi => ({
-        ...envoi,
+      const envoisFormatted: NotificationEnvoi[] = (data || []).map(envoi => ({
+        id: envoi.id,
+        campagne_id: envoi.campagne_id,
+        canal: envoi.canal as 'email' | 'sms' | 'push',
+        statut: envoi.statut as 'en_attente' | 'envoye' | 'lu' | 'erreur',
+        date_envoi: envoi.date_envoi,
+        date_lecture: envoi.date_lecture,
+        erreur_message: envoi.erreur_message,
         membre_nom: envoi.membre ? `${envoi.membre.nom} ${envoi.membre.prenom}` : ''
       }));
 
@@ -196,6 +182,41 @@ export const NotificationsAvancees: React.FC = () => {
       console.error('Erreur chargement détails envois:', error);
     }
   };
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      await Promise.all([
+        loadCampagnes(),
+        loadMembres()
+      ]);
+    } catch (error) {
+      console.error('Erreur chargement données:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de charger les données des notifications",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useRealtimeUpdates({
+    table: 'notifications_campagnes',
+    onUpdate: loadCampagnes,
+    enabled: true
+  });
+
+  useRealtimeUpdates({
+    table: 'notifications_envois',
+    onUpdate: loadEnvoisDetails,
+    enabled: true
+  });
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   const creerCampagne = async () => {
     if (!nouvelleCampagne.nom || !nouvelleCampagne.template_sujet || !nouvelleCampagne.template_contenu) {
