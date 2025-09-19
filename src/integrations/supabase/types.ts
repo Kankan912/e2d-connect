@@ -1758,6 +1758,30 @@ export type Database = {
         }
         Relationships: []
       }
+      types_sanctions: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          nom: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          nom: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          nom?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

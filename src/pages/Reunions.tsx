@@ -30,6 +30,7 @@ import { useToast } from "@/hooks/use-toast";
 import ReunionForm from "@/components/forms/ReunionForm";
 import CompteRenduForm from "@/components/forms/CompteRenduForm";
 import CompteRenduViewer from "@/components/CompteRenduViewer";
+import ClotureReunionModal from "@/components/ClotureReunionModal";
 import CalendrierBeneficiaires from "@/components/CalendrierBeneficiaires";
 import LogoHeader from "@/components/LogoHeader";
 import { useBackNavigation } from "@/hooks/useBackNavigation";
@@ -38,6 +39,7 @@ import { useQuery } from "@tanstack/react-query";
 
 interface Reunion {
   id: string;
+  sujet?: string;
   date_reunion: string;
   statut: string;
   ordre_du_jour: string;
@@ -54,6 +56,7 @@ export default function Reunions() {
   const [showForm, setShowForm] = useState(false);
   const [showCompteRenduForm, setShowCompteRenduForm] = useState(false);
   const [showCompteRenduViewer, setShowCompteRenduViewer] = useState(false);
+  const [showClotureModal, setShowClotureModal] = useState(false);
   const [selectedReunion, setSelectedReunion] = useState<Reunion | null>(null);
   const [editingReunion, setEditingReunion] = useState<Reunion | null>(null);
   const { toast } = useToast();
@@ -413,6 +416,19 @@ export default function Reunions() {
                                 }}>
                                   <Edit className="w-4 h-4" />
                                 </Button>
+                                {reunion.statut === 'planifie' && (
+                                  <Button 
+                                    variant="default" 
+                                    size="sm" 
+                                    className="bg-success hover:bg-success/90"
+                                    onClick={() => {
+                                      setSelectedReunion(reunion);
+                                      setShowClotureModal(true);
+                                    }}
+                                  >
+                                    Clôturer
+                                  </Button>
+                                )}
                               </div>
                             ) : (
                               <div className="flex gap-2">
@@ -516,6 +532,19 @@ export default function Reunions() {
           setShowCompteRenduForm(true);
         }}
       />
+
+      {selectedReunion && (
+        <ClotureReunionModal
+          open={showClotureModal}
+          onOpenChange={setShowClotureModal}
+          reunionId={selectedReunion.id}
+          reunionData={{
+            sujet: selectedReunion.sujet || '',
+            date_reunion: selectedReunion.date_reunion,
+            beneficiaires: []
+          }}
+        />
+      )}
     </div>
   );
 }

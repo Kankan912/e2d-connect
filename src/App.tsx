@@ -133,7 +133,6 @@ function App() {
                   <Route path="/configuration" element={<Configuration />} />
                   <Route path="/configuration-generale" element={<ConfigurationGenerale />} />
                   <Route path="/statistiques-matchs" element={<StatistiquesMatchs />} />
-                  <Route path="/sport-equipes" element={<Navigate to="/sport" />} />
                   <Route path="/auth" element={<Navigate to="/" replace />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
