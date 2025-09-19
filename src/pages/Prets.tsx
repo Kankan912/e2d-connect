@@ -65,11 +65,33 @@ export default function Prets() {
   const [showPartialPayment, setShowPartialPayment] = useState(false);
   const [selectedPretId, setSelectedPretId] = useState<string | null>(null);
   const [selectedPret, setSelectedPret] = useState<Pret | null>(null);
+  const [sanctionsImpayees, setSanctionsImpayees] = useState(0);
   const { toast } = useToast();
 
   useEffect(() => {
     loadPrets();
+    loadSanctionsImpayees();
   }, []);
+
+  async function loadSanctionsImpayees() {
+    try {
+      const { data, error } = await supabase
+        .from('sanctions')
+        .select('montant, montant_paye')
+        .neq('statut', 'paye');
+
+      if (error) throw error;
+
+      const totalImpaye = data?.reduce((sum, sanction) => {
+        const montantRestant = sanction.montant - (sanction.montant_paye || 0);
+        return sum + (montantRestant > 0 ? montantRestant : 0);
+      }, 0) || 0;
+
+      setSanctionsImpayees(totalImpaye);
+    } catch (error) {
+      console.error('Erreur lors du chargement des sanctions:', error);
+    }
+  }
 
   const loadPrets = async () => {
     try {

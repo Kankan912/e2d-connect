@@ -12,41 +12,45 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import { 
-  AlertTriangle,
-  Plus,
-  Search,
-  Users,
+  AlertTriangle, 
+  Plus, 
+  Search, 
+  DollarSign,
   Calendar,
-  FileText,
+  CheckCircle,
+  Clock,
+  XCircle,
+  CreditCard,
   Edit,
   Trash2
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import LogoHeader from "@/components/LogoHeader";
-import { useBackNavigation } from "@/hooks/useBackNavigation";
 import SanctionForm from "@/components/forms/SanctionForm";
 import PaymentSanctionForm from "@/components/forms/PaymentSanctionForm";
+import LogoHeader from "@/components/LogoHeader";
+import BackButton from "@/components/BackButton";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { useRealtimeUpdates } from "@/hooks/useRealtimeUpdates";
 
-interface Sanction {
+interface SanctionWithDetails {
   id: string;
-  type_sanction_id: string;
   membre_id: string;
+  type_sanction_id: string;
   montant: number;
+  montant_paye: number;
   date_sanction: string;
   statut: string;
-  motif?: string;
-  montant_paye: number;
-}
-
-interface SanctionWithDetails extends Sanction {
-  sanctions_types?: {
-    nom: string;
-    categorie: string;
-  };
-  membres?: {
+  motif: string;
+  created_at: string;
+  membre: {
     nom: string;
     prenom: string;
+  };
+  type_sanction: {
+    nom: string;
+    categorie: string;
   };
 }
 
@@ -54,41 +58,67 @@ export default function SanctionsReunion() {
   const [sanctions, setSanctions] = useState<SanctionWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [showSanctionForm, setShowSanctionForm] = useState(false);
+  const [showForm, setShowForm] = useState(false);
   const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [selectedSanction, setSelectedSanction] = useState<SanctionWithDetails | null>(null);
   const [editingSanction, setEditingSanction] = useState<SanctionWithDetails | null>(null);
   const { toast } = useToast();
-  const { goBack, BackIcon } = useBackNavigation();
+
+  // Real-time updates
+  useRealtimeUpdates({ table: 'sanctions', onUpdate: loadSanctions });
 
   useEffect(() => {
     loadSanctions();
   }, []);
 
-  const loadSanctions = async () => {
+  async function loadSanctions() {
     try {
-      const { data, error } = await supabase
+      setLoading(true);
+      
+      // Charger les sanctions de réunion
+      const { data: sanctionsData, error: sanctionsError } = await supabase
         .from('sanctions')
         .select(`
           *,
-          sanctions_types (nom, categorie),
-          membres (nom, prenom)
+          sanctions_types!inner(nom, categorie)
         `)
         .eq('sanctions_types.categorie', 'reunion')
         .order('date_sanction', { ascending: false });
 
-      if (error) throw error;
-      setSanctions(data || []);
+      if (sanctionsError) throw sanctionsError;
+
+      if (!sanctionsData) {
+        setSanctions([]);
+        return;
+      }
+
+      // Charger les informations des membres séparément
+      const membreIds = [...new Set(sanctionsData.map(s => s.membre_id))];
+      const { data: membresData, error: membresError } = await supabase
+        .from('membres')
+        .select('id, nom, prenom')
+        .in('id', membreIds);
+
+      if (membresError) throw membresError;
+
+      // Joindre manuellement les données
+      const sanctionsWithDetails = sanctionsData.map(sanction => ({
+        ...sanction,
+        membre: membresData?.find(m => m.id === sanction.membre_id) || { nom: 'Inconnu', prenom: '' },
+        type_sanction: sanction.sanctions_types
+      }));
+
+      setSanctions(sanctionsWithDetails);
     } catch (error: any) {
       toast({
         title: "Erreur",
-        description: "Impossible de charger les sanctions de réunion",
+        description: "Impossible de charger les sanctions: " + error.message,
         variant: "destructive",
       });
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   const handlePayment = (sanction: SanctionWithDetails) => {
     setSelectedSanction(sanction);
@@ -97,12 +127,10 @@ export default function SanctionsReunion() {
 
   const handleEdit = (sanction: SanctionWithDetails) => {
     setEditingSanction(sanction);
-    setShowSanctionForm(true);
+    setShowForm(true);
   };
 
   const handleDelete = async (sanctionId: string) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer cette sanction ?')) return;
-    
     try {
       const { error } = await supabase
         .from('sanctions')
@@ -110,39 +138,45 @@ export default function SanctionsReunion() {
         .eq('id', sanctionId);
 
       if (error) throw error;
-      
+
       toast({
         title: "Succès",
         description: "Sanction supprimée avec succès",
       });
+      
       loadSanctions();
     } catch (error: any) {
       toast({
         title: "Erreur",
-        description: "Impossible de supprimer la sanction",
+        description: "Impossible de supprimer la sanction: " + error.message,
         variant: "destructive",
       });
     }
   };
 
   const getStatutBadge = (sanction: SanctionWithDetails) => {
-    const pourcentagePaye = sanction.montant > 0 ? (sanction.montant_paye / sanction.montant) * 100 : 0;
-    
-    if (pourcentagePaye >= 100) {
+    const statut = sanction.statut;
+    const montant = sanction.montant;
+    const montantPaye = sanction.montant_paye || 0;
+
+    if (montantPaye >= montant) {
       return (
         <Badge className="bg-success text-success-foreground">
+          <CheckCircle className="w-3 h-3 mr-1" />
           Payé
         </Badge>
       );
-    } else if (pourcentagePaye > 0) {
+    } else if (montantPaye > 0) {
       return (
         <Badge className="bg-warning text-warning-foreground">
-          Partiel ({pourcentagePaye.toFixed(0)}%)
+          <Clock className="w-3 h-3 mr-1" />
+          Partiel ({montantPaye.toLocaleString()}/{montant.toLocaleString()})
         </Badge>
       );
     } else {
       return (
-        <Badge variant="destructive">
+        <Badge className="bg-destructive text-destructive-foreground">
+          <XCircle className="w-3 h-3 mr-1" />
           Impayé
         </Badge>
       );
@@ -150,52 +184,55 @@ export default function SanctionsReunion() {
   };
 
   const filteredSanctions = sanctions.filter(sanction =>
-    sanction.membres && (
-      `${sanction.membres.nom} ${sanction.membres.prenom}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (sanction.sanctions_types?.nom || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (sanction.motif || '').toLowerCase().includes(searchTerm.toLowerCase())
-    )
+    `${sanction.membre?.nom} ${sanction.membre?.prenom}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    sanction.type_sanction?.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    sanction.motif?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Statistiques
+  const totalSanctions = sanctions.reduce((sum, s) => sum + s.montant, 0);
+  const montantPaye = sanctions.reduce((sum, s) => sum + (s.montant_paye || 0), 0);
+  const montantImpaye = totalSanctions - montantPaye;
+  const sanctionsPayees = sanctions.filter(s => (s.montant_paye || 0) >= s.montant).length;
+  const sanctionsImpayees = sanctions.filter(s => (s.montant_paye || 0) < s.montant).length;
 
   if (loading) {
     return (
       <div className="space-y-6">
         <LogoHeader 
-          title="Sanctions Réunions"
-          subtitle="Gestion des sanctions liées aux réunions"
+          title="Sanctions - Réunions"
+          subtitle="Sanctions liées aux réunions et assemblées"
         />
-        <Card className="animate-pulse">
-          <CardContent className="p-6">
-            <div className="h-64 bg-muted rounded" />
-          </CardContent>
-        </Card>
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          {[1,2,3,4].map(i => (
+            <Card key={i} className="animate-pulse">
+              <CardContent className="p-6">
+                <div className="h-16 bg-muted rounded" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
     );
   }
-
-  const totalSanctions = sanctions.length;
-  const sanctionsPayees = sanctions.filter(s => s.montant_paye >= s.montant).length;
-  const sanctionsImpayees = sanctions.filter(s => s.montant_paye === 0).length;
-  const montantTotal = sanctions.reduce((sum, s) => sum + s.montant, 0);
-  const montantPaye = sanctions.reduce((sum, s) => sum + s.montant_paye, 0);
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Button variant="outline" size="sm" onClick={goBack}>
-            <BackIcon className="w-4 h-4 mr-2" />
-            Retour
-          </Button>
+          <BackButton />
           <LogoHeader 
-            title="Sanctions Réunions"
-            subtitle="Gestion des sanctions liées aux réunions"
+            title="Sanctions - Réunions"
+            subtitle="Sanctions liées aux réunions et assemblées"
           />
         </div>
         <Button 
           className="bg-gradient-to-r from-primary to-secondary"
-          onClick={() => setShowSanctionForm(true)}
+          onClick={() => {
+            setEditingSanction(null);
+            setShowForm(true);
+          }}
         >
           <Plus className="w-4 h-4 mr-2" />
           Nouvelle sanction
@@ -203,60 +240,63 @@ export default function SanctionsReunion() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-6 md:grid-cols-4">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Sanctions</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+            <DollarSign className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalSanctions}</div>
+            <div className="text-2xl font-bold">{totalSanctions.toLocaleString()} FCFA</div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Payées</CardTitle>
-            <FileText className="h-4 w-4 text-success" />
+            <CheckCircle className="h-4 w-4 text-success" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-success">{sanctionsPayees}</div>
+            <p className="text-xs text-muted-foreground">{montantPaye.toLocaleString()} FCFA</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Impayées</CardTitle>
-            <Users className="h-4 w-4 text-destructive" />
+            <XCircle className="h-4 w-4 text-destructive" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-destructive">{sanctionsImpayees}</div>
+            <p className="text-xs text-muted-foreground">{montantImpaye.toLocaleString()} FCFA</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Montant Collecté</CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Ce Mois</CardTitle>
+            <Calendar className="h-4 w-4 text-secondary" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {montantPaye.toLocaleString('fr-FR')} F
+              {sanctions.filter(s => {
+                const date = new Date(s.date_sanction);
+                const now = new Date();
+                return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+              }).length}
             </div>
-            <p className="text-xs text-muted-foreground">
-              sur {montantTotal.toLocaleString('fr-FR')} F
-            </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Sanctions Table */}
+      {/* Liste des sanctions */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5" />
-              Sanctions Réunions
+              <AlertTriangle className="h-5 w-5" />
+              Sanctions de Réunions
             </CardTitle>
             <div className="relative">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -271,130 +311,142 @@ export default function SanctionsReunion() {
         </CardHeader>
         
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Membre</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Montant</TableHead>
-                <TableHead>Statut</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Motif</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredSanctions.map((sanction) => (
-                <TableRow key={sanction.id}>
-                  <TableCell className="font-medium">
-                    {sanction.membres && 
-                      `${sanction.membres.prenom} ${sanction.membres.nom}`
-                    }
-                  </TableCell>
-                  
-                  <TableCell>
-                    <Badge variant="outline">
-                      {sanction.sanctions_types?.nom || 'Type inconnu'}
-                    </Badge>
-                  </TableCell>
-                  
-                  <TableCell>
-                    <div>
-                      <p className="font-semibold">
-                        {sanction.montant.toLocaleString('fr-FR')} F CFA
-                      </p>
-                      {sanction.montant_paye > 0 && (
-                        <p className="text-sm text-muted-foreground">
-                          Payé: {sanction.montant_paye.toLocaleString('fr-FR')} F
-                        </p>
-                      )}
-                    </div>
-                  </TableCell>
-                  
-                  <TableCell>
-                    {getStatutBadge(sanction)}
-                  </TableCell>
-                  
-                  <TableCell>
-                    {new Date(sanction.date_sanction).toLocaleDateString('fr-FR')}
-                  </TableCell>
-                  
-                  <TableCell>
-                    <p className="text-sm max-w-48 truncate" title={sanction.motif}>
-                      {sanction.motif || '-'}
-                    </p>
-                  </TableCell>
-                  
-                  <TableCell>
-                    <div className="flex gap-2">
-                      {sanction.montant_paye < sanction.montant && showPaymentForm && selectedSanction?.id === sanction.id ? (
-                        <PaymentSanctionForm
-                          sanctionId={sanction.id}
-                          montantTotal={sanction.montant}
-                          montantPaye={sanction.montant_paye}
-                          onSuccess={() => {
-                            setShowPaymentForm(false);
-                            setSelectedSanction(null);
-                            loadSanctions();
-                          }}
-                          onCancel={() => {
-                            setShowPaymentForm(false);
-                            setSelectedSanction(null);
-                          }}
-                        />
-                      ) : sanction.montant_paye < sanction.montant ? (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handlePayment(sanction)}
-                          className="text-success"
-                        >
-                          Payer
-                        </Button>
-                      ) : null}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleEdit(sanction)}
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDelete(sanction.id)}
-                        className="text-destructive hover:bg-destructive/10"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-              
-              {filteredSanctions.length === 0 && (
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                    {searchTerm ? "Aucune sanction trouvée" : "Aucune sanction de réunion enregistrée"}
-                  </TableCell>
+                  <TableHead>Membre</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Montant</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Statut</TableHead>
+                  <TableHead>Motif</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
-              )}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filteredSanctions.map((sanction) => (
+                  <TableRow key={sanction.id} className="hover:bg-muted/50">
+                    <TableCell className="font-medium">
+                      {sanction.membre?.nom} {sanction.membre?.prenom}
+                    </TableCell>
+                    
+                    <TableCell>
+                      <div>
+                        <p className="font-medium">{sanction.type_sanction?.nom}</p>
+                        <Badge variant="outline" className="text-xs mt-1">
+                          Réunion
+                        </Badge>
+                      </div>
+                    </TableCell>
+                    
+                    <TableCell className="font-bold text-destructive">
+                      {sanction.montant.toLocaleString()} FCFA
+                    </TableCell>
+                    
+                    <TableCell className="text-muted-foreground">
+                      {new Date(sanction.date_sanction).toLocaleDateString('fr-FR')}
+                    </TableCell>
+                    
+                    <TableCell>
+                      {getStatutBadge(sanction)}
+                    </TableCell>
+                    
+                    <TableCell className="text-muted-foreground">
+                      {sanction.motif || "-"}
+                    </TableCell>
+                    
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        {((sanction.montant_paye || 0) < sanction.montant) && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handlePayment(sanction)}
+                            className="text-success border-success hover:bg-success/10"
+                          >
+                            <CreditCard className="w-4 h-4 mr-1" />
+                            Payer
+                          </Button>
+                        )}
+                        
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleEdit(sanction)}
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-destructive border-destructive hover:bg-destructive/10"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Êtes-vous sûr de vouloir supprimer cette sanction ? Cette action est irréversible.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Annuler</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => handleDelete(sanction.id)}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              >
+                                Supprimer
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+                
+                {filteredSanctions.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                      {searchTerm ? "Aucune sanction trouvée" : "Aucune sanction de réunion enregistrée"}
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
 
       <SanctionForm
-        open={showSanctionForm}
-        onOpenChange={setShowSanctionForm}
-        onSuccess={() => {
-          setShowSanctionForm(false);
-          setEditingSanction(null);
-          loadSanctions();
-        }}
+        open={showForm}
+        onOpenChange={setShowForm}
+        onSuccess={loadSanctions}
       />
 
-      {/* Payment form is now inline within the table */}
+      <Dialog open={showPaymentForm} onOpenChange={setShowPaymentForm}>
+        <DialogContent className="sm:max-w-[500px]">
+          {selectedSanction && (
+            <PaymentSanctionForm
+              sanctionId={selectedSanction.id}
+              montantTotal={selectedSanction.montant}
+              montantPaye={selectedSanction.montant_paye || 0}
+              onSuccess={() => {
+                setShowPaymentForm(false);
+                setSelectedSanction(null);
+                loadSanctions();
+              }}
+              onCancel={() => setShowPaymentForm(false)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

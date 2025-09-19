@@ -24,6 +24,7 @@ interface DashboardData {
   totalPrets: number;
   totalAides: number;
   soldeTresorerie: number;
+  soldeFondCaisse: number;
   
   // KPIs membres
   totalMembres: number;
@@ -103,7 +104,7 @@ export const TableauBordDirection: React.FC = () => {
 
       // Données financières
       const [
-        cotisationsRes, epargnessRes, pretsRes, aidesRes, sanctionsRes,
+        cotisationsRes, epargnessRes, pretsRes, aidesRes, sanctionsRes, fondCaisseRes,
         cotisationsLastMonthRes, epargnessLastMonthRes,
         membresRes, nouveauxMembresRes,
         reunionsRes, matchsE2DRes, matchsPhoenixRes
@@ -114,6 +115,7 @@ export const TableauBordDirection: React.FC = () => {
         supabase.from('prets').select('montant, statut, created_at').gte('created_at', startOfYear.toISOString()),
         supabase.from('aides').select('montant, created_at').gte('created_at', startOfYear.toISOString()),
         supabase.from('sanctions').select('montant, created_at').gte('created_at', startOfYear.toISOString()),
+        supabase.from('fond_caisse_operations').select('montant, type_operation, created_at').gte('created_at', startOfYear.toISOString()),
         
         // Données du mois précédent pour comparaison
         supabase.from('cotisations').select('montant').gte('created_at', lastMonth.toISOString()).lte('created_at', endLastMonth.toISOString()),
@@ -136,8 +138,13 @@ export const TableauBordDirection: React.FC = () => {
       const totalAides = aidesRes.data?.reduce((sum, item) => sum + Number(item.montant), 0) || 0;
       const totalSanctions = sanctionsRes.data?.reduce((sum, item) => sum + Number(item.montant), 0) || 0;
       
-      const totalEntrees = totalCotisations + totalEpargnes + totalSanctions;
-      const totalSorties = totalPrets + totalAides;
+      // Calculs fond de caisse
+      const fondCaisseEntrees = fondCaisseRes.data?.filter(op => op.type_operation === 'entree').reduce((sum, item) => sum + Number(item.montant), 0) || 0;
+      const fondCaisseSorties = fondCaisseRes.data?.filter(op => op.type_operation === 'sortie').reduce((sum, item) => sum + Number(item.montant), 0) || 0;
+      const soldeFondCaisse = fondCaisseEntrees - fondCaisseSorties;
+
+      const totalEntrees = totalCotisations + totalEpargnes + totalSanctions + fondCaisseEntrees;
+      const totalSorties = totalPrets + totalAides + fondCaisseSorties;
       const soldeTresorerie = totalEntrees - totalSorties;
 
       // Évolution trésorerie
@@ -289,6 +296,7 @@ export const TableauBordDirection: React.FC = () => {
         totalPrets,
         totalAides,
         soldeTresorerie,
+        soldeFondCaisse,
         totalMembres,
         membresActifs,
         nouveauxMembres,
@@ -420,6 +428,19 @@ export const TableauBordDirection: React.FC = () => {
           <CardContent>
             <div className="text-2xl font-bold">{data.nouveauxMembres}</div>
             <p className="text-xs text-muted-foreground">Ce mois-ci</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Fond de Caisse</CardTitle>
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className={`text-2xl font-bold ${data.soldeFondCaisse >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              {data.soldeFondCaisse.toLocaleString()} FCFA
+            </div>
+            <p className="text-xs text-muted-foreground">Solde disponible</p>
           </CardContent>
         </Card>
       </div>
