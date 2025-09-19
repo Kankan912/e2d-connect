@@ -33,6 +33,10 @@ interface SanctionWithDetails extends Sanction {
     nom: string;
     categorie: string;
   };
+  sanctions_types?: {
+    nom: string;
+    categorie: string;
+  };
 }
 
 export default function SanctionsSport() {
@@ -58,18 +62,40 @@ export default function SanctionsSport() {
 
   async function loadSanctions() {
     try {
-      const { data, error } = await supabase
+      // Approche alternative : charger d'abord les sanctions, puis joindre manuellement
+      const { data: sanctionsData, error: sanctionsError } = await supabase
         .from('sanctions')
         .select(`
           *,
-          membre:membres!sanctions_membre_id_fkey(nom, prenom),
-          type_sanction:sanctions_types!sanctions_type_sanction_id_fkey(nom, categorie)
+          sanctions_types!inner(nom, categorie)
         `)
-        .eq('type_sanction.categorie', 'sport')
+        .eq('sanctions_types.categorie', 'sport')
         .order('date_sanction', { ascending: false });
 
-      if (error) throw error;
-      setSanctions(data || []);
+      if (sanctionsError) throw sanctionsError;
+
+      if (!sanctionsData) {
+        setSanctions([]);
+        return;
+      }
+
+      // Charger les informations des membres séparément
+      const membreIds = [...new Set(sanctionsData.map(s => s.membre_id))];
+      const { data: membresData, error: membresError } = await supabase
+        .from('membres')
+        .select('id, nom, prenom')
+        .in('id', membreIds);
+
+      if (membresError) throw membresError;
+
+      // Joindre manuellement les données
+      const sanctionsWithDetails = sanctionsData.map(sanction => ({
+        ...sanction,
+        membre: membresData?.find(m => m.id === sanction.membre_id) || { nom: 'Inconnu', prenom: '' },
+        type_sanction: sanction.sanctions_types
+      }));
+
+      setSanctions(sanctionsWithDetails);
     } catch (error: any) {
       toast({
         title: "Erreur",
