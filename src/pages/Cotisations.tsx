@@ -27,7 +27,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import CotisationForm from "@/components/forms/CotisationForm";
+import CotisationFormModal from "@/components/forms/CotisationFormModal";
 import CotisationTypeForm from "@/components/forms/CotisationTypeForm";
 import MembreCotisationConfigForm from "@/components/forms/MembreCotisationConfigForm";
 import BeneficiairesReunion from "@/components/BeneficiairesReunion";
@@ -425,7 +425,7 @@ const loadReunions = async () => {
         </CardContent>
       </Card>
 
-      <CotisationForm
+      <CotisationFormModal
         open={showForm}
         onOpenChange={setShowForm}
         onSuccess={() => {

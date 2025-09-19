@@ -168,7 +168,7 @@ export default function CotisationForm({ onSuccess, initialData }: CotisationFor
               <SelectContent>
                 {typesCotisations?.map((type) => (
                   <SelectItem key={type.id} value={type.id}>
-                    {type.nom} {type.montant_defaut && `(${type.montant_defaut}€)`}
+                    {type.nom} {type.montant_defaut && `(${type.montant_defaut.toLocaleString()} FCFA)`}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -180,7 +180,7 @@ export default function CotisationForm({ onSuccess, initialData }: CotisationFor
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="montant">Montant (€) *</Label>
+              <Label htmlFor="montant">Montant (FCFA) *</Label>
               <Input
                 id="montant"
                 type="number"

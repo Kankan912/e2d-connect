@@ -75,7 +75,7 @@ export default function Configuration() {
 
       {/* Configuration Tabs */}
       <Tabs defaultValue="users" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="users" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
             Utilisateurs
@@ -91,6 +91,14 @@ export default function Configuration() {
           <TabsTrigger value="tontine" className="flex items-center gap-2">
             <DollarSign className="h-4 w-4" />
             Tontine
+          </TabsTrigger>
+          <TabsTrigger value="fond-caisse" className="flex items-center gap-2">
+            <DollarSign className="h-4 w-4" />
+            Fond de Caisse
+          </TabsTrigger>
+          <TabsTrigger value="photos" className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            Photos
           </TabsTrigger>
           <TabsTrigger value="backup" className="flex items-center gap-2">
             <Database className="h-4 w-4" />
@@ -166,6 +174,44 @@ export default function Configuration() {
 
         <TabsContent value="tontine" className="space-y-6">
           <TontineBeneficiairesManager />
+        </TabsContent>
+
+        <TabsContent value="fond-caisse" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <DollarSign className="h-5 w-5" />
+                Fond de Caisse
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground mb-4">
+                Gestion du fond de caisse et des opérations
+              </p>
+              <Button onClick={() => window.location.href = '/fond-caisse'}>
+                Accéder au Fond de Caisse
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="photos" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Photos des Membres
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground mb-4">
+                Gestion des photos des membres de l'association
+              </p>
+              <Button onClick={() => window.location.href = '/gestion-photos'}>
+                Gérer les Photos
+              </Button>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="backup" className="space-y-6">

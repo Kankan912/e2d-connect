@@ -19,6 +19,7 @@ interface Epargne {
   montant: number;
   date_depot: string;
   exercice_id?: string;
+  reunion_id?: string;
   statut: string;
   notes?: string;
   membres?: {
@@ -33,25 +34,23 @@ interface Membre {
   prenom: string;
 }
 
-interface Exercice {
+interface Reunion {
   id: string;
-  nom: string;
-  date_debut: string;
-  date_fin: string;
-  statut: string;
+  sujet: string;
+  date_reunion: string;
 }
 
 export default function Epargnes() {
   const [epargnes, setEpargnes] = useState<Epargne[]>([]);
   const [membres, setMembres] = useState<Membre[]>([]);
-  const [exercices, setExercices] = useState<Exercice[]>([]);
+  const [reunions, setReunions] = useState<Reunion[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [selectedEpargne, setSelectedEpargne] = useState<Epargne | null>(null);
   const [formData, setFormData] = useState({
     membre_id: "",
     montant: "",
-    exercice_id: "",
+    reunion_id: "",
     notes: ""
   });
   const { toast } = useToast();
@@ -59,7 +58,7 @@ export default function Epargnes() {
   useEffect(() => {
     fetchEpargnes();
     fetchMembres();
-    fetchExercices();
+    fetchReunions();
   }, []);
 
   const fetchEpargnes = async () => {
@@ -103,17 +102,18 @@ export default function Epargnes() {
     }
   };
 
-  const fetchExercices = async () => {
+  const fetchReunions = async () => {
     try {
       const { data, error } = await supabase
-        .from('exercices')
-        .select('*')
-        .order('date_debut', { ascending: false });
+        .from('reunions')
+        .select('id, sujet, date_reunion')
+        .order('date_reunion', { ascending: false })
+        .limit(20);
 
       if (error) throw error;
-      setExercices(data || []);
+      setReunions(data || []);
     } catch (error) {
-      console.error('Erreur lors du chargement des exercices:', error);
+      console.error('Erreur lors du chargement des réunions:', error);
     }
   };
 
@@ -133,7 +133,7 @@ export default function Epargnes() {
       const epargneData = {
         membre_id: formData.membre_id,
         montant: parseFloat(formData.montant),
-        exercice_id: formData.exercice_id || null,
+        reunion_id: formData.reunion_id || null,
         notes: formData.notes || null,
         statut: 'actif'
       };
@@ -156,7 +156,7 @@ export default function Epargnes() {
 
       setShowAddDialog(false);
       setSelectedEpargne(null);
-      setFormData({ membre_id: "", montant: "", exercice_id: "", notes: "" });
+      setFormData({ membre_id: "", montant: "", reunion_id: "", notes: "" });
       fetchEpargnes();
     } catch (error) {
       toast({
@@ -172,7 +172,7 @@ export default function Epargnes() {
     setFormData({
       membre_id: epargne.membre_id,
       montant: epargne.montant.toString(),
-      exercice_id: epargne.exercice_id || "",
+      reunion_id: epargne.reunion_id || "",
       notes: epargne.notes || ""
     });
     setShowAddDialog(true);
@@ -201,7 +201,7 @@ export default function Epargnes() {
           <DialogTrigger asChild>
             <Button onClick={() => {
               setSelectedEpargne(null);
-              setFormData({ membre_id: "", montant: "", exercice_id: "", notes: "" });
+              setFormData({ membre_id: "", montant: "", reunion_id: "", notes: "" });
             }}>
               <Plus className="w-4 h-4 mr-2" />
               Nouvelle Épargne
@@ -248,17 +248,17 @@ export default function Epargnes() {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="exercice">Exercice (optionnel)</Label>
-                <Select value={formData.exercice_id} onValueChange={(value) => 
-                  setFormData(prev => ({ ...prev, exercice_id: value }))
+                <Label htmlFor="reunion">Réunion (optionnel)</Label>
+                <Select value={formData.reunion_id} onValueChange={(value) => 
+                  setFormData(prev => ({ ...prev, reunion_id: value }))
                 }>
                   <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner un exercice" />
+                    <SelectValue placeholder="Sélectionner une réunion" />
                   </SelectTrigger>
                   <SelectContent>
-                    {exercices.map((exercice) => (
-                      <SelectItem key={exercice.id} value={exercice.id}>
-                        {exercice.nom}
+                    {reunions.map((reunion) => (
+                      <SelectItem key={reunion.id} value={reunion.id}>
+                        {new Date(reunion.date_reunion).toLocaleDateString('fr-FR')} - {reunion.sujet || 'Réunion'}
                       </SelectItem>
                     ))}
                   </SelectContent>
