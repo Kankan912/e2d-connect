@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import { 
   User, 
   CreditCard, 
@@ -19,6 +20,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import LogoHeader from "@/components/LogoHeader";
 import { HistoriqueMembre } from "@/components/HistoriqueMembre";
+import MembreEditForm from "@/components/forms/MembreEditForm";
+import BackButton from "@/components/BackButton";
 
 interface MembreDetail {
   id: string;
@@ -65,11 +68,14 @@ export default function MembreFiche() {
   const [epargnes, setEpargnes] = useState<Epargne[]>([]);
   const [prets, setPrets] = useState<Pret[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [fondCaisse, setFondCaisse] = useState(0);
   const { toast } = useToast();
 
   useEffect(() => {
     if (id) {
       loadMembreData();
+      loadFondCaisse();
     }
   }, [id]);
 
@@ -130,6 +136,29 @@ export default function MembreFiche() {
     }
   };
 
+  const loadFondCaisse = async () => {
+    if (!id) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('fond_caisse_operations')
+        .select('montant, type_operation')
+        .eq('beneficiaire_id', id);
+
+      if (error) throw error;
+
+      const total = data?.reduce((sum, op) => {
+        return op.type_operation === 'entree' 
+          ? sum + Number(op.montant)
+          : sum - Number(op.montant);
+      }, 0) || 0;
+
+      setFondCaisse(total);
+    } catch (error) {
+      console.error('Erreur lors du chargement du fond de caisse:', error);
+    }
+  };
+
   const getStatutColor = (statut: string, echeance?: string) => {
     switch (statut) {
       case 'paye':
@@ -185,10 +214,18 @@ export default function MembreFiche() {
 
   return (
     <div className="space-y-6">
-      <LogoHeader 
-        title="Fiche Membre"
-        subtitle="Détails complets et historique"
-      />
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <BackButton to="/membres" />
+          <LogoHeader 
+            title={`Fiche de ${membre.prenom} ${membre.nom}`}
+            subtitle="Détails complets du membre"
+          />
+        </div>
+        <Button onClick={() => setShowEditForm(true)}>
+          Éditer le profil
+        </Button>
+      </div>
 
       {/* Profil du membre */}
       <Card>
@@ -212,9 +249,14 @@ export default function MembreFiche() {
                   <span>{membre.telephone}</span>
                 </div>
               </div>
-              <Badge className={`mt-2 ${membre.statut === 'actif' ? 'bg-success' : 'bg-muted'}`}>
-                {membre.statut}
-              </Badge>
+              <div className="flex items-center gap-2 mt-2">
+                <Badge className={`${membre.statut === 'actif' ? 'bg-success' : 'bg-muted'}`}>
+                  {membre.statut}
+                </Badge>
+                <div className="text-sm text-muted-foreground">
+                  Fond de Caisse: {fondCaisse.toLocaleString()} FCFA
+                </div>
+              </div>
             </div>
             <div className="text-right">
               <div className="grid grid-cols-3 gap-4 text-center">
@@ -426,6 +468,20 @@ export default function MembreFiche() {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Modal d'édition */}
+      {showEditForm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <MembreEditForm
+            membreId={id!}
+            onSuccess={() => {
+              setShowEditForm(false);
+              loadMembreData();
+            }}
+            onCancel={() => setShowEditForm(false)}
+          />
+        </div>
+      )}
     </div>
   );
 }

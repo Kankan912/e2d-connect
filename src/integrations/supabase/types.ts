@@ -211,6 +211,7 @@ export type Database = {
           membre_id: string | null
           montant: number
           notes: string | null
+          reunion_id: string | null
           statut: string | null
           type_cotisation_id: string | null
         }
@@ -222,6 +223,7 @@ export type Database = {
           membre_id?: string | null
           montant: number
           notes?: string | null
+          reunion_id?: string | null
           statut?: string | null
           type_cotisation_id?: string | null
         }
@@ -233,6 +235,7 @@ export type Database = {
           membre_id?: string | null
           montant?: number
           notes?: string | null
+          reunion_id?: string | null
           statut?: string | null
           type_cotisation_id?: string | null
         }
@@ -242,6 +245,13 @@ export type Database = {
             columns: ["membre_id"]
             isOneToOne: false
             referencedRelation: "membres"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cotisations_reunion_id_fkey"
+            columns: ["reunion_id"]
+            isOneToOne: false
+            referencedRelation: "reunions"
             referencedColumns: ["id"]
           },
           {
@@ -316,6 +326,7 @@ export type Database = {
           membre_id: string
           montant: number
           notes: string | null
+          reunion_id: string | null
           statut: string
           updated_at: string
         }
@@ -327,6 +338,7 @@ export type Database = {
           membre_id: string
           montant: number
           notes?: string | null
+          reunion_id?: string | null
           statut?: string
           updated_at?: string
         }
@@ -338,10 +350,18 @@ export type Database = {
           membre_id?: string
           montant?: number
           notes?: string | null
+          reunion_id?: string | null
           statut?: string
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "epargnes_reunion_id_fkey"
+            columns: ["reunion_id"]
+            isOneToOne: false
+            referencedRelation: "reunions"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "fk_epargnes_membre"
             columns: ["membre_id"]
@@ -1002,6 +1022,8 @@ export type Database = {
           justificatif_url: string | null
           membre_id: string
           montant: number
+          montant_paye: number | null
+          montant_total_du: number | null
           notes: string | null
           reconductions: number | null
           statut: string
@@ -1017,6 +1039,8 @@ export type Database = {
           justificatif_url?: string | null
           membre_id: string
           montant: number
+          montant_paye?: number | null
+          montant_total_du?: number | null
           notes?: string | null
           reconductions?: number | null
           statut?: string
@@ -1032,6 +1056,8 @@ export type Database = {
           justificatif_url?: string | null
           membre_id?: string
           montant?: number
+          montant_paye?: number | null
+          montant_total_du?: number | null
           notes?: string | null
           reconductions?: number | null
           statut?: string
@@ -1051,6 +1077,47 @@ export type Database = {
             columns: ["avaliste_id"]
             isOneToOne: false
             referencedRelation: "membres"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      prets_paiements: {
+        Row: {
+          created_at: string
+          date_paiement: string
+          id: string
+          mode_paiement: string
+          montant_paye: number
+          notes: string | null
+          pret_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          date_paiement?: string
+          id?: string
+          mode_paiement?: string
+          montant_paye: number
+          notes?: string | null
+          pret_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          date_paiement?: string
+          id?: string
+          mode_paiement?: string
+          montant_paye?: number
+          notes?: string | null
+          pret_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prets_paiements_pret_id_fkey"
+            columns: ["pret_id"]
+            isOneToOne: false
+            referencedRelation: "prets"
             referencedColumns: ["id"]
           },
         ]
@@ -1331,6 +1398,44 @@ export type Database = {
           },
           {
             foreignKeyName: "fk_sanctions_type"
+            columns: ["type_sanction_id"]
+            isOneToOne: false
+            referencedRelation: "sanctions_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sanctions_tarifs: {
+        Row: {
+          actif: boolean
+          categorie_membre: string
+          created_at: string
+          id: string
+          montant: number
+          type_sanction_id: string
+          updated_at: string
+        }
+        Insert: {
+          actif?: boolean
+          categorie_membre?: string
+          created_at?: string
+          id?: string
+          montant: number
+          type_sanction_id: string
+          updated_at?: string
+        }
+        Update: {
+          actif?: boolean
+          categorie_membre?: string
+          created_at?: string
+          id?: string
+          montant?: number
+          type_sanction_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sanctions_tarifs_type_sanction_id_fkey"
             columns: ["type_sanction_id"]
             isOneToOne: false
             referencedRelation: "sanctions_types"
@@ -1668,6 +1773,10 @@ export type Database = {
       }
       get_current_user_role: {
         Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      get_pret_status: {
+        Args: { echeance: string; montant_paye: number; montant_total: number }
         Returns: string
       }
       get_sanction_status: {

@@ -31,10 +31,13 @@ import PretForm from "@/components/forms/PretForm";
 import LogoHeader from "@/components/LogoHeader";
 import PretPaymentModal from "@/components/modals/PretPaymentModal";
 import PretReconductionModal from "@/components/modals/PretReconductionModal";
+import PretPaymentPartielForm from '@/components/forms/PretPaymentPartielForm';
 
 interface Pret {
   id: string;
   montant: number;
+  montant_total_du?: number;
+  montant_paye?: number;
   date_pret: string;
   echeance: string;
   statut: string;
@@ -58,7 +61,9 @@ export default function Prets() {
   const [showForm, setShowForm] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showReconductionModal, setShowReconductionModal] = useState(false);
+  const [showPartialPayment, setShowPartialPayment] = useState(false);
   const [selectedPretId, setSelectedPretId] = useState<string | null>(null);
+  const [selectedPret, setSelectedPret] = useState<Pret | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -120,6 +125,11 @@ export default function Prets() {
   const handlePayment = (pretId: string) => {
     setSelectedPretId(pretId);
     setShowPaymentModal(true);
+  };
+
+  const handlePartialPayment = (pret: Pret) => {
+    setSelectedPret(pret);
+    setShowPartialPayment(true);
   };
 
   const handleReconduction = (pretId: string) => {
@@ -227,10 +237,13 @@ export default function Prets() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <LogoHeader 
-          title="Gestion des Prêts"
-          subtitle="Suivi des prêts accordés aux membres"
-        />
+        <div className="flex items-center gap-4">
+          <BackButton to="/" />
+          <LogoHeader 
+            title="Gestion des Prêts"
+            subtitle="Suivi des prêts accordés aux membres"
+          />
+        </div>
         <Button 
           className="bg-gradient-to-r from-primary to-secondary"
           onClick={() => setShowForm(true)}
@@ -358,17 +371,25 @@ export default function Prets() {
                         size="sm" 
                         variant="outline"
                         onClick={() => handlePayment(pret.id)}
-                        disabled={pret.statut !== 'en_cours'}
+                        disabled={pret.statut === 'rembourse'}
                         className="bg-success/10 hover:bg-success/20 text-success border-success/20"
                       >
                         <CheckCircle className="w-4 h-4 mr-1" />
-                        Payer
+                        Payer Total
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => handlePartialPayment(pret)}
+                        disabled={pret.statut === 'rembourse'}
+                      >
+                        Paiement Partiel
                       </Button>
                       <Button 
                         size="sm" 
                         variant="outline"
                         onClick={() => handleReconduction(pret.id)}
-                        disabled={pret.statut !== 'en_cours'}
+                        disabled={pret.statut === 'rembourse'}
                       >
                         <RefreshCw className="w-4 h-4 mr-1" />
                         Reconduire
@@ -410,6 +431,26 @@ export default function Prets() {
         pretId={selectedPretId}
         onSuccess={loadPrets}
       />
+
+      {/* Modal de paiement partiel */}
+      {showPartialPayment && selectedPret && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <PretPaymentPartielForm
+            pretId={selectedPret.id}
+            montantTotal={Number(selectedPret.montant_total_du || selectedPret.montant)}
+            montantPaye={Number(selectedPret.montant_paye || 0)}
+            onSuccess={() => {
+              setShowPartialPayment(false);
+              setSelectedPret(null);
+              loadPrets();
+            }}
+            onCancel={() => {
+              setShowPartialPayment(false);
+              setSelectedPret(null);
+            }}
+          />
+        </div>
+      )}
     </div>
   );
 }
