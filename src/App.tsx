@@ -20,7 +20,7 @@ import Aides from "./pages/Aides";
 import Reunions from "./pages/Reunions";
 import Configuration from "./pages/Configuration";
 import SportE2D from "./pages/SportE2D";
-import SportPhoenix from "./pages/SportPhoenix";
+import SportEquipes from "./pages/SportEquipes";
 import Rapports from "./pages/Rapports";
 import CalendrierSportif from "./pages/CalendrierSportif";
 import EligibiliteGala from "./pages/EligibiliteGala";
@@ -117,7 +117,7 @@ function App() {
                   <Route path="/sport-e2d-finances" element={<SportE2DFinances />} />
                   <Route path="/sport/statistiques" element={<Navigate to="/sport" />} />
                   <Route path="/sport-e2d" element={<Navigate to="/sport" />} />
-                  <Route path="/sport-phoenix" element={<SportPhoenix />} />
+                  <Route path="/sport-equipes" element={<SportEquipes />} />
                   <Route path="/phoenix-adherents" element={<PhoenixAdherents />} />
                   <Route path="/calendrier-sportif" element={<Navigate to="/sport" />} />
                   <Route path="/calendrier" element={<Navigate to="/sport" />} />

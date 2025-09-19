@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -114,6 +114,9 @@ export default function CotisationTypeForm({
           <DialogTitle>
             {typeToEdit ? "Modifier le type de cotisation" : "Nouveau type de cotisation"}
           </DialogTitle>
+          <DialogDescription>
+            Configurez un type de cotisation avec ses paramètres par défaut
+          </DialogDescription>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4">

@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Users, DollarSign, Calendar, Mail } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface Beneficiaire {
   id: string;
@@ -158,6 +158,9 @@ export default function BeneficiairesReunion({ reunionId, open, onOpenChange }: 
             <Users className="h-5 w-5" />
             Bénéficiaires de la réunion
           </DialogTitle>
+          <DialogDescription>
+            Gérez les bénéficiaires et leurs montants pour cette réunion
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
