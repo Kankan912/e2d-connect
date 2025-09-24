@@ -1,6 +1,5 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.56.0';
-import { Resend } from "npm:resend@2.0.0";
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.4';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -25,7 +24,6 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const resendApiKey = Deno.env.get('RESEND_API_KEY')!;
     
     // Create admin Supabase client
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
@@ -34,8 +32,6 @@ const handler = async (req: Request): Promise<Response> => {
         persistSession: false
       }
     });
-
-    const resend = new Resend(resendApiKey);
 
     const { email, nom, prenom, telephone, password, roles = [] }: CreateUserRequest = await req.json();
 
@@ -120,55 +116,8 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
-    // Send welcome email
-    const emailResponse = await resend.emails.send({
-      from: "E2D Connect <onboarding@resend.dev>",
-      to: [email],
-      subject: "Bienvenue dans E2D Connect - Vos identifiants de connexion",
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <div style="background: linear-gradient(135deg, #3b82f6, #06b6d4); padding: 20px; text-align: center;">
-            <h1 style="color: white; margin: 0;">E2D Connect</h1>
-            <p style="color: white; margin: 10px 0 0 0;">Plateforme de gestion de l'association</p>
-          </div>
-          
-          <div style="padding: 30px 20px;">
-            <h2 style="color: #1f2937;">Bonjour ${prenom} ${nom},</h2>
-            
-            <p style="color: #374151; line-height: 1.6;">
-              Votre compte E2D Connect a été créé avec succès ! Voici vos identifiants de connexion :
-            </p>
-            
-            <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
-              <p style="margin: 0 0 10px 0; color: #374151;"><strong>Email :</strong> ${email}</p>
-              <p style="margin: 0 0 10px 0; color: #374151;"><strong>Mot de passe :</strong> ${password}</p>
-              <p style="margin: 0; color: #6b7280; font-size: 14px;">
-                <em>Nous vous recommandons de changer votre mot de passe lors de votre première connexion.</em>
-              </p>
-            </div>
-            
-            <p style="color: #374151; line-height: 1.6;">
-              Vous pouvez maintenant vous connecter à la plateforme pour accéder à toutes les fonctionnalités de l'association E2D.
-            </p>
-            
-            <div style="text-align: center; margin: 30px 0;">
-              <a href="${supabaseUrl.replace('supabase.co', 'lovable.app')}/auth" 
-                 style="background: linear-gradient(135deg, #3b82f6, #06b6d4); color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
-                Se connecter maintenant
-              </a>
-            </div>
-            
-            <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
-            
-            <p style="color: #6b7280; font-size: 14px; text-align: center;">
-              Si vous avez des questions, n'hésitez pas à contacter l'administration.
-            </p>
-          </div>
-        </div>
-      `,
-    });
-
-    console.log("Email sent successfully:", emailResponse);
+    // Log successful account creation (Email functionality temporarily disabled)
+    console.log("User account created successfully. Email notification skipped.");
 
     return new Response(
       JSON.stringify({ 
