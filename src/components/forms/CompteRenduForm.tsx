@@ -49,7 +49,7 @@ export default function CompteRenduForm({
     name: "sujets"
   });
 
-  // Phase 1 Fix: Load existing compte-rendu data for editing
+  // Load existing compte-rendu data for editing
   useEffect(() => {
     const loadExistingData = async () => {
       try {
@@ -141,23 +141,30 @@ export default function CompteRenduForm({
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>
-          {isEditing ? "Modifier le compte-rendu" : "Ajouter le compte-rendu"}
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <div className="space-y-4">
+    <div className="space-y-4">
+      <div className="text-center">
+        <h3 className="text-lg font-semibold">
+          {isEditing ? "Modifier le compte-rendu" : "Créer le compte-rendu"}
+        </h3>
+        <p className="text-sm text-muted-foreground">
+          Sujets traités lors de la réunion avec résolutions
+        </p>
+      </div>
+
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <div className="space-y-4 max-h-[50vh] overflow-y-auto">
+          {/* Sujets avec numérotation */}
+          <div className="space-y-3">
             {fields.map((field, index) => (
-              <div key={field.id} className="border rounded-lg p-4 space-y-3">
+              <div key={field.id} className="bg-muted border rounded-lg p-4 space-y-3">
                 <div className="flex items-center justify-between">
-                  <Label>Sujet {index + 1}</Label>
+                  <Label className="font-medium text-primary">
+                    Sujet #{index + 1}
+                  </Label>
                   {fields.length > 1 && (
                     <Button
                       type="button"
-                      variant="outline"
+                      variant="ghost"
                       size="sm"
                       onClick={() => remove(index)}
                     >
@@ -205,21 +212,22 @@ export default function CompteRenduForm({
             <Plus className="w-4 h-4 mr-2" />
             Ajouter un sujet
           </Button>
+        </div>
 
-          <div className="flex gap-2 pt-4">
-            <Button 
-              type="submit" 
-              className="flex-1"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? 'Enregistrement...' : 'Enregistrer le compte-rendu'}
-            </Button>
-            <Button type="button" variant="outline" onClick={onCancel}>
-              Annuler
-            </Button>
-          </div>
-        </form>
-      </CardContent>
-    </Card>
+        {/* Boutons d'action */}
+        <div className="flex gap-2 pt-4 border-t">
+          <Button 
+            type="submit" 
+            className="flex-1"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? 'Enregistrement...' : (isEditing ? 'Modifier le compte-rendu' : 'Créer le compte-rendu')}
+          </Button>
+          <Button type="button" variant="outline" onClick={onCancel}>
+            Annuler
+          </Button>
+        </div>
+      </form>
+    </div>
   );
 }

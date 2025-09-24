@@ -662,9 +662,11 @@ export type Database = {
           email: string | null
           equipe: string | null
           equipe_e2d: string | null
+          equipe_jaune_rouge: string | null
           equipe_phoenix: string | null
           est_adherent_phoenix: boolean | null
           est_membre_e2d: boolean | null
+          fonction: string | null
           id: string
           nom: string
           photo_url: string | null
@@ -680,9 +682,11 @@ export type Database = {
           email?: string | null
           equipe?: string | null
           equipe_e2d?: string | null
+          equipe_jaune_rouge?: string | null
           equipe_phoenix?: string | null
           est_adherent_phoenix?: boolean | null
           est_membre_e2d?: boolean | null
+          fonction?: string | null
           id?: string
           nom: string
           photo_url?: string | null
@@ -698,9 +702,11 @@ export type Database = {
           email?: string | null
           equipe?: string | null
           equipe_e2d?: string | null
+          equipe_jaune_rouge?: string | null
           equipe_phoenix?: string | null
           est_adherent_phoenix?: boolean | null
           est_membre_e2d?: boolean | null
+          fonction?: string | null
           id?: string
           nom?: string
           photo_url?: string | null

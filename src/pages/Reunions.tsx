@@ -416,19 +416,19 @@ export default function Reunions() {
                                 }}>
                                   <Edit className="w-4 h-4" />
                                 </Button>
-                                {reunion.statut === 'planifie' && (
-                                  <Button 
-                                    variant="default" 
-                                    size="sm" 
-                                    className="bg-success hover:bg-success/90"
-                                    onClick={() => {
-                                      setSelectedReunion(reunion);
-                                      setShowClotureModal(true);
-                                    }}
-                                  >
-                                    Clôturer
-                                  </Button>
-                                )}
+                 {reunion.statut === 'planifie' && (
+                    <Button 
+                      variant="default" 
+                      size="sm" 
+                      className="bg-success hover:bg-success/90"
+                      onClick={() => {
+                        setSelectedReunion(reunion);
+                        setShowClotureModal(true);
+                      }}
+                    >
+                      Confirmer et notifier
+                    </Button>
+                  )}
                               </div>
                             ) : (
                               <div className="flex gap-2">
@@ -510,15 +510,22 @@ export default function Reunions() {
       </Dialog>
 
       <Dialog open={showCompteRenduForm} onOpenChange={setShowCompteRenduForm}>
-        <DialogContent className="sm:max-w-[700px]">
-          {selectedReunion && (
-            <CompteRenduForm
-              reunionId={selectedReunion.id}
-              ordreJour={selectedReunion.ordre_du_jour}
-              onSuccess={handleCompteRenduSuccess}
-              onCancel={() => setShowCompteRenduForm(false)}
-            />
-          )}
+        <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-y-auto">
+          <div className="sticky top-0 bg-background pb-4 border-b">
+            <h2 className="text-lg font-semibold">
+              {selectedReunion ? `Compte-rendu - ${selectedReunion.ordre_du_jour}` : 'Compte-rendu'}
+            </h2>
+          </div>
+          <div className="py-4">
+            {selectedReunion && (
+              <CompteRenduForm
+                reunionId={selectedReunion.id}
+                ordreJour={selectedReunion.ordre_du_jour}
+                onSuccess={handleCompteRenduSuccess}
+                onCancel={() => setShowCompteRenduForm(false)}
+              />
+            )}
+          </div>
         </DialogContent>
       </Dialog>
 

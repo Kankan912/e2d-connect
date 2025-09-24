@@ -25,6 +25,8 @@ interface Membre {
   est_membre_e2d: boolean;
   est_adherent_phoenix: boolean;
   equipe?: string;
+  fonction?: string;
+  equipe_jaune_rouge?: string;
 }
 
 interface MembreFormProps {
@@ -44,6 +46,8 @@ export default function MembreForm({ open, onOpenChange, membre, onSuccess }: Me
     est_membre_e2d: true,
     est_adherent_phoenix: false,
     equipe: undefined,
+    fonction: "",
+    equipe_jaune_rouge: undefined,
   });
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
@@ -66,6 +70,8 @@ export default function MembreForm({ open, onOpenChange, membre, onSuccess }: Me
           est_membre_e2d: membre.est_membre_e2d ?? true,
           est_adherent_phoenix: membre.est_adherent_phoenix ?? false,
           equipe: (membre as any).equipe || undefined,
+          fonction: (membre as any).fonction || "",
+          equipe_jaune_rouge: (membre as any).equipe_jaune_rouge || undefined,
         });
       } else {
         // Reset form for new member
@@ -78,6 +84,8 @@ export default function MembreForm({ open, onOpenChange, membre, onSuccess }: Me
           est_membre_e2d: true,
           est_adherent_phoenix: false,
           equipe: undefined,
+          fonction: "",
+          equipe_jaune_rouge: undefined,
         });
         setSelectedRoles([]);
       }
@@ -167,6 +175,8 @@ export default function MembreForm({ open, onOpenChange, membre, onSuccess }: Me
             est_membre_e2d: formData.est_membre_e2d,
             est_adherent_phoenix: formData.est_adherent_phoenix,
             equipe: formData.equipe,
+            fonction: formData.fonction,
+            equipe_jaune_rouge: formData.equipe_jaune_rouge,
           })
           .eq('id', membre.id);
         
@@ -183,6 +193,8 @@ export default function MembreForm({ open, onOpenChange, membre, onSuccess }: Me
             est_membre_e2d: formData.est_membre_e2d,
             est_adherent_phoenix: formData.est_adherent_phoenix,
             equipe: formData.equipe,
+            fonction: formData.fonction,
+            equipe_jaune_rouge: formData.equipe_jaune_rouge,
           }])
           .select()
           .single();
@@ -223,16 +235,18 @@ export default function MembreForm({ open, onOpenChange, membre, onSuccess }: Me
       onSuccess();
       
       // Reset form
-      setFormData({
-        nom: "",
-        prenom: "",
-        email: "",
-        telephone: "",
-        statut: "actif",
-        est_membre_e2d: true,
-        est_adherent_phoenix: false,
-        equipe: undefined,
-      });
+        setFormData({
+          nom: "",
+          prenom: "",
+          email: "",
+          telephone: "",
+          statut: "actif",
+          est_membre_e2d: true,
+          est_adherent_phoenix: false,
+          equipe: undefined,
+          fonction: "",
+          equipe_jaune_rouge: undefined,
+        });
       setSelectedRoles([]);
     } catch (error: any) {
       toast({
@@ -308,6 +322,16 @@ export default function MembreForm({ open, onOpenChange, membre, onSuccess }: Me
           </div>
           
           <div className="space-y-2">
+            <Label htmlFor="fonction">Fonction</Label>
+            <Input
+              id="fonction"
+              placeholder="ex: Secrétaire, Trésorier, Membre actif..."
+              value={formData.fonction || ""}
+              onChange={(e) => setFormData(prev => ({ ...prev, fonction: e.target.value }))}
+            />
+          </div>
+          
+          <div className="space-y-2">
             <Label htmlFor="statut">Statut</Label>
             <Select value={formData.statut} onValueChange={(value) => 
               setFormData(prev => ({ ...prev, statut: value }))
@@ -323,6 +347,25 @@ export default function MembreForm({ open, onOpenChange, membre, onSuccess }: Me
           </div>
           
           <div className="space-y-4">
+            {/* Équipe Jaune/Rouge */}
+            <div className="space-y-2">
+              <Label htmlFor="equipe_jaune_rouge">Équipe Sport Interne</Label>
+              <Select 
+                value={formData.equipe_jaune_rouge || ""} 
+                onValueChange={(value) => 
+                  setFormData(prev => ({ ...prev, equipe_jaune_rouge: value || undefined }))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Choisir une équipe" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Jaune">Équipe Jaune</SelectItem>
+                  <SelectItem value="Rouge">Équipe Rouge</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
             {/* Équipe E2D */}
             {formData.est_membre_e2d && (
               <div className="space-y-2">

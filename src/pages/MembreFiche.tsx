@@ -14,7 +14,8 @@ import {
   Mail,
   CheckCircle,
   AlertTriangle,
-  Clock
+  Clock,
+  DollarSign
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -32,6 +33,8 @@ interface MembreDetail {
   telephone: string;
   statut: string;
   photo_url?: string;
+  fonction?: string;
+  equipe_jaune_rouge?: string;
 }
 
 interface Cotisation {
@@ -62,12 +65,33 @@ interface Pret {
   reconductions: number;
 }
 
+interface Sanction {
+  id: string;
+  montant: number;
+  statut: string;
+  date_sanction: string;
+  motif?: string;
+  type_sanction: {
+    nom: string;
+  };
+}
+
+interface FondCaisseOperation {
+  id: string;
+  montant: number;
+  type_operation: string;
+  date_operation: string;
+  libelle: string;
+}
+
 export default function MembreFiche() {
   const { id } = useParams<{ id: string }>();
   const [membre, setMembre] = useState<MembreDetail | null>(null);
   const [cotisations, setCotisations] = useState<Cotisation[]>([]);
   const [epargnes, setEpargnes] = useState<Epargne[]>([]);
   const [prets, setPrets] = useState<Pret[]>([]);
+  const [sanctions, setSanctions] = useState<Sanction[]>([]);
+  const [fondCaisseOps, setFondCaisseOps] = useState<FondCaisseOperation[]>([]);
   const [loading, setLoading] = useState(true);
   const [showEditForm, setShowEditForm] = useState(false);
   const [fondCaisse, setFondCaisse] = useState(0);
@@ -145,6 +169,29 @@ export default function MembreFiche() {
 
       if (pretsError) throw pretsError;
       setPrets(pretsData || []);
+
+      // Charger les sanctions
+      const { data: sanctionsData, error: sanctionsError } = await supabase
+        .from('sanctions')
+        .select(`
+          *,
+          type_sanction:sanctions_types(nom)
+        `)
+        .eq('membre_id', id)
+        .order('created_at', { ascending: false });
+
+      if (sanctionsError) throw sanctionsError;
+      setSanctions(sanctionsData || []);
+
+      // Charger les opérations fond de caisse
+      const { data: fondCaisseData, error: fondCaisseError } = await supabase
+        .from('fond_caisse_operations')
+        .select('*')
+        .eq('beneficiaire_id', id)
+        .order('date_operation', { ascending: false });
+
+      if (fondCaisseError) throw fondCaisseError;
+      setFondCaisseOps(fondCaisseData || []);
 
     } catch (error: any) {
       console.error('Erreur chargement fiche membre:', error);
@@ -269,6 +316,9 @@ export default function MembreFiche() {
             </Avatar>
             <div className="flex-1">
               <h2 className="text-2xl font-bold">{membre.prenom} {membre.nom}</h2>
+              {membre.fonction && (
+                <p className="text-lg text-primary font-medium">{membre.fonction}</p>
+              )}
               <div className="flex items-center space-x-4 mt-2 text-muted-foreground">
                 <div className="flex items-center space-x-1">
                   <Mail className="h-4 w-4" />
@@ -283,6 +333,11 @@ export default function MembreFiche() {
                 <Badge className={`${membre.statut === 'actif' ? 'bg-success' : 'bg-muted'}`}>
                   {membre.statut}
                 </Badge>
+                {membre.equipe_jaune_rouge && (
+                  <Badge className={membre.equipe_jaune_rouge === 'Jaune' ? 'bg-yellow-500' : 'bg-red-500'}>
+                    Équipe {membre.equipe_jaune_rouge}
+                  </Badge>
+                )}
                 <div className="text-sm text-muted-foreground">
                   Fond de Caisse: {fondCaisse.toLocaleString()} FCFA
                 </div>
@@ -310,10 +365,12 @@ export default function MembreFiche() {
 
       {/* Onglets détaillés */}
       <Tabs defaultValue="cotisations" className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="cotisations">Cotisations</TabsTrigger>
           <TabsTrigger value="epargnes">Épargnes</TabsTrigger>
           <TabsTrigger value="prets">Prêts</TabsTrigger>
+          <TabsTrigger value="sanctions">Sanctions</TabsTrigger>
+          <TabsTrigger value="fondcaisse">Fond Caisse</TabsTrigger>
           <TabsTrigger value="historique">Historique</TabsTrigger>
           <TabsTrigger value="resume">Résumé</TabsTrigger>
         </TabsList>
@@ -436,6 +493,83 @@ export default function MembreFiche() {
                 <p className="text-center text-muted-foreground py-8">Aucun prêt enregistré</p>
               )}
             </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="sanctions" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5" />
+                Historique des Sanctions
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {sanctions.map((sanction) => {
+                  const StatutIcon = getStatutIcon(sanction.statut);
+                  return (
+                    <div key={sanction.id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div>
+                        <h4 className="font-medium">{sanction.type_sanction?.nom || 'Sanction'}</h4>
+                        <p className="text-sm text-muted-foreground">
+                          {new Date(sanction.date_sanction).toLocaleDateString('fr-FR')}
+                        </p>
+                        {sanction.motif && (
+                          <p className="text-sm text-muted-foreground mt-1">{sanction.motif}</p>
+                        )}
+                      </div>
+                      <div className="text-right">
+                        <div className="font-bold text-destructive">{sanction.montant.toLocaleString()} FCFA</div>
+                        <Badge className={`mt-1 bg-${getStatutColor(sanction.statut)}`}>
+                          <StatutIcon className="w-3 h-3 mr-1" />
+                          {sanction.statut}
+                        </Badge>
+                      </div>
+                    </div>
+                  );
+                })}
+                {sanctions.length === 0 && (
+                  <p className="text-center text-muted-foreground py-8">Aucune sanction enregistrée</p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="fondcaisse" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <DollarSign className="h-5 w-5" />
+                Opérations Fond de Caisse
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {fondCaisseOps.map((operation) => (
+                  <div key={operation.id} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div>
+                      <h4 className="font-medium">{operation.libelle}</h4>
+                      <p className="text-sm text-muted-foreground">
+                        {new Date(operation.date_operation).toLocaleDateString('fr-FR')}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <div className={`font-bold ${operation.type_operation === 'entree' ? 'text-green-600' : 'text-red-600'}`}>
+                        {operation.type_operation === 'entree' ? '+' : '-'}{operation.montant.toLocaleString()} FCFA
+                      </div>
+                      <Badge variant={operation.type_operation === 'entree' ? 'default' : 'secondary'}>
+                        {operation.type_operation === 'entree' ? 'Entrée' : 'Sortie'}
+                      </Badge>
+                    </div>
+                  </div>
+                ))}
+                {fondCaisseOps.length === 0 && (
+                  <p className="text-center text-muted-foreground py-8">Aucune opération enregistrée</p>
+                )}
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
