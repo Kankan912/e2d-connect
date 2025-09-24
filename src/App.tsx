@@ -17,6 +17,10 @@ import Prets from "./pages/Prets";
 import Sanctions from "./pages/Sanctions";
 import Epargnes from "./pages/Epargnes";
 import Aides from "./pages/Aides";
+import AidesReunion from "./pages/AidesReunion";
+import AidesSport from "./pages/AidesSport";
+import SanctionsReunionPage from "./pages/SanctionsReunionPage";
+import SanctionsSportPage from "./pages/SanctionsSportPage";
 import Reunions from "./pages/Reunions";
 import Configuration from "./pages/Configuration";
 import SportE2D from "./pages/SportE2D";
@@ -109,6 +113,11 @@ function App() {
                   <Route path="/sanctions-reunion" element={<Navigate to="/reunions" />} />
                   <Route path="/epargnes" element={<Epargnes />} />
                   <Route path="/aides" element={<Aides />} />
+                  <Route path="/aides-reunion" element={<AidesReunion />} />
+                  <Route path="/aides-sport" element={<AidesSport />} />
+                  <Route path="/sanctions-reunion" element={<Navigate to="/sanctions-reunion-page" />} />
+                  <Route path="/sanctions-reunion-page" element={<SanctionsReunionPage />} />
+                  <Route path="/sanctions-sport-page" element={<SanctionsSportPage />} />
                   <Route path="/reunions" element={<Reunions />} />
                   <Route path="/presence-reunions" element={<PresenceReunions />} />
                   <Route path="/fond-caisse" element={<FondCaissePage />} />

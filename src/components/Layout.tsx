@@ -45,7 +45,7 @@ const menuItems = [
   { id: "sanctions", label: "Sanctions", icon: AlertTriangle, path: "/sanctions" },
   { id: "reunions", label: "Réunions", icon: Calendar, path: "/reunions" },
   { id: "notifications", label: "Notifications", icon: Bell, path: "/notifications-avancees" },
-  { id: "sport-equipes", label: "Sport Équipes", icon: Trophy, path: "/sport-equipes" },
+  { id: "sport", label: "Sport", icon: Trophy, path: "/sport" },
   { id: "historique", label: "Historique Connexions", icon: FileText, path: "/historique-connexion" },
   { id: "eligibilite", label: "Éligibilité Gala", icon: Trophy, path: "/eligibilite-gala" },
   { id: "rapports", label: "Rapports", icon: FileText, path: "/rapports" },

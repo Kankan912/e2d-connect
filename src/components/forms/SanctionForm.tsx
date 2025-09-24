@@ -12,6 +12,7 @@ interface SanctionFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
+  contexte?: 'reunion' | 'sport';
 }
 
 interface Membre {
@@ -27,14 +28,15 @@ interface TypeSanction {
   categorie: string;
 }
 
-export default function SanctionForm({ open, onOpenChange, onSuccess }: SanctionFormProps) {
+export default function SanctionForm({ open, onOpenChange, onSuccess, contexte = 'reunion' }: SanctionFormProps) {
   const [formData, setFormData] = useState({
     membre_id: "",
     type_sanction_id: "",
     montant: "",
     date_sanction: new Date().toISOString().split('T')[0],
     statut: "impaye",
-    motif: ""
+    motif: "",
+    contexte_sanction: contexte
   });
   const [membres, setMembres] = useState<Membre[]>([]);
   const [typesSanctions, setTypesSanctions] = useState<TypeSanction[]>([]);
@@ -121,6 +123,7 @@ export default function SanctionForm({ open, onOpenChange, onSuccess }: Sanction
           date_sanction: formData.date_sanction,
           statut: formData.statut,
           motif: formData.motif.trim() || null,
+          contexte_sanction: formData.contexte_sanction,
         }]);
 
       if (error) throw error;
@@ -140,7 +143,8 @@ export default function SanctionForm({ open, onOpenChange, onSuccess }: Sanction
         montant: "",
         date_sanction: new Date().toISOString().split('T')[0],
         statut: "impaye",
-        motif: ""
+        motif: "",
+        contexte_sanction: contexte
       });
     } catch (error: any) {
       toast({
@@ -157,9 +161,9 @@ export default function SanctionForm({ open, onOpenChange, onSuccess }: Sanction
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Enregistrer une sanction</DialogTitle>
+          <DialogTitle>Enregistrer une sanction - {contexte === 'sport' ? 'Sport' : 'Réunion'}</DialogTitle>
           <DialogDescription>
-            Appliquer une sanction disciplinaire à un membre.
+            Appliquer une sanction disciplinaire à un membre dans le contexte {contexte === 'sport' ? 'sportif' : 'des réunions'}.
           </DialogDescription>
         </DialogHeader>
         
