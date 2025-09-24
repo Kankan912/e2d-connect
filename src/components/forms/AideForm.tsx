@@ -113,7 +113,8 @@ export default function AideForm({ open, onOpenChange, onSuccess, contexte = 're
     setLoading(true);
 
     try {
-      const { error } = await supabase
+      // Insérer l'aide
+      const { error: aideError } = await supabase
         .from('aides')
         .insert([{
           beneficiaire_id: formData.beneficiaire_id,
@@ -125,11 +126,34 @@ export default function AideForm({ open, onOpenChange, onSuccess, contexte = 're
           contexte_aide: formData.contexte_aide,
         }]);
 
-      if (error) throw error;
+      if (aideError) throw aideError;
+
+      // Ajouter automatiquement une opération de fond de caisse pour l'aide
+      if (formData.statut === 'verse') {
+        const selectedType = typesAides.find(t => t.id === formData.type_aide_id);
+        const selectedMembre = membres.find(m => m.id === formData.beneficiaire_id);
+        
+        const { error: fondCaisseError } = await supabase
+          .from('fond_caisse_operations')
+          .insert({
+            type_operation: 'sortie',
+            montant: montant,
+            libelle: `Aide ${contexte === 'sport' ? 'sportive' : 'réunion'} - ${selectedType?.nom} - ${selectedMembre?.prenom} ${selectedMembre?.nom}`,
+            beneficiaire_id: formData.beneficiaire_id,
+            operateur_id: formData.beneficiaire_id, // Temporaire, devrait être l'utilisateur connecté
+            date_operation: formData.date_allocation,
+            notes: formData.notes.trim() || null
+          });
+
+        if (fondCaisseError) {
+          console.error('Erreur ajout fond de caisse:', fondCaisseError);
+          // Ne pas interrompre le processus si erreur fond de caisse
+        }
+      }
 
       toast({
         title: "Succès",
-        description: "Aide allouée avec succès",
+        description: `Aide allouée avec succès${formData.statut === 'verse' ? ' et ajoutée au fond de caisse' : ''}`,
       });
 
       onOpenChange(false);

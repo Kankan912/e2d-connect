@@ -509,25 +509,25 @@ export default function Reunions() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={showCompteRenduForm} onOpenChange={setShowCompteRenduForm}>
-        <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-y-auto">
-          <div className="sticky top-0 bg-background pb-4 border-b">
-            <h2 className="text-lg font-semibold">
-              {selectedReunion ? `Compte-rendu - ${selectedReunion.ordre_du_jour}` : 'Compte-rendu'}
-            </h2>
-          </div>
-          <div className="py-4">
-            {selectedReunion && (
-              <CompteRenduForm
-                reunionId={selectedReunion.id}
-                ordreJour={selectedReunion.ordre_du_jour}
-                onSuccess={handleCompteRenduSuccess}
-                onCancel={() => setShowCompteRenduForm(false)}
-              />
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+        <Dialog open={showCompteRenduForm} onOpenChange={setShowCompteRenduForm}>
+          <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-background pb-4 border-b">
+              <h2 className="text-lg font-semibold">
+                {selectedReunion ? `Compte-rendu - ${selectedReunion.ordre_du_jour}` : 'Compte-rendu'}
+              </h2>
+            </div>
+            <div className="py-4">
+              {selectedReunion && (
+                <CompteRenduForm
+                  reunionId={selectedReunion.id}
+                  ordreJour={selectedReunion.ordre_du_jour}
+                  onSuccess={handleCompteRenduSuccess}
+                  onCancel={() => setShowCompteRenduForm(false)}
+                />
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
 
       <CompteRenduViewer
         open={showCompteRenduViewer}

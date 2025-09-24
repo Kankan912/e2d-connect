@@ -243,6 +243,38 @@ export default function CalendrierBeneficiaires() {
     }
   };
 
+  const handleConfirmPayment = async (entry: CalendrierEntry) => {
+    try {
+      // Créer une opération de fond de caisse pour le paiement du bénéficiaire
+      const { error: fondCaisseError } = await supabase
+        .from('fond_caisse_operations')
+        .insert({
+          type_operation: 'sortie',
+          montant: entry.montant_attribue,
+          libelle: `Paiement bénéficiaire tontine - ${getMonthName(entry.mois)} ${entry.annee}`,
+          beneficiaire_id: entry.membre_id,
+          operateur_id: entry.membre_id, // Temporaire, devrait être l'utilisateur connecté
+          date_operation: new Date().toISOString().split('T')[0]
+        });
+
+      if (fondCaisseError) throw fondCaisseError;
+
+      // Marquer l'attribution comme payée (si on avait un champ statut)
+      toast({
+        title: "Paiement confirmé",
+        description: `Paiement de ${entry.montant_attribue.toLocaleString()} FCFA confirmé pour ${entry.membre?.prenom} ${entry.membre?.nom}`,
+      });
+
+      loadData();
+    } catch (error: any) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de confirmer le paiement: " + error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   const getMonthName = (month: number) => {
     const months = [
       'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
@@ -327,16 +359,24 @@ export default function CalendrierBeneficiaires() {
                         <Badge variant="secondary">Pas de réunion</Badge>
                       )}
                     </TableCell>
-                    <TableCell>
-                      <div className="flex gap-2">
-                        <Button size="sm" variant="outline" onClick={() => handleEdit(entry)}>
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button size="sm" variant="destructive" onClick={() => handleDelete(entry.id)}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
+                     <TableCell>
+                       <div className="flex gap-2">
+                         <Button size="sm" variant="outline" onClick={() => handleEdit(entry)}>
+                           <Edit className="h-4 w-4" />
+                         </Button>
+                         <Button 
+                           size="sm" 
+                           variant="default" 
+                           className="bg-success hover:bg-success/90"
+                           onClick={() => handleConfirmPayment(entry)}
+                         >
+                           Confirmer paiement
+                         </Button>
+                         <Button size="sm" variant="destructive" onClick={() => handleDelete(entry.id)}>
+                           <Trash2 className="h-4 w-4" />
+                         </Button>
+                       </div>
+                     </TableCell>
                   </TableRow>
                 );
               })}
