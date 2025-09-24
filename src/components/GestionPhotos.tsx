@@ -131,6 +131,8 @@ export const GestionPhotos: React.FC = () => {
     if (!uploadingId) return;
 
     try {
+      console.log('🚀 Début upload photo pour membre:', uploadingId);
+      
       // Validation du fichier
       if (file.size > 5 * 1024 * 1024) { // 5MB max
         throw new Error('Le fichier ne doit pas dépasser 5MB');
@@ -140,9 +142,16 @@ export const GestionPhotos: React.FC = () => {
         throw new Error('Le fichier doit être une image');
       }
 
+      console.log('✅ Validation fichier OK:', {
+        size: file.size,
+        type: file.type,
+        name: file.name
+      });
+
       // Générer un nom unique pour le fichier
       const fileExt = file.name.split('.').pop();
       const fileName = `${uploadingId}/avatar_${Date.now()}.${fileExt}`;
+      console.log('📁 Nom du fichier généré:', fileName);
 
       // Upload vers Supabase Storage
       const { data: uploadData, error: uploadError } = await supabase.storage
@@ -151,30 +160,54 @@ export const GestionPhotos: React.FC = () => {
           upsert: true
         });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('❌ Erreur upload storage:', uploadError);
+        throw uploadError;
+      }
+
+      console.log('✅ Upload storage réussi:', uploadData);
 
       // Obtenir l'URL publique
       const { data: { publicUrl } } = supabase.storage
         .from('membre-photos')
         .getPublicUrl(fileName);
 
+      console.log('🔗 URL publique générée:', publicUrl);
+
+      // Vérifier que l'URL est accessible
+      try {
+        const testResponse = await fetch(publicUrl, { method: 'HEAD' });
+        console.log('🌐 Test accessibilité URL:', testResponse.status);
+      } catch (testError) {
+        console.warn('⚠️ URL potentiellement non accessible:', testError);
+      }
+
       // Mettre à jour le profil du membre
-      const { error: updateError } = await supabase
+      console.log('💾 Mise à jour base de données...');
+      const { data: updateData, error: updateError } = await supabase
         .from('membres')
         .update({ photo_url: publicUrl })
-        .eq('id', uploadingId);
+        .eq('id', uploadingId)
+        .select();
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error('❌ Erreur mise à jour DB:', updateError);
+        throw updateError;
+      }
+
+      console.log('✅ Mise à jour DB réussie:', updateData);
 
       toast({
         title: "Succès",
         description: "Photo mise à jour avec succès"
       });
 
-      loadMembres();
+      // Forcer le rechargement des données
+      await loadMembres();
+      console.log('🔄 Rechargement des données terminé');
 
     } catch (error: any) {
-      console.error('Erreur upload photo:', error);
+      console.error('💥 Erreur upload photo:', error);
       toast({
         title: "Erreur",
         description: error.message || "Impossible d'uploader la photo",

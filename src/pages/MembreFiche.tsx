@@ -81,6 +81,8 @@ export default function MembreFiche() {
 
   const loadMembreData = async () => {
     try {
+      console.log('🔄 Chargement données membre:', id);
+      
       // Charger les informations du membre
       const { data: membreData, error: membreError } = await supabase
         .from('membres')
@@ -89,6 +91,13 @@ export default function MembreFiche() {
         .single();
 
       if (membreError) throw membreError;
+      
+      console.log('👤 Données membre chargées:', {
+        nom: membreData.nom,
+        prenom: membreData.prenom,
+        photo_url: membreData.photo_url ? 'Photo présente' : 'Pas de photo'
+      });
+      
       setMembre(membreData);
 
       // Charger les cotisations
@@ -232,7 +241,15 @@ export default function MembreFiche() {
         <CardContent className="pt-6">
           <div className="flex items-center space-x-4">
             <Avatar className="h-20 w-20">
-              <AvatarImage src={membre.photo_url} alt={`${membre.prenom} ${membre.nom}`} />
+              <AvatarImage 
+                src={membre.photo_url} 
+                alt={`${membre.prenom} ${membre.nom}`}
+                onLoad={() => console.log('✅ Photo chargée:', membre.photo_url)}
+                onError={(e) => {
+                  console.error('❌ Erreur chargement photo:', membre.photo_url);
+                  console.error('Détails erreur:', e);
+                }}
+              />
               <AvatarFallback className="text-lg">
                 {membre.prenom.charAt(0)}{membre.nom.charAt(0)}
               </AvatarFallback>
