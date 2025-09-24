@@ -25,6 +25,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import MembreForm from "@/components/forms/MembreForm";
+import { useNavigate } from "react-router-dom";
 
 interface Membre {
   id: string;
@@ -53,6 +54,7 @@ export default function Membres() {
   const [showForm, setShowForm] = useState(false);
   const [selectedMembre, setSelectedMembre] = useState<Membre | null>(null);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     loadMembres();
@@ -298,7 +300,7 @@ export default function Membres() {
                   };
 
                   return (
-                    <TableRow key={membre.id} className="hover:bg-muted/50 cursor-pointer" onClick={() => window.location.href = `/membre/${membre.id}`}>
+                    <TableRow key={membre.id} className="hover:bg-muted/50 cursor-pointer" onClick={() => navigate(`/membre/${membre.id}`)}>
                       <TableCell className="font-medium">
                         <div>
                           <p className="font-semibold">{membre.nom} {membre.prenom}</p>

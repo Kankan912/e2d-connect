@@ -14,9 +14,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import BackButton from "@/components/BackButton";
+import { useNavigate } from "react-router-dom";
 
 export default function Configuration() {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [ensureAdminLoading, setEnsureAdminLoading] = useState(false);
 
   const { data: currentRole } = useQuery({
@@ -68,10 +71,13 @@ export default function Configuration() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <LogoHeader 
-        title="Configuration"
-        subtitle="Paramètres généraux et administration"
-      />
+      <div className="flex items-center gap-4">
+        <BackButton />
+        <LogoHeader 
+          title="Configuration"
+          subtitle="Paramètres généraux et administration"
+        />
+      </div>
 
       {/* Configuration Tabs */}
       <Tabs defaultValue="users" className="space-y-6">
@@ -188,7 +194,7 @@ export default function Configuration() {
               <p className="text-sm text-muted-foreground mb-4">
                 Gestion du fond de caisse et des opérations
               </p>
-              <Button onClick={() => window.location.href = '/fond-caisse'}>
+              <Button onClick={() => navigate('/fond-caisse')}>
                 Accéder au Fond de Caisse
               </Button>
             </CardContent>
@@ -207,7 +213,7 @@ export default function Configuration() {
               <p className="text-sm text-muted-foreground mb-4">
                 Gestion des photos des membres de l'association
               </p>
-              <Button onClick={() => window.location.href = '/gestion-photos'}>
+              <Button onClick={() => navigate('/gestion-photos')}>
                 Gérer les Photos
               </Button>
             </CardContent>
