@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useRealtimeUpdates } from "@/hooks/useRealtimeUpdates";
 import LogoHeader from "@/components/LogoHeader";
 import { HistoriqueMembre } from "@/components/HistoriqueMembre";
 import MembreEditForm from "@/components/forms/MembreEditForm";
@@ -71,6 +72,18 @@ export default function MembreFiche() {
   const [showEditForm, setShowEditForm] = useState(false);
   const [fondCaisse, setFondCaisse] = useState(0);
   const { toast } = useToast();
+
+  // Mise à jour en temps réel pour les changements de membre (notamment photo)
+  useRealtimeUpdates({
+    table: 'membres',
+    onUpdate: () => {
+      console.log('🔄 Mise à jour temps réel détectée pour les membres');
+      if (id) {
+        loadMembreData();
+      }
+    },
+    enabled: true
+  });
 
   useEffect(() => {
     if (id) {
