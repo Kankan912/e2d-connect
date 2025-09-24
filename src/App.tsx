@@ -109,13 +109,10 @@ function App() {
                   <Route path="/membre-cotisation-config" element={<MembreCotisationConfig />} />
                   <Route path="/prets" element={<Prets />} />
                   <Route path="/sanctions" element={<Sanctions />} />
-                  <Route path="/sanctions-sport" element={<Navigate to="/sport" />} />
-                  <Route path="/sanctions-reunion" element={<Navigate to="/reunions" />} />
                   <Route path="/epargnes" element={<Epargnes />} />
                   <Route path="/aides" element={<Aides />} />
                   <Route path="/aides-reunion" element={<AidesReunion />} />
                   <Route path="/aides-sport" element={<AidesSport />} />
-                  <Route path="/sanctions-reunion" element={<Navigate to="/sanctions-reunion-page" />} />
                   <Route path="/sanctions-reunion-page" element={<SanctionsReunionPage />} />
                   <Route path="/sanctions-sport-page" element={<SanctionsSportPage />} />
                   <Route path="/reunions" element={<Reunions />} />
@@ -124,15 +121,19 @@ function App() {
                   <Route path="/notifications-avancees" element={<NotificationsAvanceesPage />} />
                   <Route path="/sport" element={<Sport />} />
                   <Route path="/sport-e2d-finances" element={<SportE2DFinances />} />
-                  <Route path="/sport/statistiques" element={<Navigate to="/sport" />} />
-                  <Route path="/sport-e2d" element={<Navigate to="/sport" />} />
                   <Route path="/sport-equipes" element={<SportEquipes />} />
                   <Route path="/phoenix-adherents" element={<PhoenixAdherents />} />
+                  <Route path="/eligibilite-gala" element={<EligibiliteGala />} />
+                  
+                  {/* Redirections vers les sections sportives unifiées */}
+                  <Route path="/sanctions-sport" element={<Navigate to="/sport" />} />
+                  <Route path="/sanctions-reunion" element={<Navigate to="/reunions" />} />
+                  <Route path="/sport/statistiques" element={<Navigate to="/sport" />} />
+                  <Route path="/sport-e2d" element={<Navigate to="/sport" />} />
                   <Route path="/calendrier-sportif" element={<Navigate to="/sport" />} />
                   <Route path="/calendrier" element={<Navigate to="/sport" />} />
                   <Route path="/match-results" element={<Navigate to="/sport" />} />
                   <Route path="/resultats-matchs" element={<Navigate to="/sport" />} />
-                  <Route path="/eligibilite-gala" element={<EligibiliteGala />} />
                   <Route path="/gestion-presences" element={<Navigate to="/sport" />} />
                   <Route path="/presences" element={<Navigate to="/sport" />} />
                   <Route path="/sport-config" element={<SportConfig />} />

@@ -1,13 +1,19 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, TrendingUp, Users, Settings, Trophy, MapPin, Clock, DollarSign, Plus } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Calendar, TrendingUp, Users, Settings, Trophy, MapPin, Clock, DollarSign, Plus, Target, Star, Activity } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import LogoHeader from "@/components/LogoHeader";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import PhoenixMatchForm from "@/components/forms/PhoenixMatchForm";
+import PhoenixEquipesManager from "@/components/PhoenixEquipesManager";
+import PhoenixMatchDetails from "@/components/PhoenixMatchDetails";
+import PhoenixEntrainementsManager from "@/components/PhoenixEntrainementsManager";
+import PhoenixClassements from "@/components/PhoenixClassements";
+import PhoenixCotisationsAnnuelles from "@/components/PhoenixCotisationsAnnuelles";
 
 export default function SportPhoenix() {
   const navigate = useNavigate();
@@ -182,6 +188,137 @@ export default function SportPhoenix() {
           </CardContent>
         </Card>
       )}
+
+      {/* Interface principale avec onglets */}
+      <Tabs defaultValue="overview" className="w-full">
+        <TabsList className="grid w-full grid-cols-6">
+          <TabsTrigger value="overview" className="flex items-center gap-1">
+            <Trophy className="w-4 h-4" />
+            Aperçu
+          </TabsTrigger>
+          <TabsTrigger value="equipes" className="flex items-center gap-1">
+            <Users className="w-4 h-4" />
+            Équipes
+          </TabsTrigger>
+          <TabsTrigger value="matchs" className="flex items-center gap-1">
+            <Target className="w-4 h-4" />
+            Matchs
+          </TabsTrigger>
+          <TabsTrigger value="entrainements" className="flex items-center gap-1">
+            <Activity className="w-4 h-4" />
+            Entraînements
+          </TabsTrigger>
+          <TabsTrigger value="classements" className="flex items-center gap-1">
+            <Star className="w-4 h-4" />
+            Classements
+          </TabsTrigger>
+          <TabsTrigger value="cotisations" className="flex items-center gap-1">
+            <DollarSign className="w-4 h-4" />
+            Cotisations
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview" className="mt-6">
+          {/* Actions rapides */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate("/phoenix-adherents")}>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Adhérents</p>
+                    <p className="text-2xl font-bold">{adherents?.length || 0}</p>
+                  </div>
+                  <Users className="h-8 w-8 text-blue-500" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate("/gestion-presences")}>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Présences</p>
+                    <p className="text-2xl font-bold">Gérer</p>
+                  </div>
+                  <Calendar className="h-8 w-8 text-green-500" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Button 
+              className="h-full min-h-[120px] flex flex-col items-center justify-center"
+              onClick={() => setShowMatchForm(true)}
+            >
+              <Plus className="h-8 w-8 mb-2" />
+              <span className="text-sm">Planifier un match</span>
+            </Button>
+
+            <Button 
+              className="h-full min-h-[120px] flex flex-col items-center justify-center"
+              variant="outline"
+              onClick={() => navigate("/match-results")}
+            >
+              <TrendingUp className="h-8 w-8 mb-2" />
+              <span className="text-sm">Voir les résultats</span>
+            </Button>
+          </div>
+
+          {/* Derniers matchs */}
+          {matchs && matchs.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Trophy className="h-5 w-5" />
+                  Derniers Matchs Phoenix
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {matchs.slice(0, 3).map((match) => (
+                    <div key={match.id} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div>
+                        <p className="font-medium">Phoenix vs {match.equipe_adverse}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {new Date(match.date_match).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        {match.score_phoenix !== null && match.score_adverse !== null ? (
+                          <p className="text-lg font-bold">
+                            {match.score_phoenix} - {match.score_adverse}
+                          </p>
+                        ) : (
+                          <Badge variant="outline">{match.statut}</Badge>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        <TabsContent value="equipes" className="mt-6">
+          <PhoenixEquipesManager />
+        </TabsContent>
+
+        <TabsContent value="matchs" className="mt-6">
+          <PhoenixMatchDetails />
+        </TabsContent>
+
+        <TabsContent value="entrainements" className="mt-6">
+          <PhoenixEntrainementsManager />
+        </TabsContent>
+
+        <TabsContent value="classements" className="mt-6">
+          <PhoenixClassements />
+        </TabsContent>
+
+        <TabsContent value="cotisations" className="mt-6">
+          <PhoenixCotisationsAnnuelles />
+        </TabsContent>
+      </Tabs>
 
       <PhoenixMatchForm
         open={showMatchForm}
