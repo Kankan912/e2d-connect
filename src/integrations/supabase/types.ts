@@ -61,6 +61,7 @@ export type Database = {
       aides: {
         Row: {
           beneficiaire_id: string
+          contexte_aide: string
           created_at: string
           date_allocation: string
           id: string
@@ -72,6 +73,7 @@ export type Database = {
         }
         Insert: {
           beneficiaire_id: string
+          contexte_aide?: string
           created_at?: string
           date_allocation?: string
           id?: string
@@ -83,6 +85,7 @@ export type Database = {
         }
         Update: {
           beneficiaire_id?: string
+          contexte_aide?: string
           created_at?: string
           date_allocation?: string
           id?: string
@@ -1362,6 +1365,7 @@ export type Database = {
       }
       sanctions: {
         Row: {
+          contexte_sanction: string | null
           created_at: string
           date_sanction: string
           id: string
@@ -1373,6 +1377,7 @@ export type Database = {
           type_sanction_id: string
         }
         Insert: {
+          contexte_sanction?: string | null
           created_at?: string
           date_sanction?: string
           id?: string
@@ -1384,6 +1389,7 @@ export type Database = {
           type_sanction_id: string
         }
         Update: {
+          contexte_sanction?: string | null
           created_at?: string
           date_sanction?: string
           id?: string

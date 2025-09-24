@@ -12,6 +12,7 @@ interface AideFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
+  contexte?: 'reunion' | 'sport';
 }
 
 interface Membre {
@@ -26,14 +27,15 @@ interface TypeAide {
   montant_defaut: number;
 }
 
-export default function AideForm({ open, onOpenChange, onSuccess }: AideFormProps) {
+export default function AideForm({ open, onOpenChange, onSuccess, contexte = 'reunion' }: AideFormProps) {
   const [formData, setFormData] = useState({
     beneficiaire_id: "",
     type_aide_id: "",
     montant: "",
     date_allocation: new Date().toISOString().split('T')[0],
     statut: "alloue",
-    notes: ""
+    notes: "",
+    contexte_aide: contexte
   });
   const [membres, setMembres] = useState<Membre[]>([]);
   const [typesAides, setTypesAides] = useState<TypeAide[]>([]);
@@ -120,6 +122,7 @@ export default function AideForm({ open, onOpenChange, onSuccess }: AideFormProp
           date_allocation: formData.date_allocation,
           statut: formData.statut,
           notes: formData.notes.trim() || null,
+          contexte_aide: formData.contexte_aide,
         }]);
 
       if (error) throw error;
@@ -139,7 +142,8 @@ export default function AideForm({ open, onOpenChange, onSuccess }: AideFormProp
         montant: "",
         date_allocation: new Date().toISOString().split('T')[0],
         statut: "alloue",
-        notes: ""
+        notes: "",
+        contexte_aide: contexte
       });
     } catch (error: any) {
       toast({
@@ -156,9 +160,9 @@ export default function AideForm({ open, onOpenChange, onSuccess }: AideFormProp
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Allouer une aide</DialogTitle>
+          <DialogTitle>Allouer une aide - {contexte === 'sport' ? 'Sport' : 'Réunion'}</DialogTitle>
           <DialogDescription>
-            Enregistrez l'allocation d'une aide à un membre.
+            Enregistrez l'allocation d'une aide à un membre dans le contexte {contexte === 'sport' ? 'sportif' : 'des réunions'}.
           </DialogDescription>
         </DialogHeader>
         
