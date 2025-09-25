@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, TrendingUp, Users, Settings, Trophy, MapPin, Clock, DollarSign, Plus } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import LogoHeader from "@/components/LogoHeader";
 import { useNavigate } from "react-router-dom";
@@ -13,6 +13,7 @@ import BackButton from "@/components/BackButton";
 export default function SportEquipes() {
   const navigate = useNavigate();
   const [showMatchForm, setShowMatchForm] = useState(false);
+  const queryClient = useQueryClient();
   
   const { data: configE2D } = useQuery({
     queryKey: ['sport-e2d-config'],
@@ -234,7 +235,8 @@ export default function SportEquipes() {
         onOpenChange={setShowMatchForm}
         onSuccess={() => {
           // Rafraîchir les données des matchs
-          window.location.reload();
+          queryClient.invalidateQueries({ queryKey: ['sport-equipes-matchs'] });
+          setShowMatchForm(false);
         }}
       />
     </div>

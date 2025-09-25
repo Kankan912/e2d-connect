@@ -52,10 +52,8 @@ export default function Configuration() {
       } else {
         toast({
           title: "Succès",
-          description: "Rôle administrateur initialisé. Réessayez votre action.",
+          description: "Rôle administrateur initialisé. Les permissions ont été mises à jour.",
         });
-        // Recharger la page pour actualiser les permissions
-        setTimeout(() => window.location.reload(), 1500);
       }
     } catch (error: any) {
       toast({

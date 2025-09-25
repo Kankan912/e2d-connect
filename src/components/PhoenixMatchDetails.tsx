@@ -139,10 +139,10 @@ export default function PhoenixMatchDetails() {
 
   const getEventIcon = (type: string) => {
     switch (type) {
-      case 'but': return <Goal className="w-4 h-4 text-green-500" />;
-      case 'carton_jaune': return <AlertTriangle className="w-4 h-4 text-yellow-500" />;
-      case 'carton_rouge': return <UserMinus className="w-4 h-4 text-red-500" />;
-      case 'passe_decisive': return <Star className="w-4 h-4 text-blue-500" />;
+      case 'but': return <Goal className="w-4 h-4" />;
+      case 'carton_jaune': return <AlertTriangle className="w-4 h-4" />;
+      case 'carton_rouge': return <UserMinus className="w-4 h-4" />;
+      case 'passe_decisive': return <Star className="w-4 h-4" />;
       default: return <Trophy className="w-4 h-4" />;
     }
   };

@@ -67,13 +67,13 @@ export default function PhoenixClassements() {
   const meilleurPasseur = [...(statistiques || [])].sort((a, b) => b.passes_decisives - a.passes_decisives)[0];
   const joueurLePlusRegulier = [...(statistiques || [])].sort((a, b) => b.matchs_joues - a.matchs_joues)[0];
 
-  const StatCard = ({ title, value, subtitle, icon: Icon, color = "primary" }: any) => (
+  const StatCard = ({ title, value, subtitle, icon: Icon, variant = "default" }: any) => (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium text-muted-foreground">
           {title}
         </CardTitle>
-        <Icon className={`h-4 w-4 text-${color}`} />
+        <Icon className="h-4 w-4" />
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-bold">{value}</div>
@@ -97,26 +97,22 @@ export default function PhoenixClassements() {
           title="Matchs joués"
           value={matchsStats?.matchsJoues || 0}
           icon={Calendar}
-          color="primary"
         />
         <StatCard
           title="Victoires"
           value={matchsStats?.victoires || 0}
           subtitle={`${matchsStats?.pourcentageVictoires?.toFixed(1) || 0}% de réussite`}
           icon={Trophy}
-          color="success"
         />
         <StatCard
           title="Nuls"
           value={matchsStats?.nuls || 0}
           icon={Target}
-          color="warning"
         />
         <StatCard
           title="Défaites"
           value={matchsStats?.defaites || 0}
           icon={TrendingUp}
-          color="destructive"
         />
       </div>
 
@@ -126,7 +122,7 @@ export default function PhoenixClassements() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Target className="h-5 w-5 text-green-500" />
+                <Target className="h-5 w-5" />
                 Meilleur buteur
               </CardTitle>
             </CardHeader>
@@ -135,7 +131,7 @@ export default function PhoenixClassements() {
                 <p className="text-lg font-semibold">
                   {meilleurButeur.membres.prenom} {meilleurButeur.membres.nom}
                 </p>
-                <p className="text-3xl font-bold text-green-500 my-2">
+                <p className="text-3xl font-bold my-2">
                   {meilleurButeur.buts} buts
                 </p>
                 <p className="text-sm text-muted-foreground">
@@ -150,7 +146,7 @@ export default function PhoenixClassements() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Star className="h-5 w-5 text-blue-500" />
+                <Star className="h-5 w-5" />
                 Meilleur passeur
               </CardTitle>
             </CardHeader>
@@ -159,7 +155,7 @@ export default function PhoenixClassements() {
                 <p className="text-lg font-semibold">
                   {meilleurPasseur.membres.prenom} {meilleurPasseur.membres.nom}
                 </p>
-                <p className="text-3xl font-bold text-blue-500 my-2">
+                <p className="text-3xl font-bold my-2">
                   {meilleurPasseur.passes_decisives} passes
                 </p>
                 <p className="text-sm text-muted-foreground">
@@ -174,7 +170,7 @@ export default function PhoenixClassements() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5 text-purple-500" />
+                <Users className="h-5 w-5" />
                 Plus régulier
               </CardTitle>
             </CardHeader>
@@ -183,7 +179,7 @@ export default function PhoenixClassements() {
                 <p className="text-lg font-semibold">
                   {joueurLePlusRegulier.membres.prenom} {joueurLePlusRegulier.membres.nom}
                 </p>
-                <p className="text-3xl font-bold text-purple-500 my-2">
+                <p className="text-3xl font-bold my-2">
                   {joueurLePlusRegulier.matchs_joues} matchs
                 </p>
                 <p className="text-sm text-muted-foreground">
@@ -223,11 +219,11 @@ export default function PhoenixClassements() {
                 <div className="text-right">
                   <div className="flex gap-4 text-sm">
                     <span className="flex items-center gap-1">
-                      <Target className="w-3 h-3 text-green-500" />
+                      <Target className="w-3 h-3" />
                       {stat.buts}
                     </span>
                     <span className="flex items-center gap-1">
-                      <Star className="w-3 h-3 text-blue-500" />
+                      <Star className="w-3 h-3" />
                       {stat.passes_decisives}
                     </span>
                     {stat.cartons_jaunes > 0 && (

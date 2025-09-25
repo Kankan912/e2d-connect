@@ -2,8 +2,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, TrendingUp, Users, Settings, Trophy, MapPin, Clock, DollarSign, Plus, Target, Star, Activity } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { Calendar, TrendingUp, Users, Settings, Trophy, MapPin, Clock, DollarSign, Plus, Target, Star, Activity, Shirt } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import LogoHeader from "@/components/LogoHeader";
 import { useNavigate } from "react-router-dom";
@@ -13,11 +13,13 @@ import PhoenixEquipesManager from "@/components/PhoenixEquipesManager";
 import PhoenixMatchDetails from "@/components/PhoenixMatchDetails";
 import PhoenixEntrainementsManager from "@/components/PhoenixEntrainementsManager";
 import PhoenixClassements from "@/components/PhoenixClassements";
+import PhoenixCompositionsManager from "@/components/PhoenixCompositionsManager";
 import PhoenixCotisationsAnnuelles from "@/components/PhoenixCotisationsAnnuelles";
 
 export default function SportPhoenix() {
   const navigate = useNavigate();
   const [showMatchForm, setShowMatchForm] = useState(false);
+  const queryClient = useQueryClient();
   
   // Stats globales (désactivées pour l'instant)
   const stats: any = null;
@@ -191,7 +193,7 @@ export default function SportPhoenix() {
 
       {/* Interface principale avec onglets */}
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="overview" className="flex items-center gap-1">
             <Trophy className="w-4 h-4" />
             Aperçu
@@ -203,6 +205,10 @@ export default function SportPhoenix() {
           <TabsTrigger value="matchs" className="flex items-center gap-1">
             <Target className="w-4 h-4" />
             Matchs
+          </TabsTrigger>
+          <TabsTrigger value="compositions" className="flex items-center gap-1">
+            <Shirt className="w-4 h-4" />
+            Compositions
           </TabsTrigger>
           <TabsTrigger value="entrainements" className="flex items-center gap-1">
             <Activity className="w-4 h-4" />
@@ -307,6 +313,10 @@ export default function SportPhoenix() {
           <PhoenixMatchDetails />
         </TabsContent>
 
+        <TabsContent value="compositions" className="mt-6">
+          <PhoenixCompositionsManager />
+        </TabsContent>
+
         <TabsContent value="entrainements" className="mt-6">
           <PhoenixEntrainementsManager />
         </TabsContent>
@@ -325,7 +335,8 @@ export default function SportPhoenix() {
         onOpenChange={setShowMatchForm}
         onSuccess={() => {
           // Rafraîchir les données des matchs
-          window.location.reload();
+          queryClient.invalidateQueries({ queryKey: ['phoenix-matchs'] });
+          setShowMatchForm(false);
         }}
       />
     </div>

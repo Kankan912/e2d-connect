@@ -320,11 +320,11 @@ export default function PhoenixEntrainementsManager() {
           {selectedEntrainement && (
             <div className="space-y-4">
               <div className="flex gap-4 text-sm">
-                <Badge variant="outline" className="text-green-600">
+                <Badge variant="outline">
                   <CheckCircle className="w-3 h-3 mr-1" />
                   Présents: {getPresenceStats().presents}
                 </Badge>
-                <Badge variant="outline" className="text-red-600">
+                <Badge variant="outline">
                   <XCircle className="w-3 h-3 mr-1" />
                   Absents: {getPresenceStats().absents}
                 </Badge>

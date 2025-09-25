@@ -13,7 +13,7 @@ import {
   User,
   Plus
 } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import LogoHeader from "@/components/LogoHeader";
 import { useNavigate } from "react-router-dom";
@@ -26,6 +26,7 @@ export default function SportE2D() {
   const [showMatchForm, setShowMatchForm] = useState(false);
   const [selectedMatch, setSelectedMatch] = useState<any>(null);
   const [showMatchDetails, setShowMatchDetails] = useState(false);
+  const queryClient = useQueryClient();
 
   const { data: membres } = useQuery({
     queryKey: ['membres'],
@@ -210,7 +211,8 @@ export default function SportE2D() {
         onOpenChange={setShowMatchForm}
         onSuccess={() => {
           // Rafraîchir les données des matchs
-          window.location.reload();
+          queryClient.invalidateQueries({ queryKey: ['sport-e2d-matchs'] });
+          setShowMatchForm(false);
         }}
       />
 
