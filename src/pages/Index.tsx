@@ -1,7 +1,7 @@
 import React from 'react';
-import { TableauBordDirection } from '@/components/TableauBordDirection';
+import { TableauBordDirectionSimple } from '@/components/TableauBordDirectionSimple';
 
 export default function Index() {
-  return <TableauBordDirection />;
+  return <TableauBordDirectionSimple />;
 }
 

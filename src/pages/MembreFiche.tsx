@@ -291,8 +291,12 @@ export default function MembreFiche() {
             subtitle="Détails complets du membre"
           />
         </div>
-        <Button onClick={() => setShowEditForm(true)}>
-          Éditer le profil
+        <EditMembreButton 
+          membreId={membre.id} 
+          onSuccess={() => window.location.reload()}
+          variant="default"
+        />
+      </div>
         </Button>
       </div>
 

@@ -32,6 +32,7 @@ import CompteRenduForm from "@/components/forms/CompteRenduForm";
 import CompteRenduViewer from "@/components/CompteRenduViewer";
 import ClotureReunionModal from "@/components/ClotureReunionModal";
 import CalendrierBeneficiaires from "@/components/CalendrierBeneficiaires";
+import BeneficiairesReunionManager from "@/components/BeneficiairesReunionManager";
 import LogoHeader from "@/components/LogoHeader";
 import { useBackNavigation } from "@/hooks/useBackNavigation";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -60,7 +61,6 @@ export default function Reunions() {
   const [selectedReunion, setSelectedReunion] = useState<Reunion | null>(null);
   const [editingReunion, setEditingReunion] = useState<Reunion | null>(null);
   const { toast } = useToast();
-  const { goBack, BackIcon } = useBackNavigation();
 
   // Composant pour afficher le nom du bénéficiaire
   const BeneficiaireName = ({ beneficiaireId }: { beneficiaireId: string }) => {
@@ -250,10 +250,7 @@ export default function Reunions() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Button variant="outline" size="sm" onClick={goBack}>
-            <BackIcon className="w-4 h-4 mr-2" />
-            Retour
-          </Button>
+          <BackButtonGlobal />
           <LogoHeader 
             title="Gestion des Réunions"
             subtitle="Planification et suivi des réunions"
@@ -416,7 +413,7 @@ export default function Reunions() {
                                 }}>
                                   <Edit className="w-4 h-4" />
                                 </Button>
-                 {reunion.statut === 'planifie' && (
+                 {reunion.statut === 'terminee' && (
                     <Button 
                       variant="default" 
                       size="sm" 
@@ -497,6 +494,7 @@ export default function Reunions() {
 
         <TabsContent value="beneficiaires">
           <CalendrierBeneficiaires />
+          <BeneficiairesReunionManager />
         </TabsContent>
       </Tabs>
 

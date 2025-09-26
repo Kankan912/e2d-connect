@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import BackButton from '@/components/BackButton';
+import BackButtonGlobal from '@/components/ui/back-button-global';
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { 
@@ -261,7 +261,7 @@ export default function Prets() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <BackButton to="/" />
+          <BackButtonGlobal />
           <LogoHeader 
             title="Gestion des Prêts"
             subtitle="Suivi des prêts accordés aux membres"

@@ -120,10 +120,10 @@ export default function Epargnes() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.membre_id || !formData.montant) {
+    if (!formData.membre_id || !formData.montant || !formData.reunion_id) {
       toast({
         title: "Erreur",
-        description: "Veuillez remplir tous les champs obligatoires",
+        description: "Veuillez remplir tous les champs obligatoires (membre, montant et réunion)",
         variant: "destructive",
       });
       return;
@@ -248,12 +248,12 @@ export default function Epargnes() {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="reunion">Réunion (optionnel)</Label>
+                <Label htmlFor="reunion">Réunion planifiée *</Label>
                 <Select value={formData.reunion_id} onValueChange={(value) => 
                   setFormData(prev => ({ ...prev, reunion_id: value }))
-                }>
+                } required>
                   <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner une réunion" />
+                    <SelectValue placeholder="Sélectionner une réunion planifiée" />
                   </SelectTrigger>
                   <SelectContent>
                     {reunions.map((reunion) => (
@@ -263,6 +263,9 @@ export default function Epargnes() {
                     ))}
                   </SelectContent>
                 </Select>
+                <p className="text-xs text-muted-foreground">
+                  L'épargne doit être rattachée à une réunion planifiée
+                </p>
               </div>
               
               <div className="space-y-2">

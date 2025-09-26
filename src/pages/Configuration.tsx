@@ -16,6 +16,10 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import BackButton from "@/components/BackButton";
 import { useNavigate } from "react-router-dom";
+import ExercicesManager from "@/components/ExercicesManager";
+import SMTPConfigManager from "@/components/SMTPConfigManager";
+import NotificationsHistorique from "@/components/NotificationsHistorique";
+import MatchGalaConfig from "@/components/MatchGalaConfig";
 
 export default function Configuration() {
   const { toast } = useToast();
@@ -79,7 +83,11 @@ export default function Configuration() {
 
       {/* Configuration Tabs */}
       <Tabs defaultValue="users" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-7">
+        <TabsList className="grid w-full grid-cols-8">
+          <TabsTrigger value="exercices" className="flex items-center gap-2">
+            <Settings className="h-4 w-4" />
+            Exercices
+          </TabsTrigger>
           <TabsTrigger value="users" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
             Utilisateurs
@@ -109,6 +117,10 @@ export default function Configuration() {
             Sauvegarde
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="exercices" className="space-y-6">
+          <ExercicesManager />
+        </TabsContent>
 
         <TabsContent value="users" className="space-y-6">
           <Card>
@@ -173,7 +185,12 @@ export default function Configuration() {
         </TabsContent>
 
         <TabsContent value="notifications" className="space-y-6">
-          <SystemeNotifications />
+          <div className="space-y-6">
+            <SystemeNotifications />
+            <SMTPConfigManager />
+            <NotificationsHistorique />
+            <MatchGalaConfig />
+          </div>
         </TabsContent>
 
         <TabsContent value="tontine" className="space-y-6">
