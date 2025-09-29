@@ -35,6 +35,7 @@ import CalendrierBeneficiaires from "@/components/CalendrierBeneficiaires";
 import BeneficiairesReunionManager from "@/components/BeneficiairesReunionManager";
 import LogoHeader from "@/components/LogoHeader";
 import { useBackNavigation } from "@/hooks/useBackNavigation";
+import BackButton from "@/components/BackButton";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useQuery } from "@tanstack/react-query";
 
@@ -250,7 +251,7 @@ export default function Reunions() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <BackButtonGlobal />
+          <BackButton />
           <LogoHeader 
             title="Gestion des Réunions"
             subtitle="Planification et suivi des réunions"

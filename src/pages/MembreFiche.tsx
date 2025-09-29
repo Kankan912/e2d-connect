@@ -24,6 +24,7 @@ import LogoHeader from "@/components/LogoHeader";
 import { HistoriqueMembre } from "@/components/HistoriqueMembre";
 import MembreEditForm from "@/components/forms/MembreEditForm";
 import BackButton from "@/components/BackButton";
+import EditMembreButton from "@/components/EditMembreButton";
 
 interface MembreDetail {
   id: string;
@@ -296,8 +297,6 @@ export default function MembreFiche() {
           onSuccess={() => window.location.reload()}
           variant="default"
         />
-      </div>
-        </Button>
       </div>
 
       {/* Profil du membre */}
