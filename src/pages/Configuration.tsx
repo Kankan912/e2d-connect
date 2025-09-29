@@ -20,6 +20,7 @@ import ExercicesManager from "@/components/ExercicesManager";
 import SMTPConfigManager from "@/components/SMTPConfigManager";
 import NotificationsHistorique from "@/components/NotificationsHistorique";
 import MatchGalaConfig from "@/components/MatchGalaConfig";
+import HistoriqueVariables from "@/components/HistoriqueVariables";
 
 export default function Configuration() {
   const { toast } = useToast();

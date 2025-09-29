@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useEnsureAdmin } from "@/hooks/useEnsureAdmin";
+import { Calendar, Clock, MapPin, Users } from "lucide-react";
 
 interface PhoenixMatchFormProps {
   open: boolean;
@@ -29,7 +29,7 @@ export default function PhoenixMatchForm({ open, onOpenChange, onSuccess }: Phoe
   });
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
-  const { withEnsureAdmin } = useEnsureAdmin();
+  
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,7 +45,7 @@ export default function PhoenixMatchForm({ open, onOpenChange, onSuccess }: Phoe
 
     setLoading(true);
 
-    const operation = async () => {
+    try {
       const matchData = {
         date_match: formData.date_match,
         heure_match: formData.heure_match || null,
@@ -63,10 +63,6 @@ export default function PhoenixMatchForm({ open, onOpenChange, onSuccess }: Phoe
         .insert([matchData]);
 
       if (error) throw error;
-    };
-
-    try {
-      await withEnsureAdmin(operation);
 
       toast({
         title: "Succès",
@@ -103,33 +99,41 @@ export default function PhoenixMatchForm({ open, onOpenChange, onSuccess }: Phoe
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Programmer un match Phoenix</DialogTitle>
-          <DialogDescription>
-            Planifiez un nouveau match pour l'équipe Phoenix.
-          </DialogDescription>
+          <DialogTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            Programmer un match Phoenix
+          </DialogTitle>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="date_match">Date du match *</Label>
-              <Input
-                id="date_match"
-                type="date"
-                value={formData.date_match}
-                onChange={(e) => setFormData(prev => ({ ...prev, date_match: e.target.value }))}
-                required
-              />
+              <div className="relative">
+                <Calendar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="date_match"
+                  type="date"
+                  value={formData.date_match}
+                  onChange={(e) => setFormData(prev => ({ ...prev, date_match: e.target.value }))}
+                  className="pl-10"
+                  required
+                />
+              </div>
             </div>
             
             <div className="space-y-2">
               <Label htmlFor="heure_match">Heure</Label>
-              <Input
-                id="heure_match"
-                type="time"
-                value={formData.heure_match}
-                onChange={(e) => setFormData(prev => ({ ...prev, heure_match: e.target.value }))}
-              />
+              <div className="relative">
+                <Clock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="heure_match"
+                  type="time"
+                  value={formData.heure_match}
+                  onChange={(e) => setFormData(prev => ({ ...prev, heure_match: e.target.value }))}
+                  className="pl-10"
+                />
+              </div>
             </div>
           </div>
 
@@ -146,12 +150,16 @@ export default function PhoenixMatchForm({ open, onOpenChange, onSuccess }: Phoe
 
           <div className="space-y-2">
             <Label htmlFor="lieu">Lieu</Label>
-            <Input
-              id="lieu"
-              placeholder="Ex: Stade municipal, Terrain du quartier..."
-              value={formData.lieu}
-              onChange={(e) => setFormData(prev => ({ ...prev, lieu: e.target.value }))}
-            />
+            <div className="relative">
+              <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="lieu"
+                placeholder="Ex: Stade municipal, Terrain du quartier..."
+                value={formData.lieu}
+                onChange={(e) => setFormData(prev => ({ ...prev, lieu: e.target.value }))}
+                className="pl-10"
+              />
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">

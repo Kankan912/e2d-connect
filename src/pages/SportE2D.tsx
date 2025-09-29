@@ -157,7 +157,7 @@ export default function SportE2D() {
         <Button 
           className="h-full min-h-[120px] flex flex-col items-center justify-center"
           variant="outline"
-          onClick={() => window.open('/sport-e2d-finances', '_blank')}
+          onClick={() => navigate("/sport-e2d-finances")}
         >
           <Settings className="h-8 w-8 mb-2" />
           <span className="text-sm">Gérer les finances</span>

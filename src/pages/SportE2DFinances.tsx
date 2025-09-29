@@ -24,6 +24,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import LogoHeader from "@/components/LogoHeader";
 import { useBackNavigation } from "@/hooks/useBackNavigation";
+import SportE2DFinancesManager from "@/components/SportE2DFinancesManager";
 
 interface Recette {
   id: string;
@@ -157,138 +158,7 @@ export default function SportE2DFinances() {
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <StatCard
-          title="Total Recettes"
-          value={`${totalRecettes.toLocaleString()} FCFA`}
-          icon={TrendingUp}
-          color="success"
-        />
-        <StatCard
-          title="Total Dépenses"
-          value={`${totalDepenses.toLocaleString()} FCFA`}
-          icon={TrendingDown}
-          color="destructive"
-        />
-        <StatCard
-          title="Solde"
-          value={`${solde.toLocaleString()} FCFA`}
-          icon={DollarSign}
-          color={solde >= 0 ? "success" : "destructive"}
-        />
-      </div>
-
-      {/* Onglets */}
-      <div className="flex gap-2">
-        <Button
-          variant={activeTab === 'recettes' ? 'default' : 'outline'}
-          onClick={() => setActiveTab('recettes')}
-        >
-          <TrendingUp className="w-4 h-4 mr-2" />
-          Recettes ({recettes.length})
-        </Button>
-        <Button
-          variant={activeTab === 'depenses' ? 'default' : 'outline'}
-          onClick={() => setActiveTab('depenses')}
-        >
-          <TrendingDown className="w-4 h-4 mr-2" />
-          Dépenses ({depenses.length})
-        </Button>
-      </div>
-
-      {/* Tableau des transactions */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              {activeTab === 'recettes' ? (
-                <>
-                  <TrendingUp className="h-5 w-5 text-success" />
-                  Recettes Sport E2D
-                </>
-              ) : (
-                <>
-                  <TrendingDown className="h-5 w-5 text-destructive" />
-                  Dépenses Sport E2D
-                </>
-              )}
-            </CardTitle>
-            <div className="relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Rechercher..."
-                className="pl-10 w-64"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-          </div>
-        </CardHeader>
-        
-        <CardContent>
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Libellé</TableHead>
-                  <TableHead>Montant</TableHead>
-                  <TableHead>Date</TableHead>
-                  {activeTab === 'recettes' ? (
-                    <TableHead>Notes</TableHead>
-                  ) : (
-                    <TableHead>Justificatif</TableHead>
-                  )}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {(activeTab === 'recettes' ? filteredRecettes : filteredDepenses).map((item) => (
-                  <TableRow key={item.id} className="hover:bg-muted/50">
-                    <TableCell className="font-medium">
-                      {item.libelle}
-                    </TableCell>
-                    
-                    <TableCell className={`font-bold ${activeTab === 'recettes' ? 'text-success' : 'text-destructive'}`}>
-                      {activeTab === 'recettes' ? '+' : '-'}{Number(item.montant || 0).toLocaleString()} FCFA
-                    </TableCell>
-                    
-                    <TableCell className="text-muted-foreground">
-                      {new Date(activeTab === 'recettes' ? (item as Recette).date_recette : (item as Depense).date_depense).toLocaleDateString('fr-FR')}
-                    </TableCell>
-                    
-                    <TableCell>
-                      {activeTab === 'recettes' ? (
-                        <span className="text-sm text-muted-foreground">
-                          {(item as Recette).notes || '-'}
-                        </span>
-                      ) : (
-                        (item as Depense).justificatif_url ? (
-                          <Button variant="outline" size="sm" asChild>
-                            <a href={(item as Depense).justificatif_url} target="_blank" rel="noopener noreferrer">
-                              <FileText className="w-4 h-4 mr-1" />
-                              Voir
-                            </a>
-                          </Button>
-                        ) : (
-                          <span className="text-sm text-muted-foreground">Aucun</span>
-                        )
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-                
-                {(activeTab === 'recettes' ? filteredRecettes : filteredDepenses).length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
-                      {searchTerm ? `Aucune ${activeTab} trouvée` : `Aucune ${activeTab} enregistrée`}
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+      <SportE2DFinancesManager />
     </div>
   );
 }

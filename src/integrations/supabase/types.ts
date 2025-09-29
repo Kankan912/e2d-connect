@@ -989,6 +989,200 @@ export type Database = {
           },
         ]
       }
+      phoenix_compositions: {
+        Row: {
+          created_at: string
+          equipe_nom: string
+          est_capitaine: boolean | null
+          id: string
+          match_id: string
+          membre_id: string
+          poste: string | null
+        }
+        Insert: {
+          created_at?: string
+          equipe_nom: string
+          est_capitaine?: boolean | null
+          id?: string
+          match_id: string
+          membre_id: string
+          poste?: string | null
+        }
+        Update: {
+          created_at?: string
+          equipe_nom?: string
+          est_capitaine?: boolean | null
+          id?: string
+          match_id?: string
+          membre_id?: string
+          poste?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_phoenix_compositions_match"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "sport_phoenix_matchs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_phoenix_compositions_membre"
+            columns: ["membre_id"]
+            isOneToOne: false
+            referencedRelation: "membres"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      phoenix_cotisations_annuelles: {
+        Row: {
+          annee: number
+          created_at: string
+          date_paiement: string | null
+          id: string
+          membre_id: string
+          montant: number
+          notes: string | null
+          statut: string | null
+          updated_at: string
+        }
+        Insert: {
+          annee: number
+          created_at?: string
+          date_paiement?: string | null
+          id?: string
+          membre_id: string
+          montant?: number
+          notes?: string | null
+          statut?: string | null
+          updated_at?: string
+        }
+        Update: {
+          annee?: number
+          created_at?: string
+          date_paiement?: string | null
+          id?: string
+          membre_id?: string
+          montant?: number
+          notes?: string | null
+          statut?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_phoenix_cotisations_membre"
+            columns: ["membre_id"]
+            isOneToOne: false
+            referencedRelation: "membres"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      phoenix_entrainements: {
+        Row: {
+          created_at: string
+          date_entrainement: string
+          heure_debut: string | null
+          heure_fin: string | null
+          id: string
+          lieu: string | null
+          notes: string | null
+          type_entrainement: string | null
+        }
+        Insert: {
+          created_at?: string
+          date_entrainement: string
+          heure_debut?: string | null
+          heure_fin?: string | null
+          id?: string
+          lieu?: string | null
+          notes?: string | null
+          type_entrainement?: string | null
+        }
+        Update: {
+          created_at?: string
+          date_entrainement?: string
+          heure_debut?: string | null
+          heure_fin?: string | null
+          id?: string
+          lieu?: string | null
+          notes?: string | null
+          type_entrainement?: string | null
+        }
+        Relationships: []
+      }
+      phoenix_equipes: {
+        Row: {
+          couleur_hex: string | null
+          created_at: string
+          id: string
+          nom: string
+          updated_at: string
+        }
+        Insert: {
+          couleur_hex?: string | null
+          created_at?: string
+          id?: string
+          nom: string
+          updated_at?: string
+        }
+        Update: {
+          couleur_hex?: string | null
+          created_at?: string
+          id?: string
+          nom?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      phoenix_evenements_match: {
+        Row: {
+          created_at: string
+          description: string | null
+          equipe_nom: string
+          id: string
+          match_id: string
+          membre_id: string
+          minute: number | null
+          type_evenement: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          equipe_nom: string
+          id?: string
+          match_id: string
+          membre_id: string
+          minute?: number | null
+          type_evenement: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          equipe_nom?: string
+          id?: string
+          match_id?: string
+          membre_id?: string
+          minute?: number | null
+          type_evenement?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_phoenix_evenements_match"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "sport_phoenix_matchs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_phoenix_evenements_membre"
+            columns: ["membre_id"]
+            isOneToOne: false
+            referencedRelation: "membres"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       phoenix_presences: {
         Row: {
           adherent_id: string | null
@@ -1017,6 +1211,104 @@ export type Database = {
             columns: ["adherent_id"]
             isOneToOne: false
             referencedRelation: "phoenix_adherents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      phoenix_presences_entrainement: {
+        Row: {
+          created_at: string
+          entrainement_id: string
+          excuse: string | null
+          id: string
+          membre_id: string
+          present: boolean | null
+          retard_minutes: number | null
+        }
+        Insert: {
+          created_at?: string
+          entrainement_id: string
+          excuse?: string | null
+          id?: string
+          membre_id: string
+          present?: boolean | null
+          retard_minutes?: number | null
+        }
+        Update: {
+          created_at?: string
+          entrainement_id?: string
+          excuse?: string | null
+          id?: string
+          membre_id?: string
+          present?: boolean | null
+          retard_minutes?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_phoenix_presences_entrainement"
+            columns: ["entrainement_id"]
+            isOneToOne: false
+            referencedRelation: "phoenix_entrainements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_phoenix_presences_membre"
+            columns: ["membre_id"]
+            isOneToOne: false
+            referencedRelation: "membres"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      phoenix_statistiques_joueur: {
+        Row: {
+          arrets_gardien: number | null
+          buts: number | null
+          cartons_jaunes: number | null
+          cartons_rouges: number | null
+          created_at: string
+          id: string
+          matchs_joues: number | null
+          membre_id: string
+          note_moyenne: number | null
+          passes_decisives: number | null
+          saison: string
+          updated_at: string
+        }
+        Insert: {
+          arrets_gardien?: number | null
+          buts?: number | null
+          cartons_jaunes?: number | null
+          cartons_rouges?: number | null
+          created_at?: string
+          id?: string
+          matchs_joues?: number | null
+          membre_id: string
+          note_moyenne?: number | null
+          passes_decisives?: number | null
+          saison: string
+          updated_at?: string
+        }
+        Update: {
+          arrets_gardien?: number | null
+          buts?: number | null
+          cartons_jaunes?: number | null
+          cartons_rouges?: number | null
+          created_at?: string
+          id?: string
+          matchs_joues?: number | null
+          membre_id?: string
+          note_moyenne?: number | null
+          passes_decisives?: number | null
+          saison?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_phoenix_statistiques_membre"
+            columns: ["membre_id"]
+            isOneToOne: false
+            referencedRelation: "membres"
             referencedColumns: ["id"]
           },
         ]
