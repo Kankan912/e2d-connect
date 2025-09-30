@@ -152,7 +152,7 @@ export default function CompteRenduForm({
       </div>
 
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <div className="space-y-4 max-h-[50vh] overflow-y-auto">
+        <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
           {/* Sujets avec numérotation */}
           <div className="space-y-3">
             {fields.map((field, index) => (

@@ -100,12 +100,56 @@ export default function ClotureReunionModal({
   const cloturerReunion = async () => {
     setLoading(true);
     try {
-      // Marquer la réunion comme clôturée
+      // 1. Récupérer le compte-rendu
+      const { data: rapportsData, error: rapportsError } = await supabase
+        .from('rapports_seances')
+        .select('sujet, resolution')
+        .eq('reunion_id', reunionId);
+
+      if (rapportsError) throw rapportsError;
+
+      // 2. Récupérer les emails des membres actifs
+      const { data: membresData, error: membresError } = await supabase
+        .from('membres')
+        .select('email')
+        .eq('statut', 'actif')
+        .not('email', 'is', null);
+
+      if (membresError) throw membresError;
+
+      const destinataires = membresData?.map(m => m.email).filter(Boolean) as string[];
+
+      // 3. Construire le contenu du CR
+      let contenuCR = '';
+      rapportsData?.forEach((rapport, index) => {
+        contenuCR += `\n\n${index + 1}. ${rapport.sujet}\n`;
+        contenuCR += `   Décision: ${rapport.resolution || 'Aucune résolution'}\n`;
+      });
+
+      // 4. Envoyer le CR par email via edge function
+      if (destinataires.length > 0 && rapportsData && rapportsData.length > 0) {
+        const { error: emailError } = await supabase.functions.invoke('send-reunion-cr', {
+          body: {
+            reunionId,
+            destinataires,
+            sujet: reunionData.sujet,
+            contenu: contenuCR,
+            dateReunion: reunionData.date_reunion
+          }
+        });
+
+        if (emailError) {
+          console.error('Erreur envoi email:', emailError);
+          // On continue même si l'email échoue
+        }
+      }
+
+      // 5. Marquer la réunion comme clôturée
       const { error } = await supabase
         .from('reunions')
         .update({ 
-          statut: 'termine',
-          compte_rendu_url: `Réunion clôturée le ${new Date().toLocaleDateString('fr-FR')}`
+          statut: 'terminee',
+          compte_rendu_url: 'generated'
         })
         .eq('id', reunionId);
 
@@ -113,14 +157,14 @@ export default function ClotureReunionModal({
 
       toast({
         title: "Réunion clôturée",
-        description: "La réunion a été clôturée avec succès",
+        description: `La réunion a été clôturée et le compte-rendu envoyé à ${destinataires.length} membre(s)`,
       });
 
       onOpenChange(false);
     } catch (error: any) {
       toast({
         title: "Erreur",
-        description: "Impossible de clôturer la réunion",
+        description: "Impossible de clôturer la réunion: " + error.message,
         variant: "destructive",
       });
     } finally {

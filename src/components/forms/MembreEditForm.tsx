@@ -17,6 +17,7 @@ const membreSchema = z.object({
   telephone: z.string().min(1, "Le téléphone est requis"),
   email: z.string().email("Email invalide").optional().or(z.literal("")),
   statut: z.string().min(1, "Le statut est requis"),
+  fonction: z.string().optional(),
   est_membre_e2d: z.boolean(),
   est_adherent_phoenix: z.boolean(),
   equipe_e2d: z.string().optional(),
@@ -69,6 +70,7 @@ export default function MembreEditForm({ membreId, onSuccess, onCancel }: Membre
         telephone: membre.telephone,
         email: membre.email || '',
         statut: membre.statut,
+        fonction: membre.fonction || '',
         est_membre_e2d: membre.est_membre_e2d,
         est_adherent_phoenix: membre.est_adherent_phoenix,
         equipe_e2d: membre.equipe_e2d || '',
@@ -95,6 +97,7 @@ export default function MembreEditForm({ membreId, onSuccess, onCancel }: Membre
           telephone: data.telephone,
           email: data.email || null,
           statut: data.statut,
+          fonction: data.fonction || null,
           est_membre_e2d: data.est_membre_e2d,
           est_adherent_phoenix: data.est_adherent_phoenix,
           equipe_e2d: data.equipe_e2d || null,
@@ -199,8 +202,20 @@ export default function MembreEditForm({ membreId, onSuccess, onCancel }: Membre
           </div>
 
           <div>
+            <Label htmlFor="fonction">Fonction</Label>
+            <Input
+              id="fonction"
+              {...register('fonction')}
+              placeholder="Ex: Trésorier, Secrétaire..."
+            />
+          </div>
+
+          <div>
             <Label htmlFor="statut">Statut</Label>
-            <Select onValueChange={(value) => setValue('statut', value)}>
+            <Select 
+              value={watch('statut')}
+              onValueChange={(value) => setValue('statut', value)}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Sélectionner le statut" />
               </SelectTrigger>
@@ -235,7 +250,10 @@ export default function MembreEditForm({ membreId, onSuccess, onCancel }: Membre
           {estMembreE2D && (
             <div>
               <Label htmlFor="equipe_e2d">Équipe E2D</Label>
-              <Select onValueChange={(value) => setValue('equipe_e2d', value)}>
+              <Select 
+                value={watch('equipe_e2d') || undefined}
+                onValueChange={(value) => setValue('equipe_e2d', value)}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner l'équipe E2D" />
                 </SelectTrigger>

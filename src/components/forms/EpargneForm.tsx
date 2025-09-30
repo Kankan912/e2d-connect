@@ -20,30 +20,31 @@ interface Membre {
   prenom: string;
 }
 
-interface Exercice {
+interface Reunion {
   id: string;
-  nom: string;
+  sujet: string;
+  date_reunion: string;
   statut: string;
 }
 
 export default function EpargneForm({ open, onOpenChange, onSuccess }: EpargneFormProps) {
   const [formData, setFormData] = useState({
     membre_id: "",
-    exercice_id: "",
+    reunion_id: "",
     montant: "",
     date_depot: new Date().toISOString().split('T')[0],
     statut: "actif",
     notes: ""
   });
   const [membres, setMembres] = useState<Membre[]>([]);
-  const [exercices, setExercices] = useState<Exercice[]>([]);
+  const [reunions, setReunions] = useState<Reunion[]>([]);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
     if (open) {
       fetchMembres();
-      fetchExercices();
+      fetchReunionsPlannifiees();
     }
   }, [open]);
 
@@ -62,23 +63,24 @@ export default function EpargneForm({ open, onOpenChange, onSuccess }: EpargneFo
     }
   };
 
-  const fetchExercices = async () => {
+  const fetchReunionsPlannifiees = async () => {
     try {
       const { data, error } = await supabase
-        .from('exercices')
-        .select('*')
-        .order('date_debut', { ascending: false });
+        .from('reunions')
+        .select('id, sujet, date_reunion, statut')
+        .in('statut', ['planifie', 'en_cours'])
+        .gte('date_reunion', new Date().toISOString())
+        .order('date_reunion', { ascending: true });
 
       if (error) throw error;
-      setExercices(data || []);
+      setReunions(data || []);
       
-      // Auto-select active exercise
-      const activeExercise = data?.find(e => e.statut === 'actif');
-      if (activeExercise) {
-        setFormData(prev => ({ ...prev, exercice_id: activeExercise.id }));
+      // Auto-select la prochaine réunion
+      if (data && data.length > 0) {
+        setFormData(prev => ({ ...prev, reunion_id: data[0].id }));
       }
     } catch (error) {
-      console.error('Erreur lors du chargement des exercices:', error);
+      console.error('Erreur lors du chargement des réunions:', error);
     }
   };
 
@@ -86,10 +88,10 @@ export default function EpargneForm({ open, onOpenChange, onSuccess }: EpargneFo
     e.preventDefault();
     
     // Validation
-    if (!formData.membre_id || !formData.montant) {
+    if (!formData.membre_id || !formData.montant || !formData.reunion_id) {
       toast({
         title: "Erreur",
-        description: "Veuillez remplir tous les champs obligatoires",
+        description: "Veuillez remplir tous les champs obligatoires (membre, montant et réunion)",
         variant: "destructive",
       });
       return;
@@ -112,7 +114,7 @@ export default function EpargneForm({ open, onOpenChange, onSuccess }: EpargneFo
         .from('epargnes')
         .insert([{
           membre_id: formData.membre_id,
-          exercice_id: formData.exercice_id || null,
+          reunion_id: formData.reunion_id,
           montant: montant,
           date_depot: formData.date_depot,
           statut: formData.statut,
@@ -123,7 +125,7 @@ export default function EpargneForm({ open, onOpenChange, onSuccess }: EpargneFo
 
       toast({
         title: "Succès",
-        description: "Épargne enregistrée avec succès",
+        description: "Épargne enregistrée et liée à la réunion planifiée",
       });
 
       onOpenChange(false);
@@ -132,7 +134,7 @@ export default function EpargneForm({ open, onOpenChange, onSuccess }: EpargneFo
       // Reset form
       setFormData({
         membre_id: "",
-        exercice_id: "",
+        reunion_id: "",
         montant: "",
         date_depot: new Date().toISOString().split('T')[0],
         statut: "actif",
@@ -179,21 +181,26 @@ export default function EpargneForm({ open, onOpenChange, onSuccess }: EpargneFo
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="exercice">Exercice</Label>
-            <Select value={formData.exercice_id} onValueChange={(value) => 
-              setFormData(prev => ({ ...prev, exercice_id: value }))
-            }>
+            <Label htmlFor="reunion">Réunion planifiée *</Label>
+            <Select 
+              value={formData.reunion_id} 
+              onValueChange={(value) => setFormData(prev => ({ ...prev, reunion_id: value }))}
+              required
+            >
               <SelectTrigger>
-                <SelectValue placeholder="Sélectionner un exercice" />
+                <SelectValue placeholder="Sélectionner une réunion planifiée" />
               </SelectTrigger>
               <SelectContent>
-                {exercices.map((exercice) => (
-                  <SelectItem key={exercice.id} value={exercice.id}>
-                    {exercice.nom} {exercice.statut === 'actif' ? '(Actuel)' : ''}
+                {reunions.map((reunion) => (
+                  <SelectItem key={reunion.id} value={reunion.id}>
+                    {new Date(reunion.date_reunion).toLocaleDateString('fr-FR')} - {reunion.sujet || 'Réunion'}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
+            <p className="text-xs text-muted-foreground">
+              L'épargne doit être rattachée à une réunion planifiée où elle sera versée
+            </p>
           </div>
           
           <div className="grid grid-cols-2 gap-4">
