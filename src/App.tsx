@@ -119,6 +119,8 @@ function App() {
                   <Route path="/aides-sport" element={<AidesSport />} />
                   <Route path="/sanctions-reunion-page" element={<SanctionsReunionPage />} />
                   <Route path="/sanctions-sport-page" element={<SanctionsSportPage />} />
+                  <Route path="/sanctions-sport" element={<SanctionsSportPage />} />
+                  <Route path="/sanctions-reunion" element={<SanctionsReunionPage />} />
                   <Route path="/reunions" element={<Reunions />} />
                   <Route path="/presence-reunions" element={<PresenceReunions />} />
                   <Route path="/fond-caisse" element={<FondCaissePage />} />
@@ -130,8 +132,6 @@ function App() {
                   <Route path="/eligibilite-gala" element={<EligibiliteGala />} />
                   
                   {/* Redirections vers les sections sportives unifiées */}
-                  <Route path="/sanctions-sport" element={<Navigate to="/sport" />} />
-                  <Route path="/sanctions-reunion" element={<Navigate to="/reunions" />} />
                   <Route path="/sport/statistiques" element={<Navigate to="/sport" />} />
                   <Route path="/sport-e2d" element={<Navigate to="/sport" />} />
                   <Route path="/calendrier-sportif" element={<Navigate to="/sport" />} />

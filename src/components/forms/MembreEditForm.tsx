@@ -51,7 +51,9 @@ export default function MembreEditForm({ membreId, onSuccess, onCancel }: Membre
   const estAdherentPhoenix = watch('est_adherent_phoenix');
 
   useEffect(() => {
-    loadMembreData();
+    if (membreId) {
+      loadMembreData();
+    }
   }, [membreId]);
 
   const loadMembreData = async () => {

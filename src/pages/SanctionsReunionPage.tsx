@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useRealtimeUpdates } from "@/hooks/useRealtimeUpdates";
 import LogoHeader from "@/components/LogoHeader";
 import SanctionForm from "@/components/forms/SanctionForm";
 import PaymentSanctionForm from "@/components/forms/PaymentSanctionForm";
@@ -42,10 +43,6 @@ export default function SanctionsReunionPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
 
-  useEffect(() => {
-    fetchSanctions();
-  }, []);
-
   const fetchSanctions = async () => {
     try {
       const { data, error } = await supabase
@@ -76,6 +73,17 @@ export default function SanctionsReunionPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchSanctions();
+  }, []);
+
+  // Synchronisation temps réel des sanctions
+  useRealtimeUpdates({
+    table: 'sanctions',
+    onUpdate: fetchSanctions,
+    enabled: true
+  });
 
   const handlePayment = (sanction: SanctionWithDetails) => {
     setSelectedSanction(sanction);

@@ -108,7 +108,15 @@ export const NotificationsAvancees: React.FC = () => {
         `)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erreur chargement campagnes:', error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger les campagnes: " + error.message,
+          variant: "destructive"
+        });
+        return;
+      }
 
       const campagnesFormatted: NotificationCampagne[] = (data || []).map(campagne => ({
         id: campagne.id,
@@ -131,8 +139,13 @@ export const NotificationsAvancees: React.FC = () => {
       }));
 
       setCampagnes(campagnesFormatted);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erreur chargement campagnes:', error);
+      toast({
+        title: "Erreur",
+        description: "Erreur inattendue: " + error.message,
+        variant: "destructive"
+      });
     }
   };
 
@@ -164,7 +177,15 @@ export const NotificationsAvancees: React.FC = () => {
         .eq('campagne_id', selectedCampagne.id)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erreur chargement détails envois:', error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger les détails des envois: " + error.message,
+          variant: "destructive"
+        });
+        return;
+      }
 
       const envoisFormatted: NotificationEnvoi[] = (data || []).map(envoi => ({
         id: envoi.id,
@@ -178,8 +199,13 @@ export const NotificationsAvancees: React.FC = () => {
       }));
 
       setEnvoisDetails(envoisFormatted);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erreur chargement détails envois:', error);
+      toast({
+        title: "Erreur",
+        description: "Erreur inattendue: " + error.message,
+        variant: "destructive"
+      });
     }
   };
 

@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useRealtimeUpdates } from '@/hooks/useRealtimeUpdates';
 
 interface PretStats {
   totalPrets: number;
@@ -40,10 +41,6 @@ export default function TableauBordPrets() {
   });
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
-
-  useEffect(() => {
-    loadStatsPrets();
-  }, []);
 
   const loadStatsPrets = async () => {
     try {
@@ -107,6 +104,23 @@ export default function TableauBordPrets() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadStatsPrets();
+  }, []);
+
+  // Synchronisation temps réel des prêts
+  useRealtimeUpdates({
+    table: 'prets',
+    onUpdate: loadStatsPrets,
+    enabled: true
+  });
+
+  useRealtimeUpdates({
+    table: 'prets_paiements',
+    onUpdate: loadStatsPrets,
+    enabled: true
+  });
 
   if (loading) {
     return (

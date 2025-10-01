@@ -21,10 +21,6 @@ export default function EditMembreButton({ membreId, onSuccess, variant = "outli
 
   const handleOpenChange = (newOpen: boolean) => {
     setOpen(newOpen);
-    // Force le rechargement des données quand on ouvre le dialog
-    if (newOpen) {
-      // Le MembreEditForm se chargera de recharger les données
-    }
   };
 
   return (
