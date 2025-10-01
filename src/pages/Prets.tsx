@@ -33,6 +33,7 @@ import LogoHeader from "@/components/LogoHeader";
 import PretPaymentModal from "@/components/modals/PretPaymentModal";
 import PretReconductionModal from "@/components/modals/PretReconductionModal";
 import PretPaymentPartielForm from '@/components/forms/PretPaymentPartielForm';
+import { useNavigate } from 'react-router-dom';
 
 interface Pret {
   id: string;
@@ -67,6 +68,7 @@ export default function Prets() {
   const [selectedPret, setSelectedPret] = useState<Pret | null>(null);
   const [sanctionsImpayees, setSanctionsImpayees] = useState(0);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     loadPrets();
@@ -267,13 +269,22 @@ export default function Prets() {
             subtitle="Suivi des prêts accordés aux membres"
           />
         </div>
-        <Button 
-          className="bg-gradient-to-r from-primary to-secondary"
-          onClick={() => setShowForm(true)}
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Nouveau prêt
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline"
+            onClick={() => navigate('/prets/tableau-bord')}
+          >
+            <TrendingUp className="w-4 h-4 mr-2" />
+            Tableau de Bord
+          </Button>
+          <Button 
+            className="bg-gradient-to-r from-primary to-secondary"
+            onClick={() => setShowForm(true)}
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Nouveau prêt
+          </Button>
+        </div>
       </div>
 
       {/* Stats Cards */}

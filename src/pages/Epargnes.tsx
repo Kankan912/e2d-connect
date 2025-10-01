@@ -12,6 +12,8 @@ import { useToast } from "@/hooks/use-toast";
 import LogoHeader from "@/components/LogoHeader";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { useNavigate } from "react-router-dom";
+import BackButton from "@/components/BackButton";
 
 interface Epargne {
   id: string;
@@ -54,6 +56,7 @@ export default function Epargnes() {
     notes: ""
   });
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchEpargnes();
@@ -192,10 +195,19 @@ export default function Epargnes() {
   return (
     <div className="container mx-auto p-6 space-y-6">
       {/* Header */}
-      <LogoHeader 
-        title="Banque E2D - Épargnes"
-        subtitle="Gérez les épargnes des membres avec intérêts en fin d'exercice"
-      />
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <BackButton />
+          <LogoHeader 
+            title="Banque E2D - Épargnes"
+            subtitle="Gérez les épargnes des membres avec intérêts en fin d'exercice"
+          />
+        </div>
+        <Button onClick={() => navigate('/epargnes/benefices')} variant="outline">
+          <Calculator className="w-4 h-4 mr-2" />
+          Voir les Bénéficiaires
+        </Button>
+      </div>
       <div className="flex justify-end">
         <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
           <DialogTrigger asChild>

@@ -178,36 +178,43 @@ export default function PretPaymentModal({ open, onOpenChange, pretId, onSuccess
           </Card>
 
           {/* Calcul des intérêts */}
-          <Card>
+          <Card className="bg-primary/5 border-primary/20">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Calculator className="h-4 w-4" />
+              <CardTitle className="flex items-center gap-2 text-primary">
+                <Calculator className="h-5 w-5" />
                 Détail du Calcul
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span>Montant initial:</span>
-                  <span className="font-medium">{pret.montant.toLocaleString()} FCFA</span>
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">Montant initial:</span>
+                  <span className="font-bold text-lg">{pret.montant.toLocaleString()} FCFA</span>
                 </div>
-                <div className="flex justify-between">
-                  <span>Taux d'intérêt:</span>
-                  <span className="font-medium">{pret.taux_interet}%</span>
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">Taux d'intérêt:</span>
+                  <span className="font-semibold text-warning">{pret.taux_interet}%</span>
                 </div>
-                <div className="flex justify-between">
-                  <span>Reconductions:</span>
-                  <span className="font-medium">{pret.reconductions}</span>
+                {pret.reconductions > 0 && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Reconductions:</span>
+                    <Badge variant="outline">{pret.reconductions}</Badge>
+                  </div>
+                )}
+                <Separator className="my-2" />
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">Intérêts calculés:</span>
+                  <span className="font-bold text-warning">{interets.toLocaleString()} FCFA</span>
                 </div>
-                <Separator />
-                <div className="flex justify-between">
-                  <span>Intérêts calculés:</span>
-                  <span className="font-medium text-warning">{interets.toLocaleString()} FCFA</span>
+                <div className="p-3 bg-primary/10 rounded-lg border border-primary/20">
+                  <div className="flex justify-between items-center">
+                    <span className="font-semibold">Montant total à rembourser:</span>
+                    <span className="font-bold text-2xl text-primary">{totalAmount.toLocaleString()} FCFA</span>
+                  </div>
                 </div>
-                <div className="flex justify-between text-lg">
-                  <span className="font-semibold">Montant total à rembourser:</span>
-                  <span className="font-bold text-primary">{totalAmount.toLocaleString()} FCFA</span>
-                </div>
+                <p className="text-xs text-muted-foreground italic">
+                  Formule: {pret.montant.toLocaleString()} + ({pret.montant.toLocaleString()} × {pret.taux_interet}%) × (1 + {pret.reconductions})
+                </p>
               </div>
             </CardContent>
           </Card>

@@ -159,7 +159,7 @@ export default function CompteRenduViewer({
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead className="w-16">#</TableHead>
+                          <TableHead className="w-16">N°</TableHead>
                           <TableHead>Sujet traité</TableHead>
                           <TableHead>Résolution / Décision</TableHead>
                         </TableRow>
@@ -168,7 +168,7 @@ export default function CompteRenduViewer({
                         {rapports.map((rapport, index) => (
                           <TableRow key={rapport.id}>
                             <TableCell className="font-medium">
-                              {index + 1}
+                              CR-{reunion.id.substring(0, 8).toUpperCase()}-{String(index + 1).padStart(2, '0')}
                             </TableCell>
                             <TableCell className="font-medium">
                               {rapport.sujet}

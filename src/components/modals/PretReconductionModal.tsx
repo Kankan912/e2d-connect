@@ -213,23 +213,39 @@ export default function PretReconductionModal({ open, onOpenChange, pretId, onSu
           {/* Impact de la reconduction */}
           <Card className="bg-warning/10 border-warning/20">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-warning-foreground">
-                <DollarSign className="h-4 w-4" />
-                Impact de la Reconduction
+              <CardTitle className="flex items-center gap-2 text-warning">
+                <DollarSign className="h-5 w-5" />
+                ⚠️ Impact Financier de la Reconduction
               </CardTitle>
             </CardHeader>
-            <CardContent className="text-warning-foreground">
-              <div className="space-y-2">
-                <p className="text-sm">
-                  <strong>Attention:</strong> La reconduction augmentera les intérêts à payer.
-                </p>
-                <p className="text-sm">
-                  Formule: Montant + (Montant × Taux%) × (1 + Reconductions)
-                </p>
-                <Separator className="bg-warning/20" />
-                <div className="flex justify-between text-sm">
-                  <span>Reconductions après cette opération:</span>
-                  <span className="font-medium">{pret.reconductions + 1}</span>
+            <CardContent>
+              <div className="space-y-3">
+                <div className="p-3 bg-warning/20 rounded-lg">
+                  <p className="text-sm font-medium text-warning-foreground">
+                    <strong>Attention:</strong> Chaque reconduction augmente les intérêts totaux à payer
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-sm font-semibold">Calcul des intérêts:</p>
+                  <p className="text-sm font-mono bg-muted p-2 rounded">
+                    Montant + (Montant × Taux%) × (1 + Reconductions)
+                  </p>
+                </div>
+                <Separator />
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Reconductions actuelles</p>
+                    <p className="text-xl font-bold">{pret.reconductions}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Après reconduction</p>
+                    <p className="text-xl font-bold text-warning">{pret.reconductions + 1}</p>
+                  </div>
+                </div>
+                <div className="p-3 bg-destructive/10 rounded-lg border border-destructive/20">
+                  <p className="text-xs text-destructive font-medium">
+                    💡 Plus il y a de reconductions, plus les intérêts augmentent. Privilégiez le remboursement!
+                  </p>
                 </div>
               </div>
             </CardContent>

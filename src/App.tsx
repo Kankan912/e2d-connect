@@ -45,6 +45,8 @@ import NotFound from "./pages/NotFound";
 import FondCaissePage from "./pages/FondCaisse";
 import GestionPhotosPage from "./pages/GestionPhotosPage";
 import NotificationsAvanceesPage from "./pages/NotificationsAvanceesPage";
+import EpargnantsBeneficesPage from "./pages/EpargnantsBenefices";
+import PretsTableauBordPage from "./pages/PretsTableauBord";
 import ErrorBoundary from "./components/ErrorBoundary";
 
 const queryClient = new QueryClient({
@@ -108,8 +110,10 @@ function App() {
                   <Route path="/cotisations-grid" element={<CotisationsGrid />} />
                   <Route path="/membre-cotisation-config" element={<MembreCotisationConfig />} />
                   <Route path="/prets" element={<Prets />} />
+                  <Route path="/prets/tableau-bord" element={<PretsTableauBordPage />} />
                   <Route path="/sanctions" element={<Sanctions />} />
                   <Route path="/epargnes" element={<Epargnes />} />
+                  <Route path="/epargnes/benefices" element={<EpargnantsBeneficesPage />} />
                   <Route path="/aides" element={<Aides />} />
                   <Route path="/aides-reunion" element={<AidesReunion />} />
                   <Route path="/aides-sport" element={<AidesSport />} />

@@ -9,10 +9,13 @@ import {
   Settings, 
   CreditCard, 
   Percent, 
-  Save
+  Save,
+  History
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import LogoHeader from "@/components/LogoHeader";
+import HistoriqueVariables from "@/components/HistoriqueVariables";
+import BackButton from "@/components/BackButton";
 
 export default function ConfigurationGenerale() {
   const [configurations, setConfigurations] = useState<Record<string, string>>({
@@ -72,11 +75,14 @@ export default function ConfigurationGenerale() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <LogoHeader 
-          title="Configuration Générale"
-          subtitle="Paramètres globaux de l'application"
-        />
-        <Button 
+        <div className="flex items-center gap-4">
+          <BackButton />
+          <LogoHeader 
+            title="Configuration Générale"
+            subtitle="Paramètres globaux de l'application"
+          />
+        </div>
+        <Button
           onClick={saveAllConfigurations}
           disabled={saving}
           className="bg-gradient-to-r from-primary to-secondary"
@@ -87,10 +93,14 @@ export default function ConfigurationGenerale() {
       </div>
 
       <Tabs defaultValue="financial" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="financial">Paramètres Financiers</TabsTrigger>
           <TabsTrigger value="cotisations">Cotisations</TabsTrigger>
           <TabsTrigger value="organization">Organisation</TabsTrigger>
+          <TabsTrigger value="historique">
+            <History className="h-4 w-4 mr-2" />
+            Historique
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="financial" className="space-y-4">
@@ -247,6 +257,10 @@ export default function ConfigurationGenerale() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="historique" className="space-y-4">
+          <HistoriqueVariables />
         </TabsContent>
       </Tabs>
     </div>

@@ -19,8 +19,16 @@ export default function EditMembreButton({ membreId, onSuccess, variant = "outli
     onSuccess?.();
   };
 
+  const handleOpenChange = (newOpen: boolean) => {
+    setOpen(newOpen);
+    // Force le rechargement des données quand on ouvre le dialog
+    if (newOpen) {
+      // Le MembreEditForm se chargera de recharger les données
+    }
+  };
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button variant={variant} size={size}>
           <Edit className="w-4 h-4 mr-2" />
