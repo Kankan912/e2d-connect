@@ -951,6 +951,48 @@ export type Database = {
           },
         ]
       }
+      notifications_historique: {
+        Row: {
+          contenu: string
+          created_at: string
+          date_envoi: string
+          destinataire_email: string
+          erreur_message: string | null
+          id: string
+          statut: string
+          sujet: string
+          type_notification: string
+          updated_at: string
+          variables_utilisees: Json | null
+        }
+        Insert: {
+          contenu: string
+          created_at?: string
+          date_envoi?: string
+          destinataire_email: string
+          erreur_message?: string | null
+          id?: string
+          statut?: string
+          sujet: string
+          type_notification: string
+          updated_at?: string
+          variables_utilisees?: Json | null
+        }
+        Update: {
+          contenu?: string
+          created_at?: string
+          date_envoi?: string
+          destinataire_email?: string
+          erreur_message?: string | null
+          id?: string
+          statut?: string
+          sujet?: string
+          type_notification?: string
+          updated_at?: string
+          variables_utilisees?: Json | null
+        }
+        Relationships: []
+      }
       phoenix_adherents: {
         Row: {
           adhesion_payee: boolean | null
