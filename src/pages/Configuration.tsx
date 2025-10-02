@@ -21,6 +21,8 @@ import SMTPConfigManager from "@/components/SMTPConfigManager";
 import NotificationsHistorique from "@/components/NotificationsHistorique";
 import MatchGalaConfig from "@/components/MatchGalaConfig";
 import HistoriqueVariables from "@/components/HistoriqueVariables";
+import TontineConfigManager from "@/components/TontineConfigManager";
+import SanctionsTarifsManager from "@/components/SanctionsTarifsManager";
 
 export default function Configuration() {
   const { toast } = useToast();
@@ -84,7 +86,7 @@ export default function Configuration() {
 
       {/* Configuration Tabs */}
       <Tabs defaultValue="users" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-8">
+        <TabsList className="grid w-full grid-cols-9">
           <TabsTrigger value="exercices" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
             Exercices
@@ -105,9 +107,13 @@ export default function Configuration() {
             <DollarSign className="h-4 w-4" />
             Tontine
           </TabsTrigger>
+          <TabsTrigger value="sanctions" className="flex items-center gap-2">
+            <Settings className="h-4 w-4" />
+            Sanctions
+          </TabsTrigger>
           <TabsTrigger value="fond-caisse" className="flex items-center gap-2">
             <DollarSign className="h-4 w-4" />
-            Fond de Caisse
+            Fond Caisse
           </TabsTrigger>
           <TabsTrigger value="photos" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
@@ -195,7 +201,19 @@ export default function Configuration() {
         </TabsContent>
 
         <TabsContent value="tontine" className="space-y-6">
+          <TontineConfigManager />
           <TontineBeneficiairesManager />
+        </TabsContent>
+
+        <TabsContent value="sanctions" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Gestion des Types de Sanctions et Tarifs</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <SanctionsTarifsManager />
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="fond-caisse" className="space-y-6">

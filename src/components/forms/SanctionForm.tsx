@@ -67,15 +67,21 @@ export default function SanctionForm({ open, onOpenChange, onSuccess, contexte =
 
   const fetchTypesSanctions = async () => {
     try {
-      const { data, error } = await supabase
+      // Filtrer par contexte si fourni, sinon tous
+      let query = supabase
         .from('sanctions_types')
-        .select('*')
-        .order('nom');
+        .select('*');
+
+      if (contexte) {
+        query = query.or(`contexte.eq.${contexte},contexte.eq.tous`);
+      }
+
+      const { data, error } = await query.order('nom');
 
       if (error) throw error;
       setTypesSanctions(data || []);
     } catch (error) {
-      console.error('Erreur lors du chargement des types de sanctions:', error);
+      console.error('Erreur chargement types sanctions:', error);
     }
   };
 

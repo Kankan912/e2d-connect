@@ -2062,8 +2062,43 @@ export type Database = {
         }
         Relationships: []
       }
+      tontine_configurations: {
+        Row: {
+          categorie: string | null
+          cle: string
+          created_at: string | null
+          description: string | null
+          id: string
+          type_valeur: string | null
+          updated_at: string | null
+          valeur: string
+        }
+        Insert: {
+          categorie?: string | null
+          cle: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          type_valeur?: string | null
+          updated_at?: string | null
+          valeur: string
+        }
+        Update: {
+          categorie?: string | null
+          cle?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          type_valeur?: string | null
+          updated_at?: string | null
+          valeur?: string
+        }
+        Relationships: []
+      }
       types_sanctions: {
         Row: {
+          categorie: string | null
+          contexte: string | null
           created_at: string
           description: string | null
           id: string
@@ -2071,6 +2106,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          categorie?: string | null
+          contexte?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -2078,6 +2115,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          categorie?: string | null
+          contexte?: string | null
           created_at?: string
           description?: string | null
           id?: string

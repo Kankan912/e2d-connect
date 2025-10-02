@@ -22,6 +22,7 @@ const membreSchema = z.object({
   est_adherent_phoenix: z.boolean(),
   equipe_e2d: z.string().optional(),
   equipe_phoenix: z.string().optional(),
+  equipe_jaune_rouge: z.string().optional(),
 });
 
 type MembreFormData = z.infer<typeof membreSchema>;
@@ -77,6 +78,7 @@ export default function MembreEditForm({ membreId, onSuccess, onCancel }: Membre
         est_adherent_phoenix: membre.est_adherent_phoenix,
         equipe_e2d: membre.equipe_e2d || '',
         equipe_phoenix: membre.equipe_phoenix || '',
+        equipe_jaune_rouge: membre.equipe_jaune_rouge || '',
       });
     } catch (error: any) {
       toast({
@@ -104,6 +106,7 @@ export default function MembreEditForm({ membreId, onSuccess, onCancel }: Membre
           est_adherent_phoenix: data.est_adherent_phoenix,
           equipe_e2d: data.equipe_e2d || null,
           equipe_phoenix: data.equipe_phoenix || null,
+          equipe_jaune_rouge: data.equipe_jaune_rouge || null,
         })
         .eq('id', membreId);
 
@@ -210,6 +213,22 @@ export default function MembreEditForm({ membreId, onSuccess, onCancel }: Membre
               {...register('fonction')}
               placeholder="Ex: Trésorier, Secrétaire..."
             />
+          </div>
+
+          <div>
+            <Label htmlFor="equipe_jaune_rouge">Équipe Sport Interne</Label>
+            <Select 
+              value={watch('equipe_jaune_rouge') || undefined}
+              onValueChange={(value) => setValue('equipe_jaune_rouge', value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionner l'équipe" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Jaune">Équipe Jaune</SelectItem>
+                <SelectItem value="Rouge">Équipe Rouge</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div>
