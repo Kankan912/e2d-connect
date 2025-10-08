@@ -42,10 +42,19 @@ interface Reunion {
   date_reunion: string;
 }
 
+interface Exercice {
+  id: string;
+  nom: string;
+  date_debut: string;
+  date_fin: string;
+  statut: string;
+}
+
 export default function Epargnes() {
   const [epargnes, setEpargnes] = useState<Epargne[]>([]);
   const [membres, setMembres] = useState<Membre[]>([]);
   const [reunions, setReunions] = useState<Reunion[]>([]);
+  const [exercices, setExercices] = useState<Exercice[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [selectedEpargne, setSelectedEpargne] = useState<Epargne | null>(null);
@@ -53,6 +62,7 @@ export default function Epargnes() {
     membre_id: "",
     montant: "",
     reunion_id: "",
+    exercice_id: "",
     notes: ""
   });
   const { toast } = useToast();
@@ -62,6 +72,7 @@ export default function Epargnes() {
     fetchEpargnes();
     fetchMembres();
     fetchReunions();
+    fetchExercices();
   }, []);
 
   const fetchEpargnes = async () => {
@@ -120,6 +131,20 @@ export default function Epargnes() {
     }
   };
 
+  const fetchExercices = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('exercices')
+        .select('id, nom, date_debut, date_fin, statut')
+        .order('date_debut', { ascending: false });
+
+      if (error) throw error;
+      setExercices(data || []);
+    } catch (error) {
+      console.error('Erreur lors du chargement des exercices:', error);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -137,6 +162,7 @@ export default function Epargnes() {
         membre_id: formData.membre_id,
         montant: parseFloat(formData.montant),
         reunion_id: formData.reunion_id || null,
+        exercice_id: formData.exercice_id || null,
         notes: formData.notes || null,
         statut: 'actif'
       };
@@ -159,7 +185,7 @@ export default function Epargnes() {
 
       setShowAddDialog(false);
       setSelectedEpargne(null);
-      setFormData({ membre_id: "", montant: "", reunion_id: "", notes: "" });
+      setFormData({ membre_id: "", montant: "", reunion_id: "", exercice_id: "", notes: "" });
       fetchEpargnes();
     } catch (error) {
       toast({
@@ -176,6 +202,7 @@ export default function Epargnes() {
       membre_id: epargne.membre_id,
       montant: epargne.montant.toString(),
       reunion_id: epargne.reunion_id || "",
+      exercice_id: epargne.exercice_id || "",
       notes: epargne.notes || ""
     });
     setShowAddDialog(true);
@@ -213,7 +240,7 @@ export default function Epargnes() {
           <DialogTrigger asChild>
             <Button onClick={() => {
               setSelectedEpargne(null);
-              setFormData({ membre_id: "", montant: "", reunion_id: "", notes: "" });
+              setFormData({ membre_id: "", montant: "", reunion_id: "", exercice_id: "", notes: "" });
             }}>
               <Plus className="w-4 h-4 mr-2" />
               Nouvelle Épargne
@@ -277,6 +304,29 @@ export default function Epargnes() {
                 </Select>
                 <p className="text-xs text-muted-foreground">
                   L'épargne doit être rattachée à une réunion planifiée
+                </p>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="exercice">Exercice</Label>
+                <Select 
+                  value={formData.exercice_id}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, exercice_id: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner un exercice (optionnel)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {exercices.map((exercice) => (
+                      <SelectItem key={exercice.id} value={exercice.id}>
+                        {exercice.nom} ({new Date(exercice.date_debut).toLocaleDateString('fr-FR')} - {new Date(exercice.date_fin).toLocaleDateString('fr-FR')})
+                        {exercice.statut === 'actif' && ' - Actif'}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Associer à un exercice pour le suivi des intérêts
                 </p>
               </div>
               

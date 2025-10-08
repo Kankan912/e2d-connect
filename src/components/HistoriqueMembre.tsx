@@ -86,21 +86,56 @@ export const HistoriqueMembre: React.FC<HistoriqueMembreProps> = ({ membreId }) 
 
   const loadActivites = async () => {
     try {
-      let query = supabase
+      // Charger les activités depuis activites_membres
+      let activitesQuery = supabase
         .from('activites_membres')
         .select('*')
         .eq('membre_id', membreId)
         .order('created_at', { ascending: false })
-        .limit(100);
+        .limit(50);
 
-      if (filtreType !== 'tous') {
-        query = query.eq('type_activite', filtreType);
+      if (filtreType !== 'tous' && filtreType !== 'fond_caisse') {
+        activitesQuery = activitesQuery.eq('type_activite', filtreType);
       }
 
-      const { data, error } = await query;
+      const { data: activitesData, error: activitesError } = await activitesQuery;
+      if (activitesError) throw activitesError;
 
-      if (error) throw error;
-      setActivites(data || []);
+      let allActivites = [...(activitesData || [])];
+
+      // Charger les opérations de fond de caisse si nécessaire
+      if (filtreType === 'tous' || filtreType === 'fond_caisse') {
+        const { data: fondCaisseData, error: fondCaisseError } = await supabase
+          .from('fond_caisse_operations')
+          .select('*')
+          .eq('beneficiaire_id', membreId)
+          .order('date_operation', { ascending: false })
+          .limit(50);
+
+        if (!fondCaisseError && fondCaisseData) {
+          // Transformer les opérations fond de caisse en format activité
+          const fondCaisseActivites = fondCaisseData.map(op => ({
+            id: op.id,
+            membre_id: membreId,
+            type_activite: 'fond_caisse',
+            description: `${op.type_operation}: ${op.libelle}`,
+            montant: op.montant,
+            reference_id: op.id,
+            reference_table: 'fond_caisse_operations',
+            metadata: { type_operation: op.type_operation },
+            created_at: op.date_operation
+          }));
+          
+          allActivites = [...allActivites, ...fondCaisseActivites];
+        }
+      }
+
+      // Trier toutes les activités par date
+      allActivites.sort((a, b) => 
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+
+      setActivites(allActivites.slice(0, 100));
     } catch (error) {
       console.error('Erreur chargement activités:', error);
     }
@@ -239,6 +274,8 @@ export const HistoriqueMembre: React.FC<HistoriqueMembreProps> = ({ membreId }) 
         return <DollarSign className="h-4 w-4" />;
       case 'sanction':
         return <AlertTriangle className="h-4 w-4" />;
+      case 'fond_caisse':
+        return <DollarSign className="h-4 w-4" />;
       default:
         return <Activity className="h-4 w-4" />;
     }
@@ -254,6 +291,8 @@ export const HistoriqueMembre: React.FC<HistoriqueMembreProps> = ({ membreId }) 
         return 'bg-orange-100 text-orange-800 border-orange-200';
       case 'sanction':
         return 'bg-red-100 text-red-800 border-red-200';
+      case 'fond_caisse':
+        return 'bg-purple-100 text-purple-800 border-purple-200';
       default:
         return 'bg-gray-100 text-gray-800 border-gray-200';
     }
@@ -481,6 +520,7 @@ export const HistoriqueMembre: React.FC<HistoriqueMembreProps> = ({ membreId }) 
                   <SelectItem value="epargne">Épargnes</SelectItem>
                   <SelectItem value="pret">Prêts</SelectItem>
                   <SelectItem value="sanction">Sanctions</SelectItem>
+                  <SelectItem value="fond_caisse">Fond de Caisse</SelectItem>
                 </SelectContent>
               </Select>
             </div>

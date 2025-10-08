@@ -27,10 +27,19 @@ interface Reunion {
   statut: string;
 }
 
+interface Exercice {
+  id: string;
+  nom: string;
+  date_debut: string;
+  date_fin: string;
+  statut: string;
+}
+
 export default function EpargneForm({ open, onOpenChange, onSuccess }: EpargneFormProps) {
   const [formData, setFormData] = useState({
     membre_id: "",
     reunion_id: "",
+    exercice_id: "",
     montant: "",
     date_depot: new Date().toISOString().split('T')[0],
     statut: "actif",
@@ -38,6 +47,7 @@ export default function EpargneForm({ open, onOpenChange, onSuccess }: EpargneFo
   });
   const [membres, setMembres] = useState<Membre[]>([]);
   const [reunions, setReunions] = useState<Reunion[]>([]);
+  const [exercices, setExercices] = useState<Exercice[]>([]);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
@@ -45,6 +55,7 @@ export default function EpargneForm({ open, onOpenChange, onSuccess }: EpargneFo
     if (open) {
       fetchMembres();
       fetchReunionsPlannifiees();
+      fetchExercices();
     }
   }, [open]);
 
@@ -84,6 +95,26 @@ export default function EpargneForm({ open, onOpenChange, onSuccess }: EpargneFo
     }
   };
 
+  const fetchExercices = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('exercices')
+        .select('id, nom, date_debut, date_fin, statut')
+        .order('date_debut', { ascending: false });
+
+      if (error) throw error;
+      setExercices(data || []);
+      
+      // Auto-select l'exercice actif
+      const exerciceActif = data?.find(e => e.statut === 'actif');
+      if (exerciceActif) {
+        setFormData(prev => ({ ...prev, exercice_id: exerciceActif.id }));
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement des exercices:', error);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -115,6 +146,7 @@ export default function EpargneForm({ open, onOpenChange, onSuccess }: EpargneFo
         .insert([{
           membre_id: formData.membre_id,
           reunion_id: formData.reunion_id,
+          exercice_id: formData.exercice_id || null,
           montant: montant,
           date_depot: formData.date_depot,
           statut: formData.statut,
@@ -135,6 +167,7 @@ export default function EpargneForm({ open, onOpenChange, onSuccess }: EpargneFo
       setFormData({
         membre_id: "",
         reunion_id: "",
+        exercice_id: "",
         montant: "",
         date_depot: new Date().toISOString().split('T')[0],
         statut: "actif",
@@ -197,15 +230,38 @@ export default function EpargneForm({ open, onOpenChange, onSuccess }: EpargneFo
                   </SelectItem>
                 ))}
               </SelectContent>
-            </Select>
-            <p className="text-xs text-muted-foreground">
-              L'épargne doit être rattachée à une réunion planifiée où elle sera versée
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="montant">Montant (FCFA) *</Label>
+          </Select>
+          <p className="text-xs text-muted-foreground">
+            L'épargne doit être rattachée à une réunion planifiée où elle sera versée
+          </p>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="exercice">Exercice</Label>
+          <Select 
+            value={formData.exercice_id}
+            onValueChange={(value) => setFormData(prev => ({ ...prev, exercice_id: value }))}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Sélectionner un exercice (optionnel)" />
+            </SelectTrigger>
+            <SelectContent>
+              {exercices.map((exercice) => (
+                <SelectItem key={exercice.id} value={exercice.id}>
+                  {exercice.nom} ({new Date(exercice.date_debut).toLocaleDateString('fr-FR')} - {new Date(exercice.date_fin).toLocaleDateString('fr-FR')})
+                  {exercice.statut === 'actif' && ' - Actif'}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">
+            Associer à un exercice pour le suivi des intérêts
+          </p>
+        </div>
+        
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="montant">Montant (FCFA) *</Label>
               <Input
                 id="montant"
                 type="number"

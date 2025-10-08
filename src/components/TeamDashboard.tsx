@@ -44,8 +44,9 @@ export default function TeamDashboard({ team }: TeamDashboardProps) {
       const { data, error } = await supabase
         .from('membres')
         .select('*')
-        .eq('equipe', team)
-        .eq('est_membre_e2d', true);
+        .eq('equipe_jaune_rouge', team === 'jaune' ? 'Jaune' : 'Rouge')
+        .eq('est_membre_e2d', true)
+        .eq('statut', 'actif');
       if (error) throw error;
       return data || [];
     }

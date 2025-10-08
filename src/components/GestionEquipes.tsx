@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Users, Shield, Target, Edit, Save, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useRealtimeUpdates } from '@/hooks/useRealtimeUpdates';
 import LogoHeader from '@/components/LogoHeader';
 
 interface Player {
@@ -32,10 +33,6 @@ export default function GestionEquipes() {
     equipe: 'jaune'
   });
 
-  useEffect(() => {
-    loadData();
-  }, [selectedTeam]);
-
   const loadData = async () => {
     try {
       const { data: membresData, error } = await supabase
@@ -57,6 +54,16 @@ export default function GestionEquipes() {
       setLoading(false);
     }
   };
+
+  useRealtimeUpdates({
+    table: 'membres',
+    onUpdate: loadData,
+    enabled: true
+  });
+
+  useEffect(() => {
+    loadData();
+  }, [selectedTeam]);
 
   const handlePlayerSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
