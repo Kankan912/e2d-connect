@@ -53,7 +53,7 @@ export default function HistoriqueBeneficiaires() {
         .order('date_benefice_prevue', { ascending: false });
 
       if (error) throw error;
-      setBeneficiaires(data as any || []);
+      setBeneficiaires((data || []) as BeneficiaireHistorique[]);
     } catch (error: any) {
       toast({
         title: "Erreur",

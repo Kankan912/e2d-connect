@@ -7,6 +7,19 @@ import { AlertCircle, CheckCircle, Mail, Users } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
+interface Beneficiaire {
+  id: string;
+  membre_id: string;
+  montant_benefice: number;
+}
+
+interface CotisationManquante {
+  id: string;
+  nom: string;
+  prenom: string;
+  email: string;
+}
+
 interface ClotureReunionModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -14,7 +27,7 @@ interface ClotureReunionModalProps {
   reunionData: {
     sujet: string;
     date_reunion: string;
-    beneficiaires: any[];
+    beneficiaires: Beneficiaire[];
   };
 }
 
@@ -26,7 +39,7 @@ export default function ClotureReunionModal({
 }: ClotureReunionModalProps) {
   const [loading, setLoading] = useState(false);
   const [verificationEtape, setVerificationEtape] = useState<'cotisations' | 'notifications' | 'cloture'>('cotisations');
-  const [cotisationsManquantes, setCotisationsManquantes] = useState<any[]>([]);
+  const [cotisationsManquantes, setCotisationsManquantes] = useState<CotisationManquante[]>([]);
   const { toast } = useToast();
 
   const verifierCotisations = async () => {

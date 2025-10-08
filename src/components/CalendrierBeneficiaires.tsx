@@ -30,10 +30,16 @@ interface Reunion {
   statut: string;
 }
 
+interface Membre {
+  id: string;
+  nom: string;
+  prenom: string;
+}
+
 export default function CalendrierBeneficiaires() {
   const [entries, setEntries] = useState<CalendrierEntry[]>([]);
   const [reunions, setReunions] = useState<Reunion[]>([]);
-  const [membres, setMembres] = useState<any[]>([]);
+  const [membres, setMembres] = useState<Membre[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingEntry, setEditingEntry] = useState<CalendrierEntry | null>(null);

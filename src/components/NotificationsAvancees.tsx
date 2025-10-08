@@ -124,7 +124,7 @@ export const NotificationsAvancees: React.FC = () => {
         description: campagne.description,
         type_campagne: campagne.type_campagne as 'rappel_cotisation' | 'reunion' | 'echeance_pret' | 'custom',
         destinataires: Array.isArray(campagne.destinataires) ? 
-          (campagne.destinataires as any[]).map(d => String(d)) : [],
+          (campagne.destinataires as unknown[]).map(d => String(d)) : [],
         template_sujet: campagne.template_sujet,
         template_contenu: campagne.template_contenu,
         date_envoi_prevue: campagne.date_envoi_prevue,
