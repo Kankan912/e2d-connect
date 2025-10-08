@@ -20,9 +20,9 @@ const membreSchema = z.object({
   fonction: z.string().optional(),
   est_membre_e2d: z.boolean(),
   est_adherent_phoenix: z.boolean(),
-  equipe_e2d: z.string().optional(),
-  equipe_phoenix: z.string().optional(),
-  equipe_jaune_rouge: z.string().optional(),
+  equipe: z.string().optional(), // Équipe E2D (colonne DB)
+  equipe_phoenix: z.string().optional(), // Équipe Phoenix
+  equipe_jaune_rouge: z.string().optional(), // Équipe Sport Interne Jaune/Rouge
 });
 
 type MembreFormData = z.infer<typeof membreSchema>;
@@ -76,7 +76,7 @@ export default function MembreEditForm({ membreId, onSuccess, onCancel }: Membre
         fonction: membre.fonction || '',
         est_membre_e2d: membre.est_membre_e2d,
         est_adherent_phoenix: membre.est_adherent_phoenix,
-        equipe_e2d: membre.equipe_e2d || '',
+        equipe: membre.equipe || '', // Équipe E2D
         equipe_phoenix: membre.equipe_phoenix || '',
         equipe_jaune_rouge: membre.equipe_jaune_rouge || '',
       });
@@ -104,7 +104,7 @@ export default function MembreEditForm({ membreId, onSuccess, onCancel }: Membre
           fonction: data.fonction || null,
           est_membre_e2d: data.est_membre_e2d,
           est_adherent_phoenix: data.est_adherent_phoenix,
-          equipe_e2d: data.equipe_e2d || null,
+          equipe: data.equipe || null, // Équipe E2D
           equipe_phoenix: data.equipe_phoenix || null,
           equipe_jaune_rouge: data.equipe_jaune_rouge || null,
         })
@@ -270,17 +270,17 @@ export default function MembreEditForm({ membreId, onSuccess, onCancel }: Membre
 
           {estMembreE2D && (
             <div>
-              <Label htmlFor="equipe_e2d">Équipe E2D</Label>
+              <Label htmlFor="equipe">Équipe E2D</Label>
               <Select 
-                value={watch('equipe_e2d') || undefined}
-                onValueChange={(value) => setValue('equipe_e2d', value)}
+                value={watch('equipe') || undefined}
+                onValueChange={(value) => setValue('equipe', value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner l'équipe E2D" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="jaune">Équipe Jaune</SelectItem>
-                  <SelectItem value="rouge">Équipe Rouge</SelectItem>
+                  <SelectItem value="Jaune">Équipe Jaune</SelectItem>
+                  <SelectItem value="Rouge">Équipe Rouge</SelectItem>
                 </SelectContent>
               </Select>
             </div>
