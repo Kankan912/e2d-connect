@@ -24,6 +24,11 @@ export default function MatchGalaConfig() {
     pourcentage_presence_minimum: '75',
     actif: true
   });
+  const [criteres, setCriteres] = useState({
+    min_cotisations_payees: 80,
+    min_entrainements: 10,
+    sanctions_max: 2
+  });
   const { toast } = useToast();
 
   useEffect(() => {
@@ -186,6 +191,52 @@ export default function MatchGalaConfig() {
               </p>
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      {/* Critères additionnels */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Critères d'Éligibilité Avancés</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label htmlFor="min_cotisations">% Minimum de Cotisations Payées</Label>
+            <Input
+              id="min_cotisations"
+              type="number"
+              min="0"
+              max="100"
+              value={criteres.min_cotisations_payees}
+              onChange={(e) => setCriteres({...criteres, min_cotisations_payees: parseInt(e.target.value)})}
+            />
+          </div>
+          
+          <div>
+            <Label htmlFor="min_entrainements">Minimum d'Entraînements</Label>
+            <Input
+              id="min_entrainements"
+              type="number"
+              min="0"
+              value={criteres.min_entrainements}
+              onChange={(e) => setCriteres({...criteres, min_entrainements: parseInt(e.target.value)})}
+            />
+          </div>
+          
+          <div>
+            <Label htmlFor="sanctions_max">Nombre Maximum de Sanctions</Label>
+            <Input
+              id="sanctions_max"
+              type="number"
+              min="0"
+              value={criteres.sanctions_max}
+              onChange={(e) => setCriteres({...criteres, sanctions_max: parseInt(e.target.value)})}
+            />
+          </div>
+          
+          <p className="text-sm text-muted-foreground">
+            Ces critères seront pris en compte pour déterminer l'éligibilité au Match de Gala
+          </p>
         </CardContent>
       </Card>
     </div>

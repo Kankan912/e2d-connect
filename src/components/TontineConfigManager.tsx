@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Save, DollarSign, PiggyBank, TrendingUp, Settings } from "lucide-react";
+import { Save, DollarSign, PiggyBank, TrendingUp, Settings, Wallet } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -156,7 +156,7 @@ export default function TontineConfigManager() {
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="cotisations" className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="cotisations">
                 <DollarSign className="w-4 h-4 mr-2" />
                 Cotisations
@@ -172,6 +172,10 @@ export default function TontineConfigManager() {
               <TabsTrigger value="regles">
                 <Settings className="w-4 h-4 mr-2" />
                 Règles
+              </TabsTrigger>
+              <TabsTrigger value="fonds">
+                <Wallet className="w-4 h-4 mr-2" />
+                Fonds
               </TabsTrigger>
             </TabsList>
 
@@ -219,6 +223,26 @@ export default function TontineConfigManager() {
                 })}
               </TabsContent>
             ))}
+            
+            <TabsContent value="fonds" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Wallet className="h-4 w-4" />
+                    Fond Sport
+                  </CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    Configuration du fond destiné aux activités sportives
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground">
+                    Le fond sport est alimenté par les cotisations et sert à financer les activités sportives.
+                    Configuration via la table tontine_configurations avec la catégorie "fonds".
+                  </p>
+                </CardContent>
+              </Card>
+            </TabsContent>
           </Tabs>
         </CardContent>
       </Card>

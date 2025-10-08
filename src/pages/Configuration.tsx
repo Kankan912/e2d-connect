@@ -23,6 +23,8 @@ import MatchGalaConfig from "@/components/MatchGalaConfig";
 import HistoriqueVariables from "@/components/HistoriqueVariables";
 import TontineConfigManager from "@/components/TontineConfigManager";
 import SanctionsTarifsManager from "@/components/SanctionsTarifsManager";
+import CotisationsConfigManager from "@/components/CotisationsConfigManager";
+import HistoriqueBeneficiaires from "@/components/HistoriqueBeneficiaires";
 
 export default function Configuration() {
   const { toast } = useToast();
@@ -86,7 +88,7 @@ export default function Configuration() {
 
       {/* Configuration Tabs */}
       <Tabs defaultValue="users" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-9">
+        <TabsList className="flex flex-wrap h-auto">
           <TabsTrigger value="exercices" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
             Exercices
@@ -98,6 +100,10 @@ export default function Configuration() {
           <TabsTrigger value="permissions" className="flex items-center gap-2">
             <Shield className="h-4 w-4" />
             Permissions
+          </TabsTrigger>
+          <TabsTrigger value="cotisations" className="flex items-center gap-2">
+            <DollarSign className="h-4 w-4" />
+            Cotisations
           </TabsTrigger>
           <TabsTrigger value="notifications" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
@@ -191,6 +197,10 @@ export default function Configuration() {
           </div>
         </TabsContent>
 
+        <TabsContent value="cotisations" className="space-y-6">
+          <CotisationsConfigManager />
+        </TabsContent>
+
         <TabsContent value="notifications" className="space-y-6">
           <div className="space-y-6">
             <SystemeNotifications />
@@ -200,10 +210,11 @@ export default function Configuration() {
           </div>
         </TabsContent>
 
-        <TabsContent value="tontine" className="space-y-6">
-          <TontineConfigManager />
-          <TontineBeneficiairesManager />
-        </TabsContent>
+          <TabsContent value="tontine" className="space-y-6">
+            <TontineConfigManager />
+            <TontineBeneficiairesManager />
+            <HistoriqueBeneficiaires />
+          </TabsContent>
 
         <TabsContent value="sanctions" className="space-y-6">
           <Card>
