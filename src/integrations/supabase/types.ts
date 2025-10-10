@@ -1153,6 +1153,51 @@ export type Database = {
         }
         Relationships: []
       }
+      phoenix_entrainements_internes: {
+        Row: {
+          created_at: string
+          date_entrainement: string
+          equipe_gagnante: string | null
+          heure_debut: string | null
+          heure_fin: string | null
+          id: string
+          lieu: string | null
+          notes: string | null
+          score_jaune: number | null
+          score_rouge: number | null
+          statut: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          date_entrainement: string
+          equipe_gagnante?: string | null
+          heure_debut?: string | null
+          heure_fin?: string | null
+          id?: string
+          lieu?: string | null
+          notes?: string | null
+          score_jaune?: number | null
+          score_rouge?: number | null
+          statut?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          date_entrainement?: string
+          equipe_gagnante?: string | null
+          heure_debut?: string | null
+          heure_fin?: string | null
+          id?: string
+          lieu?: string | null
+          notes?: string | null
+          score_jaune?: number | null
+          score_rouge?: number | null
+          statut?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       phoenix_equipes: {
         Row: {
           couleur_hex: string | null
@@ -1354,6 +1399,54 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      phoenix_stats_jaune_rouge: {
+        Row: {
+          annee: number
+          buts_jaune: number | null
+          buts_rouge: number | null
+          cartons_jaunes_jaune: number | null
+          cartons_jaunes_rouge: number | null
+          cartons_rouges_jaune: number | null
+          cartons_rouges_rouge: number | null
+          created_at: string
+          id: string
+          matchs_nuls: number | null
+          updated_at: string
+          victoires_jaune: number | null
+          victoires_rouge: number | null
+        }
+        Insert: {
+          annee: number
+          buts_jaune?: number | null
+          buts_rouge?: number | null
+          cartons_jaunes_jaune?: number | null
+          cartons_jaunes_rouge?: number | null
+          cartons_rouges_jaune?: number | null
+          cartons_rouges_rouge?: number | null
+          created_at?: string
+          id?: string
+          matchs_nuls?: number | null
+          updated_at?: string
+          victoires_jaune?: number | null
+          victoires_rouge?: number | null
+        }
+        Update: {
+          annee?: number
+          buts_jaune?: number | null
+          buts_rouge?: number | null
+          cartons_jaunes_jaune?: number | null
+          cartons_jaunes_rouge?: number | null
+          cartons_rouges_jaune?: number | null
+          cartons_rouges_rouge?: number | null
+          created_at?: string
+          id?: string
+          matchs_nuls?: number | null
+          updated_at?: string
+          victoires_jaune?: number | null
+          victoires_rouge?: number | null
+        }
+        Relationships: []
       }
       prets: {
         Row: {
@@ -1911,6 +2004,8 @@ export type Database = {
           heure_match: string | null
           id: string
           lieu: string | null
+          logo_equipe_adverse: string | null
+          nom_complet_equipe_adverse: string | null
           notes: string | null
           score_adverse: number | null
           score_e2d: number | null
@@ -1924,6 +2019,8 @@ export type Database = {
           heure_match?: string | null
           id?: string
           lieu?: string | null
+          logo_equipe_adverse?: string | null
+          nom_complet_equipe_adverse?: string | null
           notes?: string | null
           score_adverse?: number | null
           score_e2d?: number | null
@@ -1937,6 +2034,8 @@ export type Database = {
           heure_match?: string | null
           id?: string
           lieu?: string | null
+          logo_equipe_adverse?: string | null
+          nom_complet_equipe_adverse?: string | null
           notes?: string | null
           score_adverse?: number | null
           score_e2d?: number | null
