@@ -2128,6 +2128,36 @@ export type Database = {
         }
         Relationships: []
       }
+      sport_phoenix_depenses: {
+        Row: {
+          created_at: string | null
+          date_depense: string
+          id: string
+          justificatif_url: string | null
+          libelle: string
+          montant: number
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          date_depense?: string
+          id?: string
+          justificatif_url?: string | null
+          libelle: string
+          montant?: number
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          date_depense?: string
+          id?: string
+          justificatif_url?: string | null
+          libelle?: string
+          montant?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       sport_phoenix_matchs: {
         Row: {
           created_at: string
@@ -2167,6 +2197,36 @@ export type Database = {
           score_phoenix?: number | null
           statut?: string
           type_match?: string
+        }
+        Relationships: []
+      }
+      sport_phoenix_recettes: {
+        Row: {
+          created_at: string | null
+          date_recette: string
+          id: string
+          libelle: string
+          montant: number
+          notes: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          date_recette?: string
+          id?: string
+          libelle: string
+          montant?: number
+          notes?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          date_recette?: string
+          id?: string
+          libelle?: string
+          montant?: number
+          notes?: string | null
+          updated_at?: string | null
         }
         Relationships: []
       }

@@ -16,7 +16,6 @@ import { supabase } from "@/integrations/supabase/client";
 import LogoHeader from "@/components/LogoHeader";
 import { useNavigate } from "react-router-dom";
 import { useBackNavigation } from "@/hooks/useBackNavigation";
-import PhoenixE2D from "./PhoenixE2D";
 
 // Import existing sport components
 import GestionPresences from "./GestionPresences";
@@ -231,7 +230,7 @@ export default function Sport() {
 
       {/* Onglets de navigation */}
       <Tabs defaultValue="presences" className="w-full">
-        <TabsList className="grid w-full grid-cols-8">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="presences" className="flex items-center gap-1">
             <Users className="w-4 h-4" />
             Présences
@@ -252,9 +251,13 @@ export default function Sport() {
             <Trophy className="w-4 h-4" />
             Classements
           </TabsTrigger>
-          <TabsTrigger value="phoenix-e2d" className="flex items-center gap-1">
-            <Trophy className="w-4 h-4" />
-            Phoenix E2D
+          <TabsTrigger value="e2d" className="flex items-center gap-1">
+            <Target className="w-4 h-4" />
+            E2D
+          </TabsTrigger>
+          <TabsTrigger value="phoenix" className="flex items-center gap-1">
+            <Activity className="w-4 h-4" />
+            Phoenix
           </TabsTrigger>
         </TabsList>
 
@@ -278,8 +281,12 @@ export default function Sport() {
           <ClassementJoueurs />
         </TabsContent>
 
-        <TabsContent value="phoenix-e2d" className="mt-6">
-          <PhoenixE2D />
+        <TabsContent value="e2d" className="mt-6">
+          <SportE2D />
+        </TabsContent>
+
+        <TabsContent value="phoenix" className="mt-6">
+          <SportPhoenix />
         </TabsContent>
       </Tabs>
     </div>

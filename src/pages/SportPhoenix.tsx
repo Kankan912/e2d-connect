@@ -15,10 +15,13 @@ import PhoenixEntrainementsManager from "@/components/PhoenixEntrainementsManage
 import PhoenixClassements from "@/components/PhoenixClassements";
 import PhoenixCompositionsManager from "@/components/PhoenixCompositionsManager";
 import PhoenixCotisationsAnnuelles from "@/components/PhoenixCotisationsAnnuelles";
+import EntrainementInterneForm from "@/components/forms/EntrainementInterneForm";
+import TableauBordJauneRouge from "@/components/TableauBordJauneRouge";
 
 export default function SportPhoenix() {
   const navigate = useNavigate();
   const [showMatchForm, setShowMatchForm] = useState(false);
+  const [showEntrainementForm, setShowEntrainementForm] = useState(false);
   const queryClient = useQueryClient();
   
   // Stats globales (désactivées pour l'instant)
@@ -149,10 +152,19 @@ export default function SportPhoenix() {
         <Button 
           className="h-full min-h-[120px] flex flex-col items-center justify-center"
           variant="outline"
-          onClick={() => navigate("/match-results")}
+          onClick={() => setShowEntrainementForm(true)}
         >
-          <TrendingUp className="h-8 w-8 mb-2" />
-          <span className="text-sm">Voir les résultats</span>
+          <Plus className="h-8 w-8 mb-2" />
+          <span className="text-sm">Planifier un entraînement</span>
+        </Button>
+
+        <Button 
+          className="h-full min-h-[120px] flex flex-col items-center justify-center"
+          variant="outline"
+          onClick={() => navigate("/sport-phoenix-finances")}
+        >
+          <DollarSign className="h-8 w-8 mb-2" />
+          <span className="text-sm">Gérer les finances</span>
         </Button>
       </div>
 
@@ -193,7 +205,7 @@ export default function SportPhoenix() {
 
       {/* Interface principale avec onglets */}
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-7">
+        <TabsList className="grid w-full grid-cols-8">
           <TabsTrigger value="overview" className="flex items-center gap-1">
             <Trophy className="w-4 h-4" />
             Aperçu
@@ -217,6 +229,10 @@ export default function SportPhoenix() {
           <TabsTrigger value="classements" className="flex items-center gap-1">
             <Star className="w-4 h-4" />
             Classements
+          </TabsTrigger>
+          <TabsTrigger value="statistiques" className="flex items-center gap-1">
+            <TrendingUp className="w-4 h-4" />
+            Stats J/R
           </TabsTrigger>
           <TabsTrigger value="cotisations" className="flex items-center gap-1">
             <DollarSign className="w-4 h-4" />
@@ -325,6 +341,10 @@ export default function SportPhoenix() {
           <PhoenixClassements />
         </TabsContent>
 
+        <TabsContent value="statistiques" className="mt-6">
+          <TableauBordJauneRouge />
+        </TabsContent>
+
         <TabsContent value="cotisations" className="mt-6">
           <PhoenixCotisationsAnnuelles />
         </TabsContent>
@@ -334,9 +354,17 @@ export default function SportPhoenix() {
         open={showMatchForm}
         onOpenChange={setShowMatchForm}
         onSuccess={() => {
-          // Rafraîchir les données des matchs
           queryClient.invalidateQueries({ queryKey: ['phoenix-matchs'] });
           setShowMatchForm(false);
+        }}
+      />
+
+      <EntrainementInterneForm
+        open={showEntrainementForm}
+        onOpenChange={setShowEntrainementForm}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ['phoenix-entrainements-internes'] });
+          setShowEntrainementForm(false);
         }}
       />
     </div>

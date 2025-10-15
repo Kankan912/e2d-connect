@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useEnsureAdmin } from "@/hooks/useEnsureAdmin";
+import LogoUpload from "@/components/LogoUpload";
 
 interface E2DMatchFormProps {
   open: boolean;
@@ -20,6 +21,8 @@ export default function E2DMatchForm({ open, onOpenChange, onSuccess }: E2DMatch
     date_match: "",
     heure_match: "15:00",
     equipe_adverse: "",
+    nom_complet_equipe_adverse: "",
+    logo_equipe_adverse: "",
     lieu: "",
     type_match: "amical",
     score_e2d: "",
@@ -34,7 +37,7 @@ export default function E2DMatchForm({ open, onOpenChange, onSuccess }: E2DMatch
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.date_match || !formData.equipe_adverse) {
+    if (!formData.date_match || !formData.nom_complet_equipe_adverse) {
       toast({
         title: "Erreur",
         description: "Veuillez remplir tous les champs obligatoires",
@@ -49,7 +52,9 @@ export default function E2DMatchForm({ open, onOpenChange, onSuccess }: E2DMatch
       const matchData = {
         date_match: formData.date_match,
         heure_match: formData.heure_match || null,
-        equipe_adverse: formData.equipe_adverse,
+        equipe_adverse: formData.equipe_adverse || formData.nom_complet_equipe_adverse,
+        nom_complet_equipe_adverse: formData.nom_complet_equipe_adverse,
+        logo_equipe_adverse: formData.logo_equipe_adverse || null,
         lieu: formData.lieu || null,
         type_match: formData.type_match,
         score_e2d: formData.score_e2d ? parseInt(formData.score_e2d) : null,
@@ -81,6 +86,8 @@ export default function E2DMatchForm({ open, onOpenChange, onSuccess }: E2DMatch
         date_match: "",
         heure_match: "15:00",
         equipe_adverse: "",
+        nom_complet_equipe_adverse: "",
+        logo_equipe_adverse: "",
         lieu: "",
         type_match: "amical",
         score_e2d: "",
@@ -133,28 +140,34 @@ export default function E2DMatchForm({ open, onOpenChange, onSuccess }: E2DMatch
             </div>
           </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="equipe_adverse">Équipe adversaire *</Label>
-              <Select 
-                value={formData.equipe_adverse} 
-                onValueChange={(value) => setFormData(prev => ({ ...prev, equipe_adverse: value }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner l'équipe..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Équipe Jaune">Équipe Jaune</SelectItem>
-                  <SelectItem value="Équipe Rouge">Équipe Rouge</SelectItem>
-                  <SelectItem value="Autre équipe">Autre équipe externe</SelectItem>
-                </SelectContent>
-              </Select>
-              {formData.equipe_adverse === "Autre équipe" && (
-                <Input
-                  placeholder="Nom de l'équipe adverse..."
-                  onChange={(e) => setFormData(prev => ({ ...prev, equipe_adverse: e.target.value }))}
-                />
-              )}
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="nom_complet_equipe_adverse">Nom complet de l'équipe adverse *</Label>
+            <Input
+              id="nom_complet_equipe_adverse"
+              placeholder="Ex: FC Barcelone Junior, Real Madrid U17..."
+              value={formData.nom_complet_equipe_adverse}
+              onChange={(e) => setFormData(prev => ({ ...prev, nom_complet_equipe_adverse: e.target.value }))}
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="equipe_adverse">Nom court (pour affichage)</Label>
+            <Input
+              id="equipe_adverse"
+              placeholder="Ex: Barcelone, Real Madrid..."
+              value={formData.equipe_adverse}
+              onChange={(e) => setFormData(prev => ({ ...prev, equipe_adverse: e.target.value }))}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Logo de l'équipe adverse</Label>
+            <LogoUpload 
+              onLogoUploaded={(url) => setFormData(prev => ({ ...prev, logo_equipe_adverse: url }))}
+              currentLogoUrl={formData.logo_equipe_adverse}
+            />
+          </div>
 
           <div className="space-y-2">
             <Label htmlFor="lieu">Lieu</Label>

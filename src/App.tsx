@@ -39,8 +39,8 @@ import StatistiquesMatchs from "./pages/StatistiquesMatchs";
 import PresenceReunions from "./pages/PresenceReunions";
 import Sport from "./pages/Sport";
 import SportE2DFinances from "./pages/SportE2DFinances";
+import SportPhoenixFinances from "./pages/SportPhoenixFinances";
 import PhoenixAdherents from "./pages/PhoenixAdherents";
-import PhoenixE2D from "./pages/PhoenixE2D";
 import Analytics from "./pages/Analytics";
 import NotFound from "./pages/NotFound";
 import FondCaissePage from "./pages/FondCaisse";
@@ -127,8 +127,8 @@ function App() {
                   <Route path="/fond-caisse" element={<FondCaissePage />} />
                   <Route path="/notifications-avancees" element={<NotificationsAvanceesPage />} />
                   <Route path="/sport" element={<Sport />} />
-                  <Route path="/phoenix-e2d" element={<PhoenixE2D />} />
                   <Route path="/sport-e2d-finances" element={<SportE2DFinances />} />
+                  <Route path="/sport-phoenix-finances" element={<SportPhoenixFinances />} />
                   <Route path="/sport-equipes" element={<SportEquipes />} />
                   <Route path="/phoenix-adherents" element={<PhoenixAdherents />} />
                   <Route path="/eligibilite-gala" element={<EligibiliteGala />} />

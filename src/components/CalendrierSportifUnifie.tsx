@@ -19,7 +19,7 @@ interface SportEvent {
   location?: string;
   time?: string;
   status: 'prevu' | 'en_cours' | 'termine' | 'annule';
-  score?: { home: number; away: number };
+  score?: string;
 }
 
 export default function CalendrierSportifUnifie() {
@@ -28,6 +28,7 @@ export default function CalendrierSportifUnifie() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [loading, setLoading] = useState(true);
   const [viewType, setViewType] = useState<'month' | 'week'>('month');
+  const [filter, setFilter] = useState<'all' | 'e2d' | 'phoenix'>('all');
   const { toast } = useToast();
 
   useEffect(() => {
@@ -39,26 +40,21 @@ export default function CalendrierSportifUnifie() {
       const startDate = startOfMonth(currentDate);
       const endDate = endOfMonth(currentDate);
 
-      const [e2dMatches, phoenixMatches, e2dActivites] = await Promise.all([
+      const [e2dMatches, phoenixEntrainements] = await Promise.all([
         supabase
           .from('sport_e2d_matchs')
           .select('*')
           .gte('date_match', startDate.toISOString().split('T')[0])
           .lte('date_match', endDate.toISOString().split('T')[0]),
         supabase
-          .from('sport_phoenix_matchs')
+          .from('phoenix_entrainements_internes')
           .select('*')
-          .gte('date_match', startDate.toISOString().split('T')[0])
-          .lte('date_match', endDate.toISOString().split('T')[0]),
-        supabase
-          .from('sport_e2d_activites')
-          .select('*')
-          .gte('date_activite', startDate.toISOString().split('T')[0])
-          .lte('date_activite', endDate.toISOString().split('T')[0])
+          .gte('date_entrainement', startDate.toISOString().split('T')[0])
+          .lte('date_entrainement', endDate.toISOString().split('T')[0])
       ]);
 
       const allEvents: SportEvent[] = [
-        // Matchs E2D
+        // Matchs E2D (externes)
         ...(e2dMatches.data || []).map(match => ({
           id: match.id,
           date: new Date(match.date_match),
@@ -70,33 +66,23 @@ export default function CalendrierSportifUnifie() {
           time: match.heure_match,
           status: match.statut as 'prevu' | 'en_cours' | 'termine' | 'annule',
           score: match.score_e2d !== null && match.score_adverse !== null 
-            ? { home: match.score_e2d, away: match.score_adverse }
+            ? `${match.score_e2d}-${match.score_adverse}`
             : undefined
         })),
-        // Matchs Phoenix
-        ...(phoenixMatches.data || []).map(match => ({
-          id: match.id,
-          date: new Date(match.date_match),
+        // Entraînements internes Phoenix (Jaune vs Rouge)
+        ...(phoenixEntrainements.data || []).map(ent => ({
+          id: ent.id,
+          date: new Date(ent.date_entrainement),
           type: 'phoenix' as const,
-          eventType: 'match' as const,
-          title: `Phoenix vs ${match.equipe_adverse}`,
-          opponent: match.equipe_adverse,
-          location: match.lieu,
-          time: match.heure_match,
-          status: match.statut as 'prevu' | 'en_cours' | 'termine' | 'annule',
-          score: match.score_phoenix !== null && match.score_adverse !== null 
-            ? { home: match.score_phoenix, away: match.score_adverse }
+          eventType: 'entrainement' as const,
+          title: `Entraînement J vs R`,
+          opponent: 'Jaune vs Rouge',
+          location: ent.lieu,
+          time: ent.heure_debut,
+          status: ent.statut as 'prevu' | 'en_cours' | 'termine' | 'annule',
+          score: ent.statut === 'termine' && ent.score_jaune !== null && ent.score_rouge !== null 
+            ? `${ent.score_jaune}-${ent.score_rouge}`
             : undefined
-        })),
-        // Activités E2D
-        ...(e2dActivites.data || []).map(activite => ({
-          id: activite.id,
-          date: new Date(activite.date_activite),
-          type: 'e2d' as const,
-          eventType: 'activite' as const,
-          title: 'Activité E2D',
-          location: activite.lieu,
-          status: 'prevu' as const
         }))
       ];
 
@@ -132,8 +118,13 @@ export default function CalendrierSportifUnifie() {
   };
 
   const getTypeColor = (type: string) => {
-    return type === 'e2d' ? 'bg-blue-500' : 'bg-purple-500';
+    return type === 'e2d' ? 'bg-blue-500' : 'bg-gradient-to-r from-yellow-400 to-red-500';
   };
+
+  const filteredEvents = events.filter(event => {
+    if (filter === 'all') return true;
+    return event.type === filter;
+  });
 
   return (
     <div className="space-y-6">
@@ -166,18 +157,25 @@ export default function CalendrierSportifUnifie() {
             
             <div className="flex items-center gap-2">
               <Button
-                variant={viewType === 'month' ? 'default' : 'outline'}
+                variant={filter === 'all' ? 'default' : 'outline'}
                 size="sm"
-                onClick={() => setViewType('month')}
+                onClick={() => setFilter('all')}
               >
-                Mois
+                Tous
               </Button>
               <Button
-                variant={viewType === 'week' ? 'default' : 'outline'}
+                variant={filter === 'e2d' ? 'default' : 'outline'}
                 size="sm"
-                onClick={() => setViewType('week')}
+                onClick={() => setFilter('e2d')}
               >
-                Semaine
+                Matchs externes
+              </Button>
+              <Button
+                variant={filter === 'phoenix' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setFilter('phoenix')}
+              >
+                Entraînements internes
               </Button>
             </div>
           </div>
@@ -194,11 +192,11 @@ export default function CalendrierSportifUnifie() {
               <div className="flex items-center gap-4 text-sm">
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 bg-blue-500 rounded"></div>
-                  <span>E2D</span>
+                  <span>E2D (Matchs externes)</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-purple-500 rounded"></div>
-                  <span>Phoenix</span>
+                  <div className="w-8 h-3 bg-gradient-to-r from-yellow-400 to-red-500 rounded"></div>
+                  <span>Phoenix (Entraînements internes)</span>
                 </div>
               </div>
 
@@ -211,7 +209,11 @@ export default function CalendrierSportifUnifie() {
                 ))}
                 
                 {getDaysInMonth().map(day => {
-                  const dayEvents = getEventsForDate(day);
+                  const allDayEvents = getEventsForDate(day);
+                  const dayEvents = allDayEvents.filter(event => {
+                    if (filter === 'all') return true;
+                    return event.type === filter;
+                  });
                   const isCurrentMonth = isSameMonth(day, currentDate);
                   const isCurrentDay = isToday(day);
                   
@@ -241,10 +243,7 @@ export default function CalendrierSportifUnifie() {
                             `}
                             title={event.title}
                           >
-                            {event.eventType === 'match' && event.score 
-                              ? `${event.score.home}-${event.score.away}`
-                              : event.title.slice(0, 10)
-                            }
+                            {event.score || event.title.slice(0, 10)}
                           </div>
                         ))}
                         {dayEvents.length > 2 && (
@@ -307,7 +306,7 @@ export default function CalendrierSportifUnifie() {
                           <div className="flex items-center gap-2">
                             <Trophy className="h-4 w-4 text-yellow-500" />
                             <span className="font-bold">
-                              Score: {event.score.home} - {event.score.away}
+                              Score: {event.score}
                             </span>
                           </div>
                         )}
@@ -341,7 +340,7 @@ export default function CalendrierSportifUnifie() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Événements E2D</CardTitle>
+            <CardTitle className="text-sm font-medium">Matchs externes E2D</CardTitle>
             <Users className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
@@ -353,8 +352,8 @@ export default function CalendrierSportifUnifie() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Événements Phoenix</CardTitle>
-            <Users className="h-4 w-4 text-purple-500" />
+            <CardTitle className="text-sm font-medium">Entraînements Phoenix</CardTitle>
+            <Users className="h-4 w-4 text-yellow-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
