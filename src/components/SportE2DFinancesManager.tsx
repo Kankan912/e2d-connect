@@ -31,6 +31,7 @@ import {
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useRealtimeUpdates } from '@/hooks/useRealtimeUpdates';
 
 interface Recette {
   id: string;
@@ -66,6 +67,21 @@ export default function SportE2DFinancesManager() {
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Real-time updates
+  useRealtimeUpdates({
+    table: 'sport_e2d_recettes',
+    onUpdate: () => {
+      queryClient.invalidateQueries({ queryKey: ['sport-e2d-recettes'] });
+    }
+  });
+
+  useRealtimeUpdates({
+    table: 'sport_e2d_depenses',
+    onUpdate: () => {
+      queryClient.invalidateQueries({ queryKey: ['sport-e2d-depenses'] });
+    }
+  });
 
   const { data: recettes } = useQuery({
     queryKey: ['sport-e2d-recettes'],

@@ -20,6 +20,7 @@ import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import E2DMatchForm from "@/components/forms/E2DMatchForm";
 import MatchDetailsModal from "@/components/MatchDetailsModal";
+import { useRealtimeUpdates } from "@/hooks/useRealtimeUpdates";
 
 export default function SportE2D() {
   const navigate = useNavigate();
@@ -63,6 +64,21 @@ export default function SportE2D() {
         .limit(5);
       if (error) throw error;
       return data;
+    }
+  });
+
+  // Real-time updates
+  useRealtimeUpdates({
+    table: 'sport_e2d_matchs',
+    onUpdate: () => {
+      queryClient.invalidateQueries({ queryKey: ['sport-e2d-matchs'] });
+    }
+  });
+
+  useRealtimeUpdates({
+    table: 'membres',
+    onUpdate: () => {
+      queryClient.invalidateQueries({ queryKey: ['membres'] });
     }
   });
 

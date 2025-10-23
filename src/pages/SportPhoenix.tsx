@@ -17,6 +17,7 @@ import PhoenixCompositionsManager from "@/components/PhoenixCompositionsManager"
 import PhoenixCotisationsAnnuelles from "@/components/PhoenixCotisationsAnnuelles";
 import EntrainementInterneForm from "@/components/forms/EntrainementInterneForm";
 import TableauBordJauneRouge from "@/components/TableauBordJauneRouge";
+import { useRealtimeUpdates } from "@/hooks/useRealtimeUpdates";
 
 export default function SportPhoenix() {
   const navigate = useNavigate();
@@ -57,16 +58,31 @@ export default function SportPhoenix() {
     }
   });
 
-  const { data: matchs } = useQuery({
-    queryKey: ['sport-phoenix-matchs'],
+  const { data: entrainements } = useQuery({
+    queryKey: ['phoenix-entrainements-internes'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('sport_phoenix_matchs')
+        .from('phoenix_entrainements_internes')
         .select('*')
-        .order('date_match', { ascending: false })
+        .order('date_entrainement', { ascending: false })
         .limit(5);
       if (error) throw error;
       return data;
+    }
+  });
+
+  // Real-time updates
+  useRealtimeUpdates({
+    table: 'phoenix_entrainements_internes',
+    onUpdate: () => {
+      queryClient.invalidateQueries({ queryKey: ['phoenix-entrainements-internes'] });
+    }
+  });
+
+  useRealtimeUpdates({
+    table: 'phoenix_adherents',
+    onUpdate: () => {
+      queryClient.invalidateQueries({ queryKey: ['phoenix-adherents'] });
     }
   });
 
@@ -168,32 +184,32 @@ export default function SportPhoenix() {
         </Button>
       </div>
 
-      {/* Derniers matchs */}
-      {matchs && matchs.length > 0 && (
+      {/* Derniers entraînements */}
+      {entrainements && entrainements.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Trophy className="h-5 w-5" />
-              Derniers Matchs Phoenix
+              Derniers Entraînements Jaune vs Rouge
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {matchs.slice(0, 3).map((match) => (
-                <div key={match.id} className="flex items-center justify-between p-3 border rounded-lg">
+              {entrainements.slice(0, 3).map((entrainement) => (
+                <div key={entrainement.id} className="flex items-center justify-between p-3 border rounded-lg">
                   <div>
-                    <p className="font-medium">Phoenix vs {match.equipe_adverse}</p>
+                    <p className="font-medium">Entraînement Jaune vs Rouge</p>
                     <p className="text-sm text-muted-foreground">
-                      {new Date(match.date_match).toLocaleDateString()}
+                      {new Date(entrainement.date_entrainement).toLocaleDateString()}
                     </p>
                   </div>
                   <div className="text-right">
-                    {match.score_phoenix !== null && match.score_adverse !== null ? (
+                    {entrainement.score_jaune !== null && entrainement.score_rouge !== null ? (
                       <p className="text-lg font-bold">
-                        {match.score_phoenix} - {match.score_adverse}
+                        {entrainement.score_jaune} - {entrainement.score_rouge}
                       </p>
                     ) : (
-                      <Badge variant="outline">{match.statut}</Badge>
+                      <Badge variant="outline">{entrainement.statut}</Badge>
                     )}
                   </div>
                 </div>
@@ -285,32 +301,32 @@ export default function SportPhoenix() {
             </Button>
           </div>
 
-          {/* Derniers matchs */}
-          {matchs && matchs.length > 0 && (
+          {/* Derniers entraînements */}
+          {entrainements && entrainements.length > 0 && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Trophy className="h-5 w-5" />
-                  Derniers Matchs Phoenix
+                  Derniers Entraînements Jaune vs Rouge
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {matchs.slice(0, 3).map((match) => (
-                    <div key={match.id} className="flex items-center justify-between p-3 border rounded-lg">
+                  {entrainements.slice(0, 3).map((entrainement) => (
+                    <div key={entrainement.id} className="flex items-center justify-between p-3 border rounded-lg">
                       <div>
-                        <p className="font-medium">Phoenix vs {match.equipe_adverse}</p>
+                        <p className="font-medium">Entraînement Jaune vs Rouge</p>
                         <p className="text-sm text-muted-foreground">
-                          {new Date(match.date_match).toLocaleDateString()}
+                          {new Date(entrainement.date_entrainement).toLocaleDateString()}
                         </p>
                       </div>
                       <div className="text-right">
-                        {match.score_phoenix !== null && match.score_adverse !== null ? (
+                        {entrainement.score_jaune !== null && entrainement.score_rouge !== null ? (
                           <p className="text-lg font-bold">
-                            {match.score_phoenix} - {match.score_adverse}
+                            {entrainement.score_jaune} - {entrainement.score_rouge}
                           </p>
                         ) : (
-                          <Badge variant="outline">{match.statut}</Badge>
+                          <Badge variant="outline">{entrainement.statut}</Badge>
                         )}
                       </div>
                     </div>

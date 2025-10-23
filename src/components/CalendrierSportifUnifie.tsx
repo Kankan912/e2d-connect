@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import LogoHeader from '@/components/LogoHeader';
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, isToday } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { useRealtimeUpdates } from '@/hooks/useRealtimeUpdates';
 
 interface SportEvent {
   id: string;
@@ -34,6 +35,21 @@ export default function CalendrierSportifUnifie() {
   useEffect(() => {
     loadEvents();
   }, [currentDate]);
+
+  // Real-time updates
+  useRealtimeUpdates({
+    table: 'sport_e2d_matchs',
+    onUpdate: () => {
+      loadEvents();
+    }
+  });
+
+  useRealtimeUpdates({
+    table: 'phoenix_entrainements_internes',
+    onUpdate: () => {
+      loadEvents();
+    }
+  });
 
   const loadEvents = async () => {
     try {

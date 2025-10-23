@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useRealtimeUpdates } from "@/hooks/useRealtimeUpdates";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,6 +34,21 @@ export default function SportPhoenixFinancesManager() {
   const queryClient = useQueryClient();
   const [showRecetteDialog, setShowRecetteDialog] = useState(false);
   const [showDepenseDialog, setShowDepenseDialog] = useState(false);
+
+  // Real-time updates
+  useRealtimeUpdates({
+    table: 'sport_phoenix_recettes',
+    onUpdate: () => {
+      queryClient.invalidateQueries({ queryKey: ['sport-phoenix-recettes'] });
+    }
+  });
+
+  useRealtimeUpdates({
+    table: 'sport_phoenix_depenses',
+    onUpdate: () => {
+      queryClient.invalidateQueries({ queryKey: ['sport-phoenix-depenses'] });
+    }
+  });
 
   const [recetteForm, setRecetteForm] = useState({
     libelle: "",

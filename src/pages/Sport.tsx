@@ -11,11 +11,12 @@ import {
   Activity,
   Target
 } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import LogoHeader from "@/components/LogoHeader";
 import { useNavigate } from "react-router-dom";
 import { useBackNavigation } from "@/hooks/useBackNavigation";
+import { useRealtimeUpdates } from "@/hooks/useRealtimeUpdates";
 
 // Import existing sport components
 import GestionPresences from "./GestionPresences";
@@ -30,6 +31,7 @@ import SportEquipes from "./SportEquipes";
 export default function Sport() {
   const navigate = useNavigate();
   const { goBack, BackIcon } = useBackNavigation();
+  const queryClient = useQueryClient();
 
   const { data: e2dMembers } = useQuery({
     queryKey: ['e2d-members'],
@@ -59,26 +61,43 @@ export default function Sport() {
     }
   });
 
-  const { data: recentMatches } = useQuery({
-    queryKey: ['recent-matches'],
+  const { data: recentEvents } = useQuery({
+    queryKey: ['recent-sport-events'],
     queryFn: async () => {
-      const [e2dMatches, phoenixMatches] = await Promise.all([
+      const [e2dMatches, phoenixEntrainements] = await Promise.all([
         supabase
           .from('sport_e2d_matchs')
           .select('*')
           .order('date_match', { ascending: false })
           .limit(3),
         supabase
-          .from('sport_phoenix_matchs')
+          .from('phoenix_entrainements_internes')
           .select('*')
-          .order('date_match', { ascending: false })
+          .order('date_entrainement', { ascending: false })
           .limit(3)
       ]);
       
       return {
         e2d: e2dMatches.data || [],
-        phoenix: phoenixMatches.data || []
+        phoenix: phoenixEntrainements.data || []
       };
+    }
+  });
+
+  // Real-time updates
+  useRealtimeUpdates({
+    table: 'sport_e2d_matchs',
+    onUpdate: () => {
+      queryClient.invalidateQueries({ queryKey: ['recent-sport-events'] });
+      queryClient.invalidateQueries({ queryKey: ['e2d-members'] });
+    }
+  });
+
+  useRealtimeUpdates({
+    table: 'phoenix_entrainements_internes',
+    onUpdate: () => {
+      queryClient.invalidateQueries({ queryKey: ['recent-sport-events'] });
+      queryClient.invalidateQueries({ queryKey: ['phoenix-adherents'] });
     }
   });
 
@@ -147,22 +166,22 @@ export default function Sport() {
         />
         <StatCard
           title="Matchs E2D"
-          value={recentMatches?.e2d.length || 0}
+          value={recentEvents?.e2d.length || 0}
           icon={Target}
           color="success"
         />
         <StatCard
-          title="Matchs Phoenix"
-          value={recentMatches?.phoenix.length || 0}
+          title="Entraînements Phoenix"
+          value={recentEvents?.phoenix.length || 0}
           icon={Target}
           color="warning"
         />
       </div>
 
       {/* Derniers résultats */}
-      {(recentMatches?.e2d.length > 0 || recentMatches?.phoenix.length > 0) && (
+      {(recentEvents?.e2d.length > 0 || recentEvents?.phoenix.length > 0) && (
         <div className="grid gap-6 md:grid-cols-2">
-          {recentMatches?.e2d.length > 0 && (
+          {recentEvents?.e2d.length > 0 && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -172,7 +191,7 @@ export default function Sport() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  {recentMatches.e2d.slice(0, 3).map((match) => (
+                  {recentEvents.e2d.slice(0, 3).map((match) => (
                     <div key={match.id} className="flex items-center justify-between p-2 border rounded">
                       <span className="text-sm">E2D vs {match.equipe_adverse}</span>
                       <div className="flex items-center gap-2">
@@ -194,29 +213,29 @@ export default function Sport() {
             </Card>
           )}
 
-          {recentMatches?.phoenix.length > 0 && (
+          {recentEvents?.phoenix.length > 0 && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Activity className="h-5 w-5 text-secondary" />
-                  Derniers matchs Phoenix
+                  Derniers Entraînements Phoenix
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  {recentMatches.phoenix.slice(0, 3).map((match) => (
-                    <div key={match.id} className="flex items-center justify-between p-2 border rounded">
-                      <span className="text-sm">Phoenix vs {match.equipe_adverse}</span>
+                  {recentEvents.phoenix.slice(0, 3).map((entrainement) => (
+                    <div key={entrainement.id} className="flex items-center justify-between p-2 border rounded">
+                      <span className="text-sm">Entraînement Jaune vs Rouge</span>
                       <div className="flex items-center gap-2">
                         <span className="text-xs text-muted-foreground">
-                          {new Date(match.date_match).toLocaleDateString()}
+                          {new Date(entrainement.date_entrainement).toLocaleDateString()}
                         </span>
-                        {match.score_phoenix !== null && match.score_adverse !== null ? (
+                        {entrainement.score_jaune !== null && entrainement.score_rouge !== null ? (
                           <Badge variant="outline">
-                            {match.score_phoenix} - {match.score_adverse}
+                            {entrainement.score_jaune} - {entrainement.score_rouge}
                           </Badge>
                         ) : (
-                          <Badge variant="secondary">{match.statut}</Badge>
+                          <Badge variant="secondary">{entrainement.statut}</Badge>
                         )}
                       </div>
                     </div>
