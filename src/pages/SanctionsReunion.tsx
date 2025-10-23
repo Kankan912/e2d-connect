@@ -50,7 +50,7 @@ interface SanctionWithDetails {
   };
   type_sanction: {
     nom: string;
-    categorie: string;
+    contexte: string;
   };
 }
 
@@ -78,11 +78,7 @@ export default function SanctionsReunion() {
       // Charger les sanctions de réunion
       const { data: sanctionsData, error: sanctionsError } = await supabase
         .from('sanctions')
-        .select(`
-          *,
-          sanctions_types!inner(nom, categorie)
-        `)
-        .eq('sanctions_types.categorie', 'reunion')
+        .select('*')
         .order('date_sanction', { ascending: false });
 
       if (sanctionsError) throw sanctionsError;
@@ -101,11 +97,26 @@ export default function SanctionsReunion() {
 
       if (membresError) throw membresError;
 
+      // Charger les types de sanctions séparément
+      const typeIds = [...new Set(sanctionsData.map(s => s.type_sanction_id))];
+      const { data: typesData, error: typesError } = await supabase
+        .from('types_sanctions')
+        .select('id, nom, contexte')
+        .in('id', typeIds)
+        .in('contexte', ['reunion', 'tous']);
+
+      if (typesError) throw typesError;
+
+      // Filtrer les sanctions qui ont un type valide (reunion ou tous)
+      const sanctionsValides = sanctionsData.filter(s => 
+        typesData?.some(t => t.id === s.type_sanction_id)
+      );
+
       // Joindre manuellement les données
-      const sanctionsWithDetails = sanctionsData.map(sanction => ({
+      const sanctionsWithDetails = sanctionsValides.map(sanction => ({
         ...sanction,
         membre: membresData?.find(m => m.id === sanction.membre_id) || { nom: 'Inconnu', prenom: '' },
-        type_sanction: sanction.sanctions_types
+        type_sanction: typesData?.find(t => t.id === sanction.type_sanction_id) || { nom: 'Inconnu', contexte: '' }
       }));
 
       setSanctions(sanctionsWithDetails);

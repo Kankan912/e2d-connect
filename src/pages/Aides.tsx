@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useRealtimeUpdates } from "@/hooks/useRealtimeUpdates";
 import LogoHeader from "@/components/LogoHeader";
 import { useNavigate } from "react-router-dom";
 
@@ -58,6 +59,13 @@ export default function Aides() {
       setLoading(false);
     }
   };
+
+  // Mises à jour temps réel
+  useRealtimeUpdates({
+    table: 'aides',
+    onUpdate: fetchStats,
+    enabled: true
+  });
 
   if (loading) {
     return (

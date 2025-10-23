@@ -31,11 +31,11 @@ interface SanctionWithDetails extends Sanction {
   };
   type_sanction: {
     nom: string;
-    categorie: string;
+    contexte: string;
   };
   sanctions_types?: {
     nom: string;
-    categorie: string;
+    contexte: string;
   };
 }
 
@@ -62,14 +62,10 @@ export default function SanctionsSport() {
 
   async function loadSanctions() {
     try {
-      // Approche alternative : charger d'abord les sanctions, puis joindre manuellement
+      // Charger les sanctions sportives
       const { data: sanctionsData, error: sanctionsError } = await supabase
         .from('sanctions')
-        .select(`
-          *,
-          sanctions_types!inner(nom, categorie)
-        `)
-        .eq('sanctions_types.categorie', 'sport')
+        .select('*')
         .order('date_sanction', { ascending: false });
 
       if (sanctionsError) throw sanctionsError;
@@ -88,11 +84,26 @@ export default function SanctionsSport() {
 
       if (membresError) throw membresError;
 
+      // Charger les types de sanctions séparément
+      const typeIds = [...new Set(sanctionsData.map(s => s.type_sanction_id))];
+      const { data: typesData, error: typesError } = await supabase
+        .from('types_sanctions')
+        .select('id, nom, contexte')
+        .in('id', typeIds)
+        .in('contexte', ['sport', 'tous']);
+
+      if (typesError) throw typesError;
+
+      // Filtrer les sanctions qui ont un type valide (sport ou tous)
+      const sanctionsValides = sanctionsData.filter(s => 
+        typesData?.some(t => t.id === s.type_sanction_id)
+      );
+
       // Joindre manuellement les données
-      const sanctionsWithDetails = sanctionsData.map(sanction => ({
+      const sanctionsWithDetails = sanctionsValides.map(sanction => ({
         ...sanction,
         membre: membresData?.find(m => m.id === sanction.membre_id) || { nom: 'Inconnu', prenom: '' },
-        type_sanction: sanction.sanctions_types
+        type_sanction: typesData?.find(t => t.id === sanction.type_sanction_id) || { nom: 'Inconnu', contexte: '' }
       }));
 
       setSanctions(sanctionsWithDetails);

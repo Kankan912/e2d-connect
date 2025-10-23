@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useRealtimeUpdates } from "@/hooks/useRealtimeUpdates";
 import LogoHeader from "@/components/LogoHeader";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -77,24 +78,34 @@ export default function Epargnes() {
 
   const fetchEpargnes = async () => {
     try {
-      const { data, error } = await supabase
+      // Charger toutes les épargnes
+      const { data: epargnesToutes, error: epargnesToutesError } = await supabase
         .from('epargnes')
-        .select(`
-          *,
-          membres!membre_id (
-            nom,
-            prenom
-          )
-        `)
+        .select('*')
         .order('date_depot', { ascending: false });
 
-      if (error) throw error;
-      setEpargnes(data || []);
+      if (epargnesToutesError) throw epargnesToutesError;
+
+      // Charger séparément les membres
+      const membreIds = [...new Set(epargnesToutes?.map(e => e.membre_id) || [])];
+      const { data: membresData } = await supabase
+        .from('membres')
+        .select('id, nom, prenom')
+        .in('id', membreIds);
+
+      // Joindre manuellement
+      const epargnesToutesWithMembers = (epargnesToutes || []).map(epargne => ({
+        ...epargne,
+        membres: membresData?.find(m => m.id === epargne.membre_id) || { nom: '', prenom: '' }
+      }));
+
+      setEpargnes(epargnesToutesWithMembers);
     } catch (error) {
+      console.error("Erreur lors du chargement des épargnes:", error);
       toast({
+        variant: "destructive",
         title: "Erreur",
         description: "Impossible de charger les épargnes",
-        variant: "destructive",
       });
     } finally {
       setLoading(false);
@@ -144,6 +155,13 @@ export default function Epargnes() {
       console.error('Erreur lors du chargement des exercices:', error);
     }
   };
+
+  // Mises à jour temps réel
+  useRealtimeUpdates({
+    table: 'epargnes',
+    onUpdate: fetchEpargnes,
+    enabled: true
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

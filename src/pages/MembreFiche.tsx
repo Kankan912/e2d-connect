@@ -98,13 +98,54 @@ export default function MembreFiche() {
   const [fondCaisse, setFondCaisse] = useState(0);
   const { toast } = useToast();
 
-  // Mise à jour en temps réel pour les changements de membre (notamment photo)
+  // Mises à jour en temps réel
   useRealtimeUpdates({
     table: 'membres',
     onUpdate: () => {
       console.log('🔄 Mise à jour temps réel détectée pour les membres');
+      if (id) loadMembreData();
+    },
+    enabled: true
+  });
+
+  useRealtimeUpdates({
+    table: 'cotisations',
+    onUpdate: () => {
+      if (id) loadMembreData();
+    },
+    enabled: true
+  });
+
+  useRealtimeUpdates({
+    table: 'epargnes',
+    onUpdate: () => {
+      if (id) loadMembreData();
+    },
+    enabled: true
+  });
+
+  useRealtimeUpdates({
+    table: 'prets',
+    onUpdate: () => {
+      if (id) loadMembreData();
+    },
+    enabled: true
+  });
+
+  useRealtimeUpdates({
+    table: 'sanctions',
+    onUpdate: () => {
+      if (id) loadMembreData();
+    },
+    enabled: true
+  });
+
+  useRealtimeUpdates({
+    table: 'fond_caisse_operations',
+    onUpdate: () => {
       if (id) {
         loadMembreData();
+        loadFondCaisse();
       }
     },
     enabled: true

@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useRealtimeUpdates } from "@/hooks/useRealtimeUpdates";
 import CotisationFormModal from "@/components/forms/CotisationFormModal";
 import CotisationTypeForm from "@/components/forms/CotisationTypeForm";
 import MembreCotisationConfigForm from "@/components/forms/MembreCotisationConfigForm";
@@ -80,18 +81,38 @@ useEffect(() => {
 
   const loadCotisations = async () => {
     try {
-      const { data, error } = await supabase
+      // Charger d'abord toutes les cotisations
+      const { data: cotisationsData, error: cotisationsError } = await supabase
         .from('cotisations')
-        .select(`
-          *,
-          membre:membres(nom, prenom),
-          cotisations_types(nom, description)
-        `)
+        .select('*')
         .order('date_paiement', { ascending: false });
 
-      if (error) throw error;
-      setCotisations(data || []);
+      if (cotisationsError) throw cotisationsError;
+
+      // Charger séparément les membres
+      const membreIds = [...new Set(cotisationsData?.map(c => c.membre_id) || [])];
+      const { data: membresData } = await supabase
+        .from('membres')
+        .select('id, nom, prenom')
+        .in('id', membreIds);
+
+      // Charger séparément les types de cotisations
+      const typeIds = [...new Set(cotisationsData?.map(c => c.type_cotisation_id).filter(Boolean) || [])];
+      const { data: typesData } = await supabase
+        .from('cotisations_types')
+        .select('id, nom, description')
+        .in('id', typeIds);
+
+      // Joindre manuellement
+      const cotisationsWithDetails = (cotisationsData || []).map(cot => ({
+        ...cot,
+        membre: membresData?.find(m => m.id === cot.membre_id) || { nom: '', prenom: '' },
+        cotisations_types: typesData?.find(t => t.id === cot.type_cotisation_id) || { nom: '', description: '' }
+      }));
+
+      setCotisations(cotisationsWithDetails);
     } catch (error: any) {
+      console.error('Erreur chargement cotisations:', error);
       toast({
         title: "Erreur",
         description: "Impossible de charger les cotisations",
@@ -129,6 +150,19 @@ const loadReunions = async () => {
     console.error('Erreur chargement réunions:', error);
   }
 };
+
+// Mises à jour temps réel
+useRealtimeUpdates({
+  table: 'cotisations',
+  onUpdate: loadCotisations,
+  enabled: true
+});
+
+useRealtimeUpdates({
+  table: 'cotisations_types',
+  onUpdate: loadTypesCotisations,
+  enabled: true
+});
 
   const filteredCotisations = cotisations.filter(cotisation =>
     `${cotisation.membre?.nom} ${cotisation.membre?.prenom}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
