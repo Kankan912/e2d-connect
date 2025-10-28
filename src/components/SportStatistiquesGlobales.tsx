@@ -45,6 +45,7 @@ export default function SportStatistiquesGlobales() {
 
   useEffect(() => {
     loadStats();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [periode]);
 
   const getDateRange = () => {

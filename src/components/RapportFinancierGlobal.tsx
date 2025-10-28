@@ -48,6 +48,7 @@ export default function RapportFinancierGlobal() {
 
   useEffect(() => {
     loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [periode]);
 
   const getDateRange = () => {

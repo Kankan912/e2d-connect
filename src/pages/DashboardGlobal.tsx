@@ -14,6 +14,7 @@ export default function DashboardGlobal() {
 
   useEffect(() => {
     loadKPIs();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadKPIs = async () => {

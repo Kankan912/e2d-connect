@@ -38,6 +38,7 @@ export default function PhoenixDashboardAnnuel() {
     if (selectedExercice) {
       loadStats(selectedExercice);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedExercice]);
 
   const loadExercices = async () => {
