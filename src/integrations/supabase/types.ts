@@ -1380,6 +1380,71 @@ export type Database = {
           },
         ]
       }
+      phoenix_statistiques_annuelles: {
+        Row: {
+          annee: number
+          buts_jaune: number | null
+          buts_rouge: number | null
+          cartons_jaunes_jaune: number | null
+          cartons_jaunes_rouge: number | null
+          cartons_rouges_jaune: number | null
+          cartons_rouges_rouge: number | null
+          created_at: string
+          exercice_id: string | null
+          id: string
+          matchs_nuls: number | null
+          total_matchs_jaune: number | null
+          total_matchs_rouge: number | null
+          updated_at: string
+          victoires_jaune: number | null
+          victoires_rouge: number | null
+        }
+        Insert: {
+          annee: number
+          buts_jaune?: number | null
+          buts_rouge?: number | null
+          cartons_jaunes_jaune?: number | null
+          cartons_jaunes_rouge?: number | null
+          cartons_rouges_jaune?: number | null
+          cartons_rouges_rouge?: number | null
+          created_at?: string
+          exercice_id?: string | null
+          id?: string
+          matchs_nuls?: number | null
+          total_matchs_jaune?: number | null
+          total_matchs_rouge?: number | null
+          updated_at?: string
+          victoires_jaune?: number | null
+          victoires_rouge?: number | null
+        }
+        Update: {
+          annee?: number
+          buts_jaune?: number | null
+          buts_rouge?: number | null
+          cartons_jaunes_jaune?: number | null
+          cartons_jaunes_rouge?: number | null
+          cartons_rouges_jaune?: number | null
+          cartons_rouges_rouge?: number | null
+          created_at?: string
+          exercice_id?: string | null
+          id?: string
+          matchs_nuls?: number | null
+          total_matchs_jaune?: number | null
+          total_matchs_rouge?: number | null
+          updated_at?: string
+          victoires_jaune?: number | null
+          victoires_rouge?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "phoenix_statistiques_annuelles_exercice_id_fkey"
+            columns: ["exercice_id"]
+            isOneToOne: false
+            referencedRelation: "exercices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       phoenix_statistiques_joueur: {
         Row: {
           arrets_gardien: number | null

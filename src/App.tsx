@@ -26,6 +26,8 @@ import Configuration from "./pages/Configuration";
 import SportE2D from "./pages/SportE2D";
 import SportEquipes from "./pages/SportEquipes";
 import Rapports from "./pages/Rapports";
+import DashboardGlobal from "./pages/DashboardGlobal";
+import ConfigurationCotisations from "./pages/ConfigurationCotisations";
 import CalendrierSportif from "./pages/CalendrierSportif";
 import EligibiliteGala from "./pages/EligibiliteGala";
 import MatchResults from "./pages/MatchResults";
@@ -144,7 +146,9 @@ function App() {
                   <Route path="/presences" element={<Navigate to="/sport" />} />
                   <Route path="/sport-config" element={<SportConfig />} />
                   <Route path="/historique-connexion" element={<HistoriqueConnexion />} />
-                  <Route path="/rapports" element={<Rapports />} />
+            <Route path="/rapports" element={<Rapports />} />
+            <Route path="/dashboard" element={<DashboardGlobal />} />
+            <Route path="/configuration/cotisations" element={<ConfigurationCotisations />} />
                   <Route path="/analytics" element={<Analytics />} />
                   <Route path="/configuration" element={<Configuration />} />
                   <Route path="/configuration-generale" element={<ConfigurationGenerale />} />

@@ -14,6 +14,7 @@ import {
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import LogoHeader from "@/components/LogoHeader";
+import SportStatistiquesGlobales from "@/components/SportStatistiquesGlobales";
 import { useNavigate } from "react-router-dom";
 import { useBackNavigation } from "@/hooks/useBackNavigation";
 import { useRealtimeUpdates } from "@/hooks/useRealtimeUpdates";
@@ -248,8 +249,12 @@ export default function Sport() {
       )}
 
       {/* Onglets de navigation */}
-      <Tabs defaultValue="presences" className="w-full">
-        <TabsList className="grid w-full grid-cols-7">
+      <Tabs defaultValue="stats" className="w-full">
+        <TabsList className="grid w-full grid-cols-8">
+          <TabsTrigger value="stats" className="flex items-center gap-1">
+            <TrendingUp className="w-4 h-4" />
+            Stats Globales
+          </TabsTrigger>
           <TabsTrigger value="presences" className="flex items-center gap-1">
             <Users className="w-4 h-4" />
             Présences

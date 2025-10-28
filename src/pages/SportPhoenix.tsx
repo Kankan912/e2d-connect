@@ -15,6 +15,7 @@ import PhoenixEntrainementsManager from "@/components/PhoenixEntrainementsManage
 import PhoenixClassements from "@/components/PhoenixClassements";
 import PhoenixCompositionsManager from "@/components/PhoenixCompositionsManager";
 import PhoenixCotisationsAnnuelles from "@/components/PhoenixCotisationsAnnuelles";
+import PhoenixDashboardAnnuel from "@/components/PhoenixDashboardAnnuel";
 import EntrainementInterneForm from "@/components/forms/EntrainementInterneForm";
 import TableauBordJauneRouge from "@/components/TableauBordJauneRouge";
 import { useRealtimeUpdates } from "@/hooks/useRealtimeUpdates";
@@ -253,6 +254,10 @@ export default function SportPhoenix() {
           <TabsTrigger value="cotisations" className="flex items-center gap-1">
             <DollarSign className="w-4 h-4" />
             Cotisations
+          </TabsTrigger>
+          <TabsTrigger value="dashboard" className="flex items-center gap-1">
+            <Activity className="w-4 h-4" />
+            Dashboard
           </TabsTrigger>
         </TabsList>
 
