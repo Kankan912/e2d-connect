@@ -548,7 +548,7 @@ export type Database = {
         Row: {
           date_connexion: string
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           statut: string
           user_agent: string | null
           user_id: string | null
@@ -556,7 +556,7 @@ export type Database = {
         Insert: {
           date_connexion?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           statut?: string
           user_agent?: string | null
           user_id?: string | null
@@ -564,10 +564,43 @@ export type Database = {
         Update: {
           date_connexion?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           statut?: string
           user_agent?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      match_gala_config: {
+        Row: {
+          actif: boolean | null
+          created_at: string | null
+          id: string
+          nombre_matchs_minimum: number | null
+          pourcentage_presence_minimum: number | null
+          sanctions_max: number | null
+          taux_cotisation_minimum: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          actif?: boolean | null
+          created_at?: string | null
+          id?: string
+          nombre_matchs_minimum?: number | null
+          pourcentage_presence_minimum?: number | null
+          sanctions_max?: number | null
+          taux_cotisation_minimum?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          actif?: boolean | null
+          created_at?: string | null
+          id?: string
+          nombre_matchs_minimum?: number | null
+          pourcentage_presence_minimum?: number | null
+          sanctions_max?: number | null
+          taux_cotisation_minimum?: number | null
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -1562,6 +1595,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          numero_ordre: number | null
           resolution: string | null
           reunion_id: string
           sujet: string
@@ -1569,6 +1603,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          numero_ordre?: number | null
           resolution?: string | null
           reunion_id: string
           sujet: string
@@ -1576,6 +1611,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          numero_ordre?: number | null
           resolution?: string | null
           reunion_id?: string
           sujet?: string
@@ -1906,6 +1942,42 @@ export type Database = {
           id?: string
           montant?: number
           nom?: string
+        }
+        Relationships: []
+      }
+      smtp_config: {
+        Row: {
+          actif: boolean | null
+          created_at: string | null
+          encryption_type: string | null
+          id: string
+          mot_de_passe_smtp: string
+          port_smtp: number | null
+          serveur_smtp: string
+          updated_at: string | null
+          utilisateur_smtp: string
+        }
+        Insert: {
+          actif?: boolean | null
+          created_at?: string | null
+          encryption_type?: string | null
+          id?: string
+          mot_de_passe_smtp: string
+          port_smtp?: number | null
+          serveur_smtp: string
+          updated_at?: string | null
+          utilisateur_smtp: string
+        }
+        Update: {
+          actif?: boolean | null
+          created_at?: string | null
+          encryption_type?: string | null
+          id?: string
+          mot_de_passe_smtp?: string
+          port_smtp?: number | null
+          serveur_smtp?: string
+          updated_at?: string | null
+          utilisateur_smtp?: string
         }
         Relationships: []
       }
@@ -2339,10 +2411,7 @@ export type Database = {
         }
         Returns: number
       }
-      get_current_user_role: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      get_current_user_role: { Args: never; Returns: string }
       get_pret_status: {
         Args: { echeance: string; montant_paye: number; montant_total: number }
         Returns: string
@@ -2351,10 +2420,7 @@ export type Database = {
         Args: { montant_paye: number; montant_total: number }
         Returns: string
       }
-      has_role: {
-        Args: { role_name: string }
-        Returns: boolean
-      }
+      has_role: { Args: { role_name: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never

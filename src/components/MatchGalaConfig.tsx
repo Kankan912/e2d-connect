@@ -37,7 +37,7 @@ export default function MatchGalaConfig() {
 
   const loadConfig = async () => {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('match_gala_config')
         .select('*')
         .limit(1)
@@ -75,11 +75,11 @@ export default function MatchGalaConfig() {
       };
 
       const { error } = config
-        ? await (supabase as any)
+        ? await supabase
             .from('match_gala_config')
             .update(configData)
             .eq('id', config.id)
-        : await (supabase as any)
+        : await supabase
             .from('match_gala_config')
             .insert([configData]);
 

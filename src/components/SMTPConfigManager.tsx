@@ -118,10 +118,44 @@ export default function SMTPConfigManager() {
   };
 
   const testConnection = async () => {
-    toast({
-      title: "Test de connexion",
-      description: "Fonctionnalité à implémenter via edge function",
-    });
+    if (!formData.serveur_smtp || !formData.utilisateur_smtp || !formData.mot_de_passe_smtp) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez remplir tous les champs avant de tester",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase.functions.invoke('test-smtp-config', {
+        body: {
+          serveur_smtp: formData.serveur_smtp,
+          port_smtp: parseInt(formData.port_smtp),
+          utilisateur_smtp: formData.utilisateur_smtp,
+          mot_de_passe_smtp: formData.mot_de_passe_smtp,
+          encryption_type: formData.encryption_type,
+          email_test: formData.utilisateur_smtp // Email de test
+        }
+      });
+
+      if (error) throw error;
+
+      if (data.success) {
+        toast({
+          title: "Succès",
+          description: "Connexion SMTP testée avec succès",
+        });
+      } else {
+        throw new Error(data.error || 'Test échoué');
+      }
+    } catch (error: any) {
+      toast({
+        title: "Erreur",
+        description: "Test de connexion échoué: " + error.message,
+        variant: "destructive",
+      });
+    }
   };
 
   if (loading) {

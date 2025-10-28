@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from "react";
+import CompteRenduActions from "@/components/CompteRenduActions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -414,18 +415,11 @@ export default function Reunions() {
                                 }}>
                                   <Edit className="w-4 h-4" />
                                 </Button>
-                 {reunion.statut === 'terminee' && (
-                    <Button 
-                      variant="default" 
-                      size="sm" 
-                      className="bg-success hover:bg-success/90"
-                      onClick={() => {
-                        setSelectedReunion(reunion);
-                        setShowClotureModal(true);
-                      }}
-                    >
-                      Confirmer et notifier
-                    </Button>
+                 {reunion.statut === 'terminee' && reunion.compte_rendu_url === 'generated' && (
+                    <CompteRenduActions 
+                      reunion={reunion}
+                      onSuccess={loadReunions}
+                    />
                   )}
                               </div>
                             ) : (

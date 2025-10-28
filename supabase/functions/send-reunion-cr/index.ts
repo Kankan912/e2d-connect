@@ -28,11 +28,13 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log(`Envoi CR réunion ${reunionId} à ${destinataires.length} destinataires`);
 
+    console.log(`Préparation envoi à ${destinataires.length} destinataires`);
+
     // Envoyer l'email à tous les destinataires
     const emailResponse = await resend.emails.send({
       from: "E2D Association <onboarding@resend.dev>",
       to: destinataires,
-      subject: `Compte-Rendu: ${sujet}`,
+      subject: `📋 Compte-Rendu: ${sujet}`,
       html: `
         <!DOCTYPE html>
         <html>
@@ -98,8 +100,8 @@ const handler = async (req: Request): Promise<Response> => {
                 <p><strong>📝 Sujet:</strong> ${sujet}</p>
               </div>
 
-              <h2 class="section-title">Résumé de la réunion</h2>
-              <div style="white-space: pre-wrap;">${contenu}</div>
+              <h2 class="section-title">Points à l'Ordre du Jour</h2>
+              <div style="white-space: pre-wrap; line-height: 1.8;">${contenu}</div>
 
               <div style="margin-top: 40px; padding: 20px; background: #e8f4f8; border-radius: 8px;">
                 <p style="margin: 0; font-size: 14px;">

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -98,11 +98,12 @@ export default function CompteRenduForm({
         .delete()
         .eq('reunion_id', reunionId);
 
-      // Insérer les nouveaux rapports
-      const rapports = data.sujets.map(sujet => ({
+      // Insérer les nouveaux rapports avec numérotation automatique
+      const rapports = data.sujets.map((sujet, index) => ({
         reunion_id: reunionId,
         sujet: sujet.titre,
         resolution: sujet.resolution,
+        numero_ordre: index + 1, // Numérotation automatique
       }));
 
       const { error: insertError } = await supabase
