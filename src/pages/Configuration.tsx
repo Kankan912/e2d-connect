@@ -198,7 +198,22 @@ export default function Configuration() {
         </TabsContent>
 
         <TabsContent value="cotisations" className="space-y-6">
-          <CotisationsConfigManager />
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <DollarSign className="h-5 w-5" />
+                Configuration des Cotisations
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Gérer les types de cotisations, les montants minimaux, les échéances et les simulations financières
+              </p>
+              <Button onClick={() => navigate('/configuration/cotisations')} className="w-full">
+                Voir la Configuration Avancée
+              </Button>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="notifications" className="space-y-6">
