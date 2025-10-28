@@ -1,10 +1,11 @@
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import BackButton from '@/components/BackButton';
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Download } from 'lucide-react';
 import { 
   Table, 
   TableBody, 
@@ -34,6 +35,7 @@ import PretPaymentModal from "@/components/modals/PretPaymentModal";
 import PretReconductionModal from "@/components/modals/PretReconductionModal";
 import PretPaymentPartielForm from '@/components/forms/PretPaymentPartielForm';
 import { useNavigate } from 'react-router-dom';
+import { ExportService } from '@/lib/exportService';
 
 interface Pret {
   id: string;
@@ -270,17 +272,35 @@ export default function Prets() {
           />
         </div>
         <div className="flex gap-2">
-          <Button 
-            variant="outline"
-            onClick={() => navigate('/prets/tableau-bord')}
-          >
+          <Button variant="outline" onClick={() => navigate('/prets/tableau-bord')}>
             <TrendingUp className="w-4 h-4 mr-2" />
             Tableau de Bord
           </Button>
-          <Button 
-            className="bg-gradient-to-r from-primary to-secondary"
-            onClick={() => setShowForm(true)}
-          >
+          <Button variant="outline" onClick={async () => {
+            await ExportService.export({
+              format: 'pdf',
+              title: 'Liste des Prêts',
+              data: filteredPrets.map(p => ({
+                Emprunteur: `${p.membre?.prenom} ${p.membre?.nom}`,
+                Montant: `${p.montant} FCFA`,
+                Taux: `${p.taux_interet}%`,
+                Échéance: new Date(p.echeance).toLocaleDateString(),
+                Statut: p.statut
+              })),
+              columns: [
+                { header: 'Emprunteur', dataKey: 'Emprunteur' },
+                { header: 'Montant', dataKey: 'Montant' },
+                { header: 'Taux', dataKey: 'Taux' },
+                { header: 'Échéance', dataKey: 'Échéance' },
+                { header: 'Statut', dataKey: 'Statut' }
+              ],
+              metadata: { author: 'E2D', dateGeneration: new Date(), association: 'Association E2D' }
+            });
+          }}>
+            <Download className="w-4 h-4 mr-2" />
+            Exporter
+          </Button>
+          <Button className="bg-gradient-to-r from-primary to-secondary" onClick={() => setShowForm(true)}>
             <Plus className="w-4 h-4 mr-2" />
             Nouveau prêt
           </Button>

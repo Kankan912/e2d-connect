@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { TrendingUp, DollarSign, Calculator, PiggyBank } from 'lucide-react';
+import { TrendingUp, DollarSign, Calculator, PiggyBank, Download } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import LogoHeader from '@/components/LogoHeader';
+import { ExportService } from '@/lib/exportService';
 
 interface EpargnantData {
   membre_id: string;
@@ -21,19 +24,45 @@ export default function EpargnantsBenefices() {
   const [totalInteretsPrets, setTotalInteretsPrets] = useState(0);
   const [totalEpargnes, setTotalEpargnes] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [exercices, setExercices] = useState<any[]>([]);
+  const [selectedExercice, setSelectedExercice] = useState<string>('all');
   const { toast } = useToast();
 
   useEffect(() => {
-    loadEpargnantsBenefices();
+    loadExercices();
   }, []);
+
+  useEffect(() => {
+    loadEpargnantsBenefices();
+  }, [selectedExercice]);
+
+  const loadExercices = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('exercices')
+        .select('*')
+        .order('date_debut', { ascending: false });
+
+      if (error) throw error;
+      setExercices(data || []);
+    } catch (error) {
+      console.error('Erreur chargement exercices:', error);
+    }
+  };
 
   const loadEpargnantsBenefices = async () => {
     try {
       // 1. Calculer le total des épargnes actives
-      const { data: epargnesData, error: epargnesError } = await supabase
+      let epargnesQuery = supabase
         .from('epargnes')
         .select('montant, membre_id, membres!membre_id(nom, prenom)')
         .eq('statut', 'actif');
+
+      if (selectedExercice && selectedExercice !== 'all') {
+        epargnesQuery = epargnesQuery.eq('exercice_id', selectedExercice);
+      }
+
+      const { data: epargnesData, error: epargnesError } = await epargnesQuery;
 
       if (epargnesError) throw epargnesError;
 
@@ -105,6 +134,54 @@ export default function EpargnantsBenefices() {
     }
   };
 
+  const handleExport = async () => {
+    try {
+      await ExportService.export({
+        format: 'pdf',
+        title: 'Épargnants - Bénéfices Attendus',
+        data: epargnants.map(e => ({
+          Épargnant: `${e.membre_prenom} ${e.membre_nom}`,
+          'Montant épargné': `${e.total_epargne.toLocaleString()} FCFA`,
+          'Part (%)': `${e.pourcentage.toFixed(2)}%`,
+          'Gains estimés': `${e.gains_estimes.toLocaleString()} FCFA`,
+          'Total attendu': `${(e.total_epargne + e.gains_estimes).toLocaleString()} FCFA`
+        })),
+        columns: [
+          { header: 'Épargnant', dataKey: 'Épargnant' },
+          { header: 'Montant épargné', dataKey: 'Montant épargné' },
+          { header: 'Part (%)', dataKey: 'Part (%)' },
+          { header: 'Gains estimés', dataKey: 'Gains estimés' },
+          { header: 'Total attendu', dataKey: 'Total attendu' }
+        ],
+        metadata: {
+          author: 'E2D',
+          dateGeneration: new Date(),
+          periode: selectedExercice !== 'all' 
+            ? exercices.find(e => e.id === selectedExercice)?.nom || 'Tous exercices'
+            : 'Tous exercices',
+          association: 'Association E2D'
+        },
+        stats: [
+          { label: 'Total épargnes', value: `${totalEpargnes.toLocaleString()} FCFA` },
+          { label: 'Total intérêts', value: `${totalInteretsPrets.toLocaleString()} FCFA` },
+          { label: 'Nombre épargnants', value: epargnants.length.toString() },
+          { label: 'Montant moyen', value: `${Math.round(totalEpargnes / epargnants.length).toLocaleString()} FCFA` }
+        ]
+      });
+
+      toast({
+        title: "Succès",
+        description: "Export PDF généré avec succès",
+      });
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible d'exporter le PDF",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -115,10 +192,31 @@ export default function EpargnantsBenefices() {
 
   return (
     <div className="space-y-6">
-      <LogoHeader 
-        title="Épargnants - Bénéfices Attendus"
-        subtitle="Répartition des gains au prorata des montants épargnés"
-      />
+      <div className="flex items-center justify-between">
+        <LogoHeader 
+          title="Épargnants - Bénéfices Attendus"
+          subtitle="Répartition des gains au prorata des montants épargnés"
+        />
+        <div className="flex items-center gap-4">
+          <Select value={selectedExercice} onValueChange={setSelectedExercice}>
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Tous exercices" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tous exercices</SelectItem>
+              {exercices.map(ex => (
+                <SelectItem key={ex.id} value={ex.id}>
+                  {ex.nom}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button onClick={handleExport} variant="outline">
+            <Download className="w-4 h-4 mr-2" />
+            Exporter PDF
+          </Button>
+        </div>
+      </div>
 
       {/* Statistiques globales */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

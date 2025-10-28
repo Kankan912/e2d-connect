@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Edit, TrendingUp, PiggyBank, DollarSign, Calculator } from "lucide-react";
+import { Plus, Edit, TrendingUp, PiggyBank, DollarSign, Calculator, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -15,6 +15,7 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
 import BackButton from "@/components/BackButton";
+import { ExportService } from '@/lib/exportService';
 
 interface Epargne {
   id: string;
@@ -248,10 +249,34 @@ export default function Epargnes() {
             subtitle="Gérez les épargnes des membres avec intérêts en fin d'exercice"
           />
         </div>
-        <Button onClick={() => navigate('/epargnes/benefices')} variant="outline">
-          <Calculator className="w-4 h-4 mr-2" />
-          Voir les Bénéficiaires
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={() => navigate('/epargnes/benefices')} variant="outline">
+            <Calculator className="w-4 h-4 mr-2" />
+            Voir les Bénéficiaires
+          </Button>
+          <Button variant="outline" onClick={async () => {
+            await ExportService.export({
+              format: 'pdf',
+              title: 'Liste des Épargnes',
+              data: epargnes.map(e => ({
+                Membre: `${e.membres?.prenom} ${e.membres?.nom}`,
+                Montant: `${e.montant} FCFA`,
+                Date: new Date(e.date_depot).toLocaleDateString(),
+                Statut: e.statut
+              })),
+              columns: [
+                { header: 'Membre', dataKey: 'Membre' },
+                { header: 'Montant', dataKey: 'Montant' },
+                { header: 'Date', dataKey: 'Date' },
+                { header: 'Statut', dataKey: 'Statut' }
+              ],
+              metadata: { author: 'E2D', dateGeneration: new Date(), association: 'Association E2D' }
+            });
+          }}>
+            <Download className="w-4 h-4 mr-2" />
+            Exporter
+          </Button>
+        </div>
       </div>
       <div className="flex justify-end">
         <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>

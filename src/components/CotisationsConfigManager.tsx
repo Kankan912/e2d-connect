@@ -1,8 +1,11 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { DollarSign, Calendar, TrendingUp, Wallet } from "lucide-react";
+import { DollarSign, Calendar, TrendingUp, Wallet, Users, Calculator } from "lucide-react";
 import CotisationsMembresManager from "./CotisationsMembresManager";
+import CotisationsTypesManager from './CotisationsTypesManager';
+import CotisationsEcheancesConfig from './CotisationsEcheancesConfig';
+import CotisationsSimulation from './CotisationsSimulation';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -110,62 +113,53 @@ export default function CotisationsConfigManager() {
       </div>
 
       {/* Configuration par catégorie */}
-      <Tabs defaultValue="mensuelles" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="mensuelles">Cotisations Mensuelles</TabsTrigger>
-          <TabsTrigger value="annuelles">Cotisations Annuelles</TabsTrigger>
-          <TabsTrigger value="fonds">Fonds</TabsTrigger>
-          <TabsTrigger value="investissements">Investissements</TabsTrigger>
+      <Tabs defaultValue="mensuelles" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="mensuelles">
+            <DollarSign className="w-4 h-4 mr-2" />
+            Minimales
+          </TabsTrigger>
+          <TabsTrigger value="types">
+            <Users className="w-4 h-4 mr-2" />
+            Types
+          </TabsTrigger>
+          <TabsTrigger value="echeances">
+            <Calendar className="w-4 h-4 mr-2" />
+            Échéances
+          </TabsTrigger>
+          <TabsTrigger value="simulation">
+            <Calculator className="w-4 h-4 mr-2" />
+            Simulation
+          </TabsTrigger>
+          <TabsTrigger value="annuelles">
+            <TrendingUp className="w-4 h-4 mr-2" />
+            Annuelles
+          </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="mensuelles" className="space-y-4">
+        <TabsContent value="mensuelles" className="space-y-6">
           <CotisationsMembresManager />
         </TabsContent>
 
-        <TabsContent value="annuelles" className="space-y-4">
+        <TabsContent value="types" className="space-y-6">
+          <CotisationsTypesManager />
+        </TabsContent>
+
+        <TabsContent value="echeances" className="space-y-6">
+          <CotisationsEcheancesConfig />
+        </TabsContent>
+
+        <TabsContent value="simulation" className="space-y-6">
+          <CotisationsSimulation />
+        </TabsContent>
+
+        <TabsContent value="annuelles" className="space-y-6">
           <Card>
             <CardHeader>
               <CardTitle>Cotisations Annuelles</CardTitle>
-              <p className="text-sm text-muted-foreground">
-                Configuration des cotisations annuelles (Phoenix, Sport, etc.)
-              </p>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground">
-                Cette section sera développée prochainement
-              </p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="fonds" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Gestion des Fonds</CardTitle>
-              <p className="text-sm text-muted-foreground">
-                Fond de caisse, Fond sport, etc.
-              </p>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                Configuration des différents fonds disponibles
-              </p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="investissements" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Investissements</CardTitle>
-              <p className="text-sm text-muted-foreground">
-                Gestion des investissements de la tontine
-              </p>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                Suivi des investissements et rendements
-              </p>
+              <p className="text-muted-foreground">Configuration des cotisations annuelles en cours de développement.</p>
             </CardContent>
           </Card>
         </TabsContent>

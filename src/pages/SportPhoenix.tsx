@@ -369,6 +369,10 @@ export default function SportPhoenix() {
         <TabsContent value="cotisations" className="mt-6">
           <PhoenixCotisationsAnnuelles />
         </TabsContent>
+
+        <TabsContent value="dashboard" className="mt-6">
+          <PhoenixDashboardAnnuel />
+        </TabsContent>
       </Tabs>
 
       <PhoenixMatchForm

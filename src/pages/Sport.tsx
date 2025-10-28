@@ -285,6 +285,10 @@ export default function Sport() {
           </TabsTrigger>
         </TabsList>
 
+        <TabsContent value="stats" className="mt-6">
+          <SportStatistiquesGlobales />
+        </TabsContent>
+
         <TabsContent value="presences" className="mt-6">
           <GestionPresences />
         </TabsContent>
