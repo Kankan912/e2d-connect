@@ -377,26 +377,32 @@ export type Database = {
       exercices: {
         Row: {
           created_at: string
+          croissance_fond_caisse: number | null
           date_debut: string
           date_fin: string
           id: string
           nom: string
+          plafond_fond_caisse: number | null
           statut: string
         }
         Insert: {
           created_at?: string
+          croissance_fond_caisse?: number | null
           date_debut: string
           date_fin: string
           id?: string
           nom: string
+          plafond_fond_caisse?: number | null
           statut?: string
         }
         Update: {
           created_at?: string
+          croissance_fond_caisse?: number | null
           date_debut?: string
           date_fin?: string
           id?: string
           nom?: string
+          plafond_fond_caisse?: number | null
           statut?: string
         }
         Relationships: []
