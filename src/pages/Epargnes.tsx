@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Edit, TrendingUp, PiggyBank, DollarSign, Calculator, Download } from "lucide-react";
+import { Plus, Edit, TrendingUp, PiggyBank, DollarSign, Calculator, Download, Filter, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -60,6 +60,14 @@ export default function Epargnes() {
   const [loading, setLoading] = useState(true);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [selectedEpargne, setSelectedEpargne] = useState<Epargne | null>(null);
+  const [filtres, setFiltres] = useState({
+    dateDebut: "",
+    dateFin: "",
+    membreId: "",
+    exerciceId: "",
+    montantMin: "",
+    montantMax: ""
+  });
   const [formData, setFormData] = useState({
     membre_id: "",
     montant: "",
@@ -230,6 +238,42 @@ export default function Epargnes() {
   const totalEpargnes = epargnes.reduce((sum, epargne) => sum + epargne.montant, 0);
   const epargnesActives = epargnes.filter(e => e.statut === 'actif');
 
+  // Fonction de filtrage avancé
+  const epargneFiltrees = epargnes.filter(epargne => {
+    // Filtre par date
+    if (filtres.dateDebut && new Date(epargne.date_depot) < new Date(filtres.dateDebut)) {
+      return false;
+    }
+    if (filtres.dateFin && new Date(epargne.date_depot) > new Date(filtres.dateFin)) {
+      return false;
+    }
+    
+    // Filtre par membre
+    if (filtres.membreId && epargne.membre_id !== filtres.membreId) {
+      return false;
+    }
+    
+    // Filtre par exercice
+    if (filtres.exerciceId && epargne.exercice_id !== filtres.exerciceId) {
+      return false;
+    }
+    
+    // Filtre par montant minimum
+    if (filtres.montantMin && epargne.montant < parseFloat(filtres.montantMin)) {
+      return false;
+    }
+    
+    // Filtre par montant maximum
+    if (filtres.montantMax && epargne.montant > parseFloat(filtres.montantMax)) {
+      return false;
+    }
+    
+    return true;
+  });
+
+  const totalFiltre = epargneFiltrees.reduce((sum, e) => sum + e.montant, 0);
+  const epargnantsUniques = new Set(epargneFiltrees.map(e => e.membre_id)).size;
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -278,6 +322,132 @@ export default function Epargnes() {
           </Button>
         </div>
       </div>
+
+      {/* Panneau de filtres avancés */}
+      <Card className="bg-muted/50">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Filter className="h-4 w-4" />
+              Filtres Avancés
+            </CardTitle>
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => setFiltres({
+                dateDebut: "",
+                dateFin: "",
+                membreId: "",
+                exerciceId: "",
+                montantMin: "",
+                montantMax: ""
+              })}
+            >
+              <X className="h-4 w-4 mr-2" />
+              Réinitialiser
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {/* Filtre par période */}
+            <div className="space-y-2">
+              <Label htmlFor="dateDebut">Date début</Label>
+              <Input
+                id="dateDebut"
+                type="date"
+                value={filtres.dateDebut}
+                onChange={(e) => setFiltres(prev => ({ ...prev, dateDebut: e.target.value }))}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="dateFin">Date fin</Label>
+              <Input
+                id="dateFin"
+                type="date"
+                value={filtres.dateFin}
+                onChange={(e) => setFiltres(prev => ({ ...prev, dateFin: e.target.value }))}
+              />
+            </div>
+
+            {/* Filtre par membre */}
+            <div className="space-y-2">
+              <Label htmlFor="membreFiltre">Membre</Label>
+              <Select 
+                value={filtres.membreId} 
+                onValueChange={(value) => setFiltres(prev => ({ ...prev, membreId: value }))}
+              >
+                <SelectTrigger id="membreFiltre">
+                  <SelectValue placeholder="Tous les membres" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Tous les membres</SelectItem>
+                  {membres.map((membre) => (
+                    <SelectItem key={membre.id} value={membre.id}>
+                      {membre.prenom} {membre.nom}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Filtre par exercice */}
+            <div className="space-y-2">
+              <Label htmlFor="exerciceFiltre">Exercice</Label>
+              <Select 
+                value={filtres.exerciceId} 
+                onValueChange={(value) => setFiltres(prev => ({ ...prev, exerciceId: value }))}
+              >
+                <SelectTrigger id="exerciceFiltre">
+                  <SelectValue placeholder="Tous les exercices" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Tous les exercices</SelectItem>
+                  {exercices.map((exercice) => (
+                    <SelectItem key={exercice.id} value={exercice.id}>
+                      {exercice.nom}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Filtre par montant */}
+            <div className="space-y-2">
+              <Label htmlFor="montantMin">Montant minimum</Label>
+              <Input
+                id="montantMin"
+                type="number"
+                placeholder="0"
+                value={filtres.montantMin}
+                onChange={(e) => setFiltres(prev => ({ ...prev, montantMin: e.target.value }))}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="montantMax">Montant maximum</Label>
+              <Input
+                id="montantMax"
+                type="number"
+                placeholder="Illimité"
+                value={filtres.montantMax}
+                onChange={(e) => setFiltres(prev => ({ ...prev, montantMax: e.target.value }))}
+              />
+            </div>
+          </div>
+
+          {/* Indicateur de résultats filtrés */}
+          <div className="mt-4 pt-4 border-t">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">
+                {epargneFiltrees.length} épargne(s) trouvée(s) • {epargnantsUniques} épargnant(s) • Total: {totalFiltre.toLocaleString()} FCFA
+              </span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="flex justify-end">
         <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
           <DialogTrigger asChild>
@@ -460,16 +630,20 @@ export default function Epargnes() {
 
       {/* Liste des épargnes */}
       <div className="grid gap-4">
-        {epargnes.length === 0 ? (
+        {epargneFiltrees.length === 0 ? (
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-8">
               <PiggyBank className="h-12 w-12 text-muted-foreground mb-4" />
-              <p className="text-lg font-medium text-muted-foreground">Aucune épargne enregistrée</p>
-              <p className="text-sm text-muted-foreground">Ajoutez la première épargne pour commencer</p>
+              <p className="text-lg font-medium text-muted-foreground">
+                {epargnes.length === 0 ? "Aucune épargne enregistrée" : "Aucune épargne ne correspond aux filtres"}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {epargnes.length === 0 ? "Ajoutez la première épargne pour commencer" : "Essayez de modifier les critères de filtrage"}
+              </p>
             </CardContent>
           </Card>
         ) : (
-          epargnes.map((epargne) => (
+          epargneFiltrees.map((epargne) => (
             <Card key={epargne.id} className="hover:shadow-md transition-shadow">
               <CardHeader>
                 <div className="flex justify-between items-start">

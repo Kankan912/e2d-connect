@@ -14,6 +14,7 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   Banknote, 
   Plus, 
@@ -62,6 +63,7 @@ export default function Prets() {
   const [prets, setPrets] = useState<Pret[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [filtreStatut, setFiltreStatut] = useState<string>("tous");
   const [showForm, setShowForm] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showReconductionModal, setShowReconductionModal] = useState(false);
@@ -164,10 +166,14 @@ export default function Prets() {
     setShowReconductionModal(true);
   };
 
-  const filteredPrets = prets.filter(pret =>
-    `${pret.membre?.nom} ${pret.membre?.prenom}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    pret.notes?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredPrets = prets.filter(pret => {
+    const matchesSearch = `${pret.membre?.nom} ${pret.membre?.prenom}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      pret.notes?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatut = filtreStatut === "tous" || pret.statut === filtreStatut;
+    
+    return matchesSearch && matchesStatut;
+  });
 
   const StatCard = ({ 
     title, 
@@ -343,14 +349,27 @@ export default function Prets() {
               <Banknote className="h-5 w-5" />
               Historique des Prêts
             </CardTitle>
-            <div className="relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Rechercher..."
-                className="pl-10 w-64"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+            <div className="flex gap-2">
+              <Select value={filtreStatut} onValueChange={setFiltreStatut}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Filtrer par statut" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="tous">Tous les statuts</SelectItem>
+                  <SelectItem value="en_cours">En cours</SelectItem>
+                  <SelectItem value="rembourse">Remboursés</SelectItem>
+                  <SelectItem value="annule">Annulés</SelectItem>
+                </SelectContent>
+              </Select>
+              <div className="relative">
+                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Rechercher..."
+                  className="pl-10 w-64"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
             </div>
           </div>
         </CardHeader>
