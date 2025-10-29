@@ -9,7 +9,9 @@ import {
   TrendingUp,
   Settings,
   Activity,
-  Target
+  Target,
+  BarChart3,
+  Gauge
 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,6 +30,8 @@ import ClassementJoueurs from "@/components/ClassementJoueurs";
 import SportE2D from "./SportE2D";
 import SportPhoenix from "./SportPhoenix";
 import SportEquipes from "./SportEquipes";
+import SportAnalyticsAvancees from "@/components/SportAnalyticsAvancees";
+import SportDashboardTempsReel from "@/components/SportDashboardTempsReel";
 
 export default function Sport() {
   const navigate = useNavigate();
@@ -249,8 +253,16 @@ export default function Sport() {
       )}
 
       {/* Onglets de navigation */}
-      <Tabs defaultValue="stats" className="w-full">
-        <TabsList className="grid w-full grid-cols-8">
+      <Tabs defaultValue="dashboard" className="w-full">
+        <TabsList className="grid w-full grid-cols-5 lg:grid-cols-10">
+          <TabsTrigger value="dashboard" className="flex items-center gap-1">
+            <Gauge className="w-4 h-4" />
+            Dashboard
+          </TabsTrigger>
+          <TabsTrigger value="analytics" className="flex items-center gap-1">
+            <BarChart3 className="w-4 h-4" />
+            Analytics
+          </TabsTrigger>
           <TabsTrigger value="stats" className="flex items-center gap-1">
             <TrendingUp className="w-4 h-4" />
             Stats Globales
@@ -284,6 +296,14 @@ export default function Sport() {
             Phoenix
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="dashboard" className="mt-6">
+          <SportDashboardTempsReel />
+        </TabsContent>
+
+        <TabsContent value="analytics" className="mt-6">
+          <SportAnalyticsAvancees />
+        </TabsContent>
 
         <TabsContent value="stats" className="mt-6">
           <SportStatistiquesGlobales />
