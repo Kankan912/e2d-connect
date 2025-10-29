@@ -15,6 +15,9 @@ interface Player {
   nom: string;
   prenom: string;
   equipe?: string;
+  equipe_e2d?: string;
+  equipe_phoenix?: string;
+  equipe_jaune_rouge?: string;
   est_membre_e2d: boolean;
   est_adherent_phoenix: boolean;
   telephone: string;
@@ -70,8 +73,8 @@ export default function GestionEquipes() {
     
     try {
       if (editingPlayer) {
-        const updateData: any = {
-          equipe_jaune_rouge: playerForm.equipe // Mise à jour du champ unifié
+        const updateData: Record<string, string> = {
+          equipe_jaune_rouge: playerForm.equipe
         };
         
         // Mettre à jour aussi les anciens champs pour compatibilité
@@ -94,15 +97,16 @@ export default function GestionEquipes() {
       setShowPlayerForm(false);
       setEditingPlayer(null);
       setPlayerForm({ equipe: 'jaune' });
-    } catch (error) {
-      toast({ title: 'Erreur', description: 'Erreur lors de la sauvegarde', variant: 'destructive' });
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
+      toast({ title: 'Erreur', description: errorMessage, variant: 'destructive' });
     }
   };
 
   const editPlayer = (player: Player) => {
     setEditingPlayer(player);
     setPlayerForm({
-      equipe: (player as any).equipe_jaune_rouge || player.equipe || 'jaune'
+      equipe: player.equipe_jaune_rouge || player.equipe || 'jaune'
     });
     setShowPlayerForm(true);
   };
@@ -167,7 +171,7 @@ export default function GestionEquipes() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {players.filter(p => (p as any).equipe_jaune_rouge === 'jaune' || p.equipe === 'jaune').length}
+              {players.filter(p => p.equipe_jaune_rouge === 'jaune' || p.equipe === 'jaune').length}
             </div>
           </CardContent>
         </Card>
@@ -179,7 +183,7 @@ export default function GestionEquipes() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {players.filter(p => (p as any).equipe_jaune_rouge === 'rouge' || p.equipe === 'rouge').length}
+              {players.filter(p => p.equipe_jaune_rouge === 'rouge' || p.equipe === 'rouge').length}
             </div>
           </CardContent>
         </Card>
@@ -191,7 +195,7 @@ export default function GestionEquipes() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {players.filter(p => !(p as any).equipe_jaune_rouge && !p.equipe).length}
+              {players.filter(p => !p.equipe_jaune_rouge && !p.equipe).length}
             </div>
           </CardContent>
         </Card>
@@ -264,11 +268,11 @@ export default function GestionEquipes() {
             </div>
             <div className="flex gap-2">
               <Badge className={
-                ((player as any).equipe_jaune_rouge === 'jaune' || player.equipe === 'jaune') ? 'bg-yellow-100 text-yellow-800' : 
-                ((player as any).equipe_jaune_rouge === 'rouge' || player.equipe === 'rouge') ? 'bg-red-100 text-red-800' : 
+                (player.equipe_jaune_rouge === 'jaune' || player.equipe === 'jaune') ? 'bg-yellow-100 text-yellow-800' : 
+                (player.equipe_jaune_rouge === 'rouge' || player.equipe === 'rouge') ? 'bg-red-100 text-red-800' : 
                 'bg-gray-100 text-gray-800'
               }>
-                {((player as any).equipe_jaune_rouge || player.equipe) ? `Équipe ${(player as any).equipe_jaune_rouge || player.equipe}` : 'Sans équipe'}
+                {(player.equipe_jaune_rouge || player.equipe) ? `Équipe ${player.equipe_jaune_rouge || player.equipe}` : 'Sans équipe'}
               </Badge>
                       <Badge variant="outline">
                         {player.telephone}

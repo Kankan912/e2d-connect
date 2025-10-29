@@ -9,11 +9,17 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { ExportService } from '@/lib/exportService';
 
+interface PrevisionData {
+  mois: string;
+  prevue: number;
+  actuelle: number;
+}
+
 export default function CotisationsSimulation() {
   const [montantActuel, setMontantActuel] = useState(5000);
   const [nouveauMontant, setNouveauMontant] = useState(6000);
   const [nombreMembres, setNombreMembres] = useState(0);
-  const [previsions, setPrevisions] = useState<any[]>([]);
+  const [previsions, setPrevisions] = useState<PrevisionData[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -29,8 +35,13 @@ export default function CotisationsSimulation() {
 
       if (error) throw error;
       setNombreMembres(count || 0);
-    } catch (error) {
-      console.error('Erreur chargement membres:', error);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
+      toast({
+        title: "Erreur",
+        description: "Erreur chargement membres: " + errorMessage,
+        variant: "destructive"
+      });
     }
   };
 

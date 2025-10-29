@@ -55,7 +55,7 @@ export default function BeneficiairesReunionManager({ reunionId }: Props) {
 
   const loadBeneficiaires = async () => {
     try {
-      let query = (supabase as any)
+      let query = supabase
         .from('reunion_beneficiaires')
         .select(`
           *,
@@ -77,10 +77,11 @@ export default function BeneficiairesReunionManager({ reunionId }: Props) {
       const { data, error } = await query;
       if (error) throw error;
       setBeneficiaires(data || []);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
       toast({
         title: "Erreur",
-        description: "Impossible de charger les bénéficiaires: " + error.message,
+        description: "Impossible de charger les bénéficiaires: " + errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -92,7 +93,7 @@ export default function BeneficiairesReunionManager({ reunionId }: Props) {
     if (!confirm('Confirmer le paiement de ce bénéficiaire ?')) return;
 
     try {
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from('reunion_beneficiaires')
         .update({
           statut: 'paye',
@@ -108,10 +109,11 @@ export default function BeneficiairesReunionManager({ reunionId }: Props) {
       });
 
       loadBeneficiaires();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
       toast({
         title: "Erreur",
-        description: "Impossible de confirmer le paiement: " + error.message,
+        description: "Impossible de confirmer le paiement: " + errorMessage,
         variant: "destructive",
       });
     }

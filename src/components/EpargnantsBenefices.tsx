@@ -19,12 +19,29 @@ interface EpargnantData {
   gains_estimes: number;
 }
 
+interface Exercice {
+  id: string;
+  nom: string;
+  date_debut: string;
+  date_fin: string;
+  statut: string;
+}
+
+interface EpargneWithMembre {
+  montant: number;
+  membre_id: string;
+  membres: {
+    nom: string;
+    prenom: string;
+  };
+}
+
 export default function EpargnantsBenefices() {
   const [epargnants, setEpargnants] = useState<EpargnantData[]>([]);
   const [totalInteretsPrets, setTotalInteretsPrets] = useState(0);
   const [totalEpargnes, setTotalEpargnes] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [exercices, setExercices] = useState<any[]>([]);
+  const [exercices, setExercices] = useState<Exercice[]>([]);
   const [selectedExercice, setSelectedExercice] = useState<string>('all');
   const { toast } = useToast();
 
@@ -45,8 +62,13 @@ export default function EpargnantsBenefices() {
 
       if (error) throw error;
       setExercices(data || []);
-    } catch (error) {
-      console.error('Erreur chargement exercices:', error);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
+      toast({
+        title: "Erreur",
+        description: "Erreur chargement exercices: " + errorMessage,
+        variant: "destructive"
+      });
     }
   };
 
@@ -89,7 +111,7 @@ export default function EpargnantsBenefices() {
         total: number;
       }>();
 
-      epargnesData?.forEach((epargne: any) => {
+      epargnesData?.forEach((epargne: EpargneWithMembre) => {
         const membre = epargnantesMap.get(epargne.membre_id) || {
           nom: epargne.membres.nom,
           prenom: epargne.membres.prenom,
@@ -122,11 +144,11 @@ export default function EpargnantsBenefices() {
 
       setEpargnants(epargnantsList);
 
-    } catch (error: any) {
-      console.error('Erreur chargement bénéfices:', error);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
       toast({
         title: "Erreur",
-        description: "Impossible de charger les données des épargnants",
+        description: "Impossible de charger les données: " + errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -173,10 +195,11 @@ export default function EpargnantsBenefices() {
         title: "Succès",
         description: "Export PDF généré avec succès",
       });
-    } catch (error) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
       toast({
         title: "Erreur",
-        description: "Impossible d'exporter le PDF",
+        description: "Erreur export PDF: " + errorMessage,
         variant: "destructive",
       });
     }

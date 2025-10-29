@@ -79,7 +79,7 @@ export default function PhoenixCompositionsManager() {
     queryFn: async () => {
       if (!selectedMatch?.id) return [];
       const { data, error } = await supabase
-        .from('phoenix_compositions' as any)
+        .from('phoenix_compositions')
         .select(`
           *,
           membres:membre_id (
@@ -89,15 +89,15 @@ export default function PhoenixCompositionsManager() {
         `)
         .eq('match_id', selectedMatch.id);
       if (error) throw error;
-      return data as any;
+      return data as Composition[];
     },
     enabled: !!selectedMatch?.id
   });
 
   const addCompositionMutation = useMutation({
-    mutationFn: async (data: any) => {
+    mutationFn: async (data: typeof compositionForm) => {
       const { error } = await supabase
-        .from('phoenix_compositions' as any)
+        .from('phoenix_compositions')
         .insert([{
           match_id: selectedMatch?.id,
           ...data
@@ -114,7 +114,7 @@ export default function PhoenixCompositionsManager() {
   const deleteCompositionMutation = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase
-        .from('phoenix_compositions' as any)
+        .from('phoenix_compositions')
         .delete()
         .eq('id', id);
       if (error) throw error;

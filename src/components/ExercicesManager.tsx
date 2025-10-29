@@ -49,11 +49,12 @@ export default function ExercicesManager() {
         .order('date_debut', { ascending: false });
 
       if (error) throw error;
-      setExercices((data || []) as any);
-    } catch (error: any) {
+      setExercices((data || []) as Exercice[]);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
       toast({
         title: "Erreur",
-        description: "Impossible de charger les exercices: " + error.message,
+        description: "Impossible de charger les exercices: " + errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -110,10 +111,11 @@ export default function ExercicesManager() {
         statut: 'actif'
       });
       loadExercices();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
       toast({
         title: "Erreur",
-        description: "Impossible d'enregistrer l'exercice: " + error.message,
+        description: "Impossible d'enregistrer: " + errorMessage,
         variant: "destructive",
       });
     }
@@ -134,10 +136,11 @@ export default function ExercicesManager() {
       });
 
       loadExercices();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
       toast({
         title: "Erreur",
-        description: "Impossible de clôturer l'exercice: " + error.message,
+        description: "Impossible de clôturer: " + errorMessage,
         variant: "destructive",
       });
     }

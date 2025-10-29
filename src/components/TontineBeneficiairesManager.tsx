@@ -92,7 +92,11 @@ export default function TontineBeneficiairesManager() {
       if (error) throw error;
 
       // Group by membre and sum amounts
-      const grouped = data.reduce((acc: any, cotisation: any) => {
+      const grouped = data.reduce((acc: Record<string, CotisationMensuelle>, cotisation: {
+        membre_id: string;
+        montant: number;
+        membres: { nom: string; prenom: string };
+      }) => {
         const membreId = cotisation.membre_id;
         if (!acc[membreId]) {
           acc[membreId] = {
@@ -200,11 +204,11 @@ export default function TontineBeneficiairesManager() {
       queryClient.invalidateQueries({ queryKey: ['attributions'] });
       queryClient.invalidateQueries({ queryKey: ['historique-attributions'] });
     },
-    onError: (error) => {
-      console.error('Erreur lors de la sauvegarde:', error);
+    onError: (error: unknown) => {
+      const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
       toast({
         title: "Erreur",
-        description: "Erreur lors de la sauvegarde des attributions.",
+        description: "Erreur lors de la sauvegarde: " + errorMessage,
         variant: "destructive"
       });
     }
@@ -230,7 +234,22 @@ export default function TontineBeneficiairesManager() {
   };
 
   // Group historical data by month/year
-  const historiqueGrouped = historique?.reduce((acc: any, attr: any) => {
+  interface HistoriqueGroup {
+    mois: number;
+    annee: number;
+    total_cotisations: number;
+    beneficiaires: Array<{ nom: string; montant: number }>;
+  }
+
+  interface AttributionWithMembres {
+    mois: number;
+    annee: number;
+    total_cotisations_mois: number;
+    montant_attribue: number;
+    membres: { nom: string; prenom: string } | null;
+  }
+  
+  const historiqueGrouped = historique?.reduce((acc, attr) => {
     const key = `${attr.mois}-${attr.annee}`;
     if (!acc[key]) {
       acc[key] = {
@@ -240,12 +259,19 @@ export default function TontineBeneficiairesManager() {
         beneficiaires: []
       };
     }
-    acc[key].beneficiaires.push({
-      nom: `${attr.membres.nom} ${attr.membres.prenom}`,
-      montant: attr.montant_attribue
-    });
+    // Vérifier que membres existe et a les propriétés requises
+    if (attr.membres && 'nom' in attr.membres && 'prenom' in attr.membres) {
+      const membreNom = attr.membres.nom;
+      const membrePrenom = attr.membres.prenom;
+      if (typeof membreNom === 'string' && typeof membrePrenom === 'string') {
+        acc[key].beneficiaires.push({
+          nom: `${membreNom} ${membrePrenom}`,
+          montant: attr.montant_attribue
+        });
+      }
+    }
     return acc;
-  }, {}) || {};
+  }, {} as Record<string, HistoriqueGroup>) || {};
 
   return (
     <div className="space-y-6">
