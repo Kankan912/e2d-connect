@@ -6,6 +6,7 @@ import { Calendar, Trophy, Users, Clock, MapPin, Plus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import LogoHeader from '@/components/LogoHeader';
+import { logger } from '@/lib/logger';
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, isToday } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useRealtimeUpdates } from '@/hooks/useRealtimeUpdates';
@@ -103,10 +104,15 @@ export default function CalendrierSportifUnifie() {
       ];
 
       setEvents(allEvents);
-    } catch (error) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Impossible de charger le calendrier sportif';
+      logger.error('Erreur chargement calendrier sportif unifié', error as Error, {
+        component: 'CalendrierSportifUnifie',
+        data: { date: currentDate.toISOString() }
+      });
       toast({ 
         title: 'Erreur', 
-        description: 'Impossible de charger le calendrier sportif',
+        description: errorMessage,
         variant: 'destructive' 
       });
     } finally {

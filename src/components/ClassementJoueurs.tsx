@@ -8,6 +8,7 @@ import { Trophy, Target, Users, Award, Star, TrendingUp, Calendar, Medal, Zap } 
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import LogoHeader from '@/components/LogoHeader';
+import { logger } from '@/lib/logger';
 
 interface PlayerStats {
   id: string;
@@ -205,10 +206,15 @@ export default function ClassementJoueurs() {
       });
 
       setPlayerStats(playersArray);
-    } catch (error) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Impossible de charger les statistiques des joueurs';
+      logger.error('Erreur chargement classement joueurs', error as Error, {
+        component: 'ClassementJoueurs',
+        data: { periode: selectedPeriod }
+      });
       toast({ 
         title: 'Erreur', 
-        description: 'Impossible de charger les statistiques des joueurs',
+        description: errorMessage,
         variant: 'destructive' 
       });
     } finally {

@@ -7,6 +7,7 @@ import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Cart
 import { Trophy, TrendingUp, Users, Target, Award, Activity } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { logger } from '@/lib/logger';
 
 interface PlayerPerformance {
   player_name: string;
@@ -162,10 +163,15 @@ export default function SportAnalyticsAvancees() {
 
       setMonthlyTrends(trends);
 
-    } catch (error) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Impossible de charger les analytics';
+      logger.error('Erreur chargement analytics sportives avancées', error as Error, {
+        component: 'SportAnalyticsAvancees',
+        data: { periode: selectedPeriod, equipe: selectedTeam }
+      });
       toast({
         title: 'Erreur',
-        description: 'Impossible de charger les analytics',
+        description: errorMessage,
         variant: 'destructive'
       });
     } finally {

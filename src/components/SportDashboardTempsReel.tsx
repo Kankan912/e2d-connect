@@ -7,6 +7,7 @@ import { Trophy, TrendingUp, TrendingDown, AlertTriangle, Users, Target, Activit
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useRealtimeUpdates } from '@/hooks/useRealtimeUpdates';
+import { logger } from '@/lib/logger';
 
 interface SportKPI {
   label: string;
@@ -277,10 +278,14 @@ export default function SportDashboardTempsReel() {
 
       setObjectives(teamObjectives);
 
-    } catch (error) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Impossible de charger le dashboard';
+      logger.error('Erreur chargement dashboard sport temps réel', error as Error, {
+        component: 'SportDashboardTempsReel'
+      });
       toast({
         title: 'Erreur',
-        description: 'Impossible de charger le dashboard',
+        description: errorMessage,
         variant: 'destructive'
       });
     } finally {
