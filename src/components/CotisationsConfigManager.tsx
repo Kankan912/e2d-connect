@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { DollarSign, Calendar, TrendingUp, Wallet, Users, Calculator } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { DollarSign, Calendar, TrendingUp, Wallet, Users, Calculator, AlertCircle } from "lucide-react";
 import CotisationsMembresManager from "./CotisationsMembresManager";
 import CotisationsTypesManager from './CotisationsTypesManager';
 import CotisationsEcheancesConfig from './CotisationsEcheancesConfig';
 import CotisationsSimulation from './CotisationsSimulation';
+import PhoenixCotisationsAnnuelles from './PhoenixCotisationsAnnuelles';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -112,12 +114,22 @@ export default function CotisationsConfigManager() {
         </Card>
       </div>
 
+      {/* Note explicative */}
+      <Alert>
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription>
+          <strong>E2D (Minimales/Types/Échéances)</strong> : Cotisations des réunions mensuelles
+          <br />
+          <strong>Phoenix (Sport)</strong> : Cotisations annuelles de l'équipe sportive
+        </AlertDescription>
+      </Alert>
+
       {/* Configuration par catégorie */}
       <Tabs defaultValue="mensuelles" className="space-y-6">
         <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="mensuelles">
             <DollarSign className="w-4 h-4 mr-2" />
-            Minimales
+            Minimales (E2D)
           </TabsTrigger>
           <TabsTrigger value="types">
             <Users className="w-4 h-4 mr-2" />
@@ -133,7 +145,7 @@ export default function CotisationsConfigManager() {
           </TabsTrigger>
           <TabsTrigger value="annuelles">
             <TrendingUp className="w-4 h-4 mr-2" />
-            Annuelles
+            Phoenix (Sport)
           </TabsTrigger>
         </TabsList>
 
@@ -154,14 +166,7 @@ export default function CotisationsConfigManager() {
         </TabsContent>
 
         <TabsContent value="annuelles" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Cotisations Annuelles</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">Configuration des cotisations annuelles en cours de développement.</p>
-            </CardContent>
-          </Card>
+          <PhoenixCotisationsAnnuelles />
         </TabsContent>
       </Tabs>
     </div>
