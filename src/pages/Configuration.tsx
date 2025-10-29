@@ -117,13 +117,9 @@ export default function Configuration() {
             <Settings className="h-4 w-4" />
             Sanctions
           </TabsTrigger>
-          <TabsTrigger value="fond-caisse" className="flex items-center gap-2">
-            <DollarSign className="h-4 w-4" />
-            Fond Caisse
-          </TabsTrigger>
-          <TabsTrigger value="photos" className="flex items-center gap-2">
-            <Users className="h-4 w-4" />
-            Photos
+          <TabsTrigger value="gestion" className="flex items-center gap-2">
+            <Settings className="h-4 w-4" />
+            Gestion
           </TabsTrigger>
           <TabsTrigger value="backup" className="flex items-center gap-2">
             <Database className="h-4 w-4" />
@@ -242,7 +238,8 @@ export default function Configuration() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="fond-caisse" className="space-y-6">
+        <TabsContent value="gestion" className="space-y-6">
+          {/* Fond de Caisse */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -259,9 +256,8 @@ export default function Configuration() {
               </Button>
             </CardContent>
           </Card>
-        </TabsContent>
 
-        <TabsContent value="photos" className="space-y-6">
+          {/* Photos des Membres */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
