@@ -78,7 +78,8 @@ export default function PhoenixAdherentForm({ open, onOpenChange, onSuccess }: P
     setLoading(true);
 
     try {
-      const { error } = await supabase
+      // Insertion dans phoenix_adherents
+      const { error: insertError } = await supabase
         .from('phoenix_adherents')
         .insert([{
           membre_id: formData.membre_id,
@@ -88,7 +89,21 @@ export default function PhoenixAdherentForm({ open, onOpenChange, onSuccess }: P
           adhesion_payee: formData.adhesion_payee,
         }]);
 
-      if (error) throw error;
+      if (insertError) throw insertError;
+
+      // Synchroniser avec la table membres
+      const { error: updateError } = await supabase
+        .from('membres')
+        .update({ 
+          est_adherent_phoenix: true,
+          equipe_phoenix: 'Phoenix'
+        })
+        .eq('id', formData.membre_id);
+
+      if (updateError) {
+        console.error('Erreur synchronisation membres:', updateError);
+        // Ne pas bloquer l'insertion, juste logger
+      }
 
       toast({
         title: "Succès",

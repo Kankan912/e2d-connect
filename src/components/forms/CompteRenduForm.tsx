@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Trash2 } from 'lucide-react';
@@ -159,9 +160,14 @@ export default function CompteRenduForm({
             {fields.map((field, index) => (
               <div key={field.id} className="bg-muted border rounded-lg p-4 space-y-3">
                 <div className="flex items-center justify-between">
-                  <Label className="font-medium text-primary">
-                    Sujet #{index + 1}
-                  </Label>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="default" className="text-lg px-3 py-1">
+                      #{index + 1}
+                    </Badge>
+                    <Label className="font-medium text-primary">
+                      Sujet de l'ordre du jour
+                    </Label>
+                  </div>
                   {fields.length > 1 && (
                     <Button
                       type="button"
@@ -178,7 +184,7 @@ export default function CompteRenduForm({
                   <Label htmlFor={`sujets.${index}.titre`}>Titre du sujet *</Label>
                   <Input
                     {...form.register(`sujets.${index}.titre`)}
-                    placeholder="Ex: Approbation du budget 2024"
+                    placeholder={`${index + 1}. Approbation du budget 2024`}
                   />
                   {form.formState.errors.sujets?.[index]?.titre && (
                     <p className="text-sm text-red-500">
