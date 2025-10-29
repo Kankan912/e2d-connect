@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Trophy, Target, Users, TrendingUp } from 'lucide-react';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 type Periode = 'mois' | 'trimestre' | 'annee';
 
@@ -105,14 +106,13 @@ export default function SportStatistiquesGlobales() {
       setStatsE2D(statsE2DCalculees);
 
       // Stats Phoenix
-      const entrainementsResult = await (supabase as any)
+      const { data: entrainements, error: errorPhoenix } = await supabase
         .from('phoenix_entrainements_internes')
-        .select('*')
-        .eq('type_entrainement', 'jaune_rouge')
+        .select('id, score_jaune, score_rouge, date_entrainement')
         .gte('date_entrainement', startDate)
         .lte('date_entrainement', endDate);
 
-      const entrainements = entrainementsResult.data;
+      if (errorPhoenix) throw errorPhoenix;
 
       const statsPhoenixCalculees: StatsPhoenix = {
         totalEntrainements: entrainements?.length || 0,
@@ -130,12 +130,12 @@ export default function SportStatistiquesGlobales() {
       });
 
       // Calculer les membres réguliers (présence > 80%)
-      const presencesResult = await (supabase as any)
+      const { data: presences, error: errorPresences } = await supabase
         .from('phoenix_presences_entrainement')
         .select('membre_id, present')
-        .in('entrainement_id', entrainements?.map((e: any) => e.id) || []);
+        .in('entrainement_id', entrainements?.map((e) => e.id) || []);
       
-      const presences = presencesResult.data;
+      if (errorPresences) throw errorPresences;
 
       const presenceParMembre: { [key: string]: { total: number; present: number } } = {};
       presences?.forEach((p) => {
@@ -151,9 +151,13 @@ export default function SportStatistiquesGlobales() {
       ).length;
 
       setStatsPhoenix(statsPhoenixCalculees);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
       toast.error('Erreur lors du chargement des statistiques');
-      console.error(error);
+      logger.error('Erreur chargement statistiques sport', error as Error, {
+        component: 'SportStatistiquesGlobales',
+        data: { periode }
+      });
     } finally {
       setLoading(false);
     }

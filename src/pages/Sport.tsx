@@ -115,7 +115,7 @@ export default function Sport() {
   }: {
     title: string;
     value: string | number;
-    icon: any;
+    icon: React.ElementType;
     color?: string;
     onClick?: () => void;
   }) => (

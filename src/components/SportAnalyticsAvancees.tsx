@@ -218,7 +218,7 @@ export default function SportAnalyticsAvancees() {
 
             <div className="space-y-2">
               <label className="text-sm font-medium">Équipe</label>
-              <Select value={selectedTeam} onValueChange={(v) => setSelectedTeam(v as any)}>
+              <Select value={selectedTeam} onValueChange={(v) => setSelectedTeam(v as 'all' | 'e2d' | 'phoenix')}>
                 <SelectTrigger className="w-32">
                   <SelectValue />
                 </SelectTrigger>

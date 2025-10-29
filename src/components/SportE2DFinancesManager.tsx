@@ -49,6 +49,20 @@ interface Depense {
   justificatif_url?: string;
 }
 
+interface RecetteFormData {
+  libelle: string;
+  montant: string;
+  date_recette: string;
+  notes: string;
+}
+
+interface DepenseFormData {
+  libelle: string;
+  montant: string;
+  date_depense: string;
+  justificatif_url: string;
+}
+
 export default function SportE2DFinancesManager() {
   const [recetteDialogOpen, setRecetteDialogOpen] = useState(false);
   const [depenseDialogOpen, setDepenseDialogOpen] = useState(false);
@@ -108,7 +122,7 @@ export default function SportE2DFinancesManager() {
   });
 
   const createRecetteMutation = useMutation({
-    mutationFn: async (recetteData: any) => {
+    mutationFn: async (recetteData: RecetteFormData) => {
       const { error } = await supabase
         .from('sport_e2d_recettes')
         .insert([{
@@ -131,17 +145,18 @@ export default function SportE2DFinancesManager() {
         notes: ''
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
       toast({
         title: "Erreur",
-        description: "Impossible d'ajouter la recette: " + error.message,
+        description: "Impossible d'ajouter la recette: " + errorMessage,
         variant: "destructive",
       });
     }
   });
 
   const createDepenseMutation = useMutation({
-    mutationFn: async (depenseData: any) => {
+    mutationFn: async (depenseData: DepenseFormData) => {
       const { error } = await supabase
         .from('sport_e2d_depenses')
         .insert([{
@@ -164,10 +179,11 @@ export default function SportE2DFinancesManager() {
         justificatif_url: ''
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
       toast({
         title: "Erreur",
-        description: "Impossible d'ajouter la dépense: " + error.message,
+        description: "Impossible d'ajouter la dépense: " + errorMessage,
         variant: "destructive",
       });
     }

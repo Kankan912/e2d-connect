@@ -29,6 +29,34 @@ interface Depense {
   justificatif_url?: string;
 }
 
+interface RecetteFormData {
+  libelle: string;
+  montant: string;
+  date_recette: string;
+  notes: string;
+}
+
+interface DepenseFormData {
+  libelle: string;
+  montant: string;
+  date_depense: string;
+  justificatif_url: string;
+}
+
+interface RecetteInsertData {
+  libelle: string;
+  montant: number;
+  date_recette: string;
+  notes: string | null;
+}
+
+interface DepenseInsertData {
+  libelle: string;
+  montant: number;
+  date_depense: string;
+  justificatif_url: string | null;
+}
+
 export default function SportPhoenixFinancesManager() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -91,7 +119,7 @@ export default function SportPhoenixFinancesManager() {
 
   // Mutations
   const createRecetteMutation = useMutation({
-    mutationFn: async (newRecette: any) => {
+    mutationFn: async (newRecette: RecetteInsertData) => {
       const { error } = await supabase
         .from('sport_phoenix_recettes')
         .insert([newRecette]);
@@ -108,17 +136,18 @@ export default function SportPhoenixFinancesManager() {
         notes: ""
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
       toast({
         title: "Erreur",
-        description: error.message,
+        description: errorMessage,
         variant: "destructive"
       });
     }
   });
 
   const createDepenseMutation = useMutation({
-    mutationFn: async (newDepense: any) => {
+    mutationFn: async (newDepense: DepenseInsertData) => {
       const { error } = await supabase
         .from('sport_phoenix_depenses')
         .insert([newDepense]);
@@ -135,10 +164,11 @@ export default function SportPhoenixFinancesManager() {
         justificatif_url: ""
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
       toast({
         title: "Erreur",
-        description: error.message,
+        description: errorMessage,
         variant: "destructive"
       });
     }
