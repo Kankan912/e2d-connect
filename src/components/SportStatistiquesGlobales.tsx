@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
-import { Trophy, Target, Users, TrendingUp } from 'lucide-react';
+import { Trophy, Target, Users, TrendingUp, Activity, Plus, FileX } from 'lucide-react';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { toast } from 'sonner';
 import { logger } from '@/lib/logger';
+import { useNavigate } from 'react-router-dom';
 
 type Periode = 'mois' | 'trimestre' | 'annee';
 
@@ -43,6 +45,7 @@ export default function SportStatistiquesGlobales() {
     membresReguliers: 0,
   });
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     loadStats();
@@ -205,7 +208,23 @@ export default function SportStatistiquesGlobales() {
         </TabsList>
 
         <TabsContent value="e2d" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-3">
+          {statsE2D.totalMatchs === 0 ? (
+            <Card className="border-dashed">
+              <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+                <FileX className="h-12 w-12 text-muted-foreground mb-4" />
+                <h3 className="text-lg font-semibold mb-2">Aucun match E2D enregistré</h3>
+                <p className="text-sm text-muted-foreground mb-4 max-w-md">
+                  Commencez à suivre vos performances sportives en ajoutant votre premier match E2D pour cette période.
+                </p>
+                <Button onClick={() => navigate('/sport-e2d')}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Ajouter un match E2D
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <>
+              <div className="grid gap-4 md:grid-cols-3">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total Matchs</CardTitle>
@@ -276,10 +295,28 @@ export default function SportStatistiquesGlobales() {
               </div>
             </CardContent>
           </Card>
+            </>
+          )}
         </TabsContent>
 
         <TabsContent value="phoenix" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-3">
+          {statsPhoenix.totalEntrainements === 0 ? (
+            <Card className="border-dashed">
+              <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+                <Activity className="h-12 w-12 text-muted-foreground mb-4" />
+                <h3 className="text-lg font-semibold mb-2">Aucun entraînement Phoenix enregistré</h3>
+                <p className="text-sm text-muted-foreground mb-4 max-w-md">
+                  Suivez l'activité de votre équipe Phoenix en enregistrant votre premier entraînement pour cette période.
+                </p>
+                <Button onClick={() => navigate('/sport-phoenix')}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Ajouter un entraînement
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <>
+              <div className="grid gap-4 md:grid-cols-3">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total Entraînements</CardTitle>
@@ -332,6 +369,8 @@ export default function SportStatistiquesGlobales() {
               </ResponsiveContainer>
             </CardContent>
           </Card>
+            </>
+          )}
         </TabsContent>
       </Tabs>
     </div>

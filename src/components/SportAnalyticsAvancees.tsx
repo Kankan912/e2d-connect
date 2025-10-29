@@ -3,8 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts';
-import { Trophy, TrendingUp, Users, Target, Award, Activity } from 'lucide-react';
+import { Trophy, TrendingUp, Users, Target, Award, Activity, AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { logger } from '@/lib/logger';
@@ -238,6 +239,15 @@ export default function SportAnalyticsAvancees() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Badge Données Simulées */}
+      <Alert className="border-amber-500/50 bg-amber-50 dark:bg-amber-950/20">
+        <AlertCircle className="h-4 w-4 text-amber-600" />
+        <AlertDescription className="text-amber-800 dark:text-amber-200">
+          <span className="font-medium">Note :</span> Les données de "Tendance de Forme" et les "Tendances Mensuelles" sont partiellement simulées. 
+          Les autres statistiques proviennent de vos matchs réels.
+        </AlertDescription>
+      </Alert>
 
       <Tabs defaultValue="performance" className="space-y-4">
         <TabsList className="grid w-full grid-cols-4">

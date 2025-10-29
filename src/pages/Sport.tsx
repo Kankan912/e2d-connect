@@ -252,89 +252,123 @@ export default function Sport() {
         </div>
       )}
 
-      {/* Onglets de navigation */}
-      <Tabs defaultValue="dashboard" className="w-full">
-        <TabsList className="grid w-full grid-cols-5 lg:grid-cols-10">
-          <TabsTrigger value="dashboard" className="flex items-center gap-1">
+      {/* Onglets de navigation - Structure à 2 niveaux */}
+      <Tabs defaultValue="vue-ensemble" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 gap-2">
+          <TabsTrigger value="vue-ensemble" className="flex items-center gap-2">
             <Gauge className="w-4 h-4" />
-            Dashboard
+            <span className="hidden sm:inline">Vue d'Ensemble</span>
+            <span className="sm:hidden">Accueil</span>
           </TabsTrigger>
-          <TabsTrigger value="analytics" className="flex items-center gap-1">
-            <BarChart3 className="w-4 h-4" />
-            Analytics
-          </TabsTrigger>
-          <TabsTrigger value="stats" className="flex items-center gap-1">
-            <TrendingUp className="w-4 h-4" />
-            Stats Globales
-          </TabsTrigger>
-          <TabsTrigger value="presences" className="flex items-center gap-1">
-            <Users className="w-4 h-4" />
-            Présences
-          </TabsTrigger>
-          <TabsTrigger value="calendrier" className="flex items-center gap-1">
-            <Calendar className="w-4 h-4" />
-            Calendrier
-          </TabsTrigger>
-          <TabsTrigger value="resultats" className="flex items-center gap-1">
-            <Trophy className="w-4 h-4" />
-            Résultats
-          </TabsTrigger>
-          <TabsTrigger value="statistiques" className="flex items-center gap-1">
-            <TrendingUp className="w-4 h-4" />
-            Statistiques
-          </TabsTrigger>
-          <TabsTrigger value="classements" className="flex items-center gap-1">
-            <Trophy className="w-4 h-4" />
-            Classements
-          </TabsTrigger>
-          <TabsTrigger value="e2d" className="flex items-center gap-1">
+          <TabsTrigger value="e2d" className="flex items-center gap-2">
             <Target className="w-4 h-4" />
             E2D
           </TabsTrigger>
-          <TabsTrigger value="phoenix" className="flex items-center gap-1">
+          <TabsTrigger value="phoenix" className="flex items-center gap-2">
             <Activity className="w-4 h-4" />
             Phoenix
           </TabsTrigger>
+          <TabsTrigger value="analytics" className="flex items-center gap-2">
+            <BarChart3 className="w-4 h-4" />
+            Analytics
+          </TabsTrigger>
+          <TabsTrigger value="gestion" className="flex items-center gap-2">
+            <Users className="w-4 h-4" />
+            Gestion
+          </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="dashboard" className="mt-6">
-          <SportDashboardTempsReel />
+        {/* Vue d'Ensemble - Dashboard + Stats Globales + Calendrier */}
+        <TabsContent value="vue-ensemble" className="mt-6 space-y-6">
+          <div className="grid gap-4 md:grid-cols-3">
+            <Button
+              variant="outline"
+              className="h-20 flex-col gap-2"
+              onClick={() => {}}
+            >
+              <Gauge className="w-6 h-6" />
+              <span className="text-sm">Dashboard Temps Réel</span>
+            </Button>
+            <Button
+              variant="outline"
+              className="h-20 flex-col gap-2"
+              onClick={() => {}}
+            >
+              <TrendingUp className="w-6 h-6" />
+              <span className="text-sm">Statistiques Globales</span>
+            </Button>
+            <Button
+              variant="outline"
+              className="h-20 flex-col gap-2"
+              onClick={() => {}}
+            >
+              <Calendar className="w-6 h-6" />
+              <span className="text-sm">Calendrier Unifié</span>
+            </Button>
+          </div>
+
+          <Tabs defaultValue="dashboard-sub" className="w-full">
+            <TabsList className="w-full justify-start">
+              <TabsTrigger value="dashboard-sub">Dashboard</TabsTrigger>
+              <TabsTrigger value="stats-sub">Stats Globales</TabsTrigger>
+              <TabsTrigger value="calendrier-sub">Calendrier</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="dashboard-sub" className="mt-6">
+              <SportDashboardTempsReel />
+            </TabsContent>
+
+            <TabsContent value="stats-sub" className="mt-6">
+              <SportStatistiquesGlobales />
+            </TabsContent>
+
+            <TabsContent value="calendrier-sub" className="mt-6">
+              <CalendrierSportifUnifie />
+            </TabsContent>
+          </Tabs>
         </TabsContent>
 
+        {/* E2D - Matchs + Résultats + Stats */}
+        <TabsContent value="e2d" className="mt-6">
+          <Tabs defaultValue="e2d-gestion" className="w-full">
+            <TabsList className="w-full justify-start">
+              <TabsTrigger value="e2d-gestion">Gestion E2D</TabsTrigger>
+              <TabsTrigger value="e2d-resultats">Résultats</TabsTrigger>
+              <TabsTrigger value="e2d-stats">Statistiques</TabsTrigger>
+              <TabsTrigger value="e2d-classements">Classements</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="e2d-gestion" className="mt-6">
+              <SportE2D />
+            </TabsContent>
+
+            <TabsContent value="e2d-resultats" className="mt-6">
+              <MatchResults />
+            </TabsContent>
+
+            <TabsContent value="e2d-stats" className="mt-6">
+              <StatsMatchDetaillee />
+            </TabsContent>
+
+            <TabsContent value="e2d-classements" className="mt-6">
+              <ClassementJoueurs />
+            </TabsContent>
+          </Tabs>
+        </TabsContent>
+
+        {/* Phoenix - Gestion */}
+        <TabsContent value="phoenix" className="mt-6">
+          <SportPhoenix />
+        </TabsContent>
+
+        {/* Analytics - Analytics Avancées */}
         <TabsContent value="analytics" className="mt-6">
           <SportAnalyticsAvancees />
         </TabsContent>
 
-        <TabsContent value="stats" className="mt-6">
-          <SportStatistiquesGlobales />
-        </TabsContent>
-
-        <TabsContent value="presences" className="mt-6">
+        {/* Gestion - Présences */}
+        <TabsContent value="gestion" className="mt-6">
           <GestionPresences />
-        </TabsContent>
-
-        <TabsContent value="calendrier" className="mt-6">
-          <CalendrierSportifUnifie />
-        </TabsContent>
-
-        <TabsContent value="resultats" className="mt-6">
-          <MatchResults />
-        </TabsContent>
-
-        <TabsContent value="statistiques" className="mt-6">
-          <StatsMatchDetaillee />
-        </TabsContent>
-
-        <TabsContent value="classements" className="mt-6">
-          <ClassementJoueurs />
-        </TabsContent>
-
-        <TabsContent value="e2d" className="mt-6">
-          <SportE2D />
-        </TabsContent>
-
-        <TabsContent value="phoenix" className="mt-6">
-          <SportPhoenix />
         </TabsContent>
       </Tabs>
     </div>
