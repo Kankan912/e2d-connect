@@ -135,12 +135,13 @@ export const SystemeNotifications: React.FC = () => {
 
   const handleSaveConfig = async (configData: Partial<NotificationConfig>) => {
     try {
-      if (editingConfig) {
-        // Mise à jour
+      if (editingConfig && configData.id) {
+        // Mise à jour - utiliser l'ID reçu dans configData
+        const { id, ...updateData } = configData;
         const { error } = await supabase
           .from('notifications_config')
-          .update(configData)
-          .eq('id', editingConfig.id);
+          .update(updateData)
+          .eq('id', id);
 
         if (error) throw error;
         
@@ -573,6 +574,7 @@ const NotificationConfigForm: React.FC<{
   onSave: (config: Partial<NotificationConfig>) => void;
   onCancel: () => void;
 }> = ({ config, templates, onSave, onCancel }) => {
+  const { toast } = useToast();
   const [formData, setFormData] = useState({
     type_notification: config?.type_notification || '',
     delai_jours: config?.delai_jours || 7,
@@ -585,6 +587,17 @@ const NotificationConfigForm: React.FC<{
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validation
+    if (!formData.type_notification) {
+      toast({
+        title: "Erreur",
+        description: "Le type de notification est requis.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     // Inclure l'ID si on édite une configuration existante
     onSave(config?.id ? { ...formData, id: config.id } : formData);
   };
@@ -625,7 +638,7 @@ const NotificationConfigForm: React.FC<{
           type="number"
           min="1"
           value={formData.delai_jours}
-          onChange={(e) => setFormData({...formData, delai_jours: parseInt(e.target.value)})}
+          onChange={(e) => setFormData({...formData, delai_jours: parseInt(e.target.value) || 1})}
         />
       </div>
 
