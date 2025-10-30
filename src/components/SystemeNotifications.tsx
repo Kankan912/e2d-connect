@@ -585,7 +585,8 @@ const NotificationConfigForm: React.FC<{
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
+    // Inclure l'ID si on édite une configuration existante
+    onSave(config?.id ? { ...formData, id: config.id } : formData);
   };
 
   return (
