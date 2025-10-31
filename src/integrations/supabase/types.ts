@@ -1032,6 +1032,51 @@ export type Database = {
         }
         Relationships: []
       }
+      notifications_templates: {
+        Row: {
+          actif: boolean | null
+          categorie: string
+          code: string
+          created_at: string | null
+          description: string | null
+          email_expediteur: string | null
+          id: string
+          nom: string
+          template_contenu: string
+          template_sujet: string
+          updated_at: string | null
+          variables_disponibles: Json | null
+        }
+        Insert: {
+          actif?: boolean | null
+          categorie: string
+          code: string
+          created_at?: string | null
+          description?: string | null
+          email_expediteur?: string | null
+          id?: string
+          nom: string
+          template_contenu: string
+          template_sujet: string
+          updated_at?: string | null
+          variables_disponibles?: Json | null
+        }
+        Update: {
+          actif?: boolean | null
+          categorie?: string
+          code?: string
+          created_at?: string | null
+          description?: string | null
+          email_expediteur?: string | null
+          id?: string
+          nom?: string
+          template_contenu?: string
+          template_sujet?: string
+          updated_at?: string | null
+          variables_disponibles?: Json | null
+        }
+        Relationships: []
+      }
       phoenix_adherents: {
         Row: {
           adhesion_payee: boolean | null

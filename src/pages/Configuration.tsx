@@ -25,6 +25,7 @@ import TontineConfigManager from "@/components/TontineConfigManager";
 import SanctionsTarifsManager from "@/components/SanctionsTarifsManager";
 import CotisationsConfigManager from "@/components/CotisationsConfigManager";
 import HistoriqueBeneficiaires from "@/components/HistoriqueBeneficiaires";
+import NotificationsTemplatesManager from "@/components/NotificationsTemplatesManager";
 
 export default function Configuration() {
   const { toast } = useToast();
@@ -214,6 +215,7 @@ export default function Configuration() {
 
         <TabsContent value="notifications" className="space-y-6">
           <div className="space-y-6">
+            <NotificationsTemplatesManager />
             <SystemeNotifications />
             <SMTPConfigManager />
             <NotificationsHistorique />
