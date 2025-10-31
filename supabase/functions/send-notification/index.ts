@@ -41,20 +41,20 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Récupérer le template de notification
-    const { data: notifConfig, error: notifError } = await supabase
-      .from('notifications_config')
+    const { data: template, error: templateError } = await supabase
+      .from('notifications_templates')
       .select('*')
-      .eq('type_notification', type_notification)
+      .eq('code', type_notification)
       .eq('actif', true)
       .single();
 
-    if (notifError || !notifConfig) {
-      throw new Error(`Configuration de notification ${type_notification} non trouvée ou inactive`);
+    if (templateError || !template) {
+      throw new Error(`Template de notification '${type_notification}' non trouvé ou inactif`);
     }
 
     // Remplacer les variables dans le sujet et le contenu
-    let sujet = notifConfig.template_sujet || '';
-    let contenu = notifConfig.template_contenu || '';
+    let sujet = template.sujet || '';
+    let contenu = template.contenu || '';
 
     Object.keys(variables).forEach(key => {
       const regex = new RegExp(`{{${key}}}`, 'g');
@@ -83,7 +83,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Envoi de l'email
     const mailOptions = {
-      from: smtpConfig.utilisateur_smtp,
+      from: template.email_expediteur || smtpConfig.utilisateur_smtp,
       to: destinataire_email,
       subject: sujet,
       html: `
@@ -125,7 +125,7 @@ const handler = async (req: Request): Promise<Response> => {
           <body>
             <div class="header">
               <h1>📧 ${sujet}</h1>
-              <p>E2D Association</p>
+              <p>E2D Association${template.categorie ? ` - ${template.categorie}` : ''}</p>
             </div>
             
             <div class="content">
