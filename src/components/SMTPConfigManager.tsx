@@ -29,7 +29,8 @@ export default function SMTPConfigManager() {
     utilisateur_smtp: '',
     mot_de_passe_smtp: '',
     encryption_type: 'TLS',
-    actif: false
+    actif: false,
+    email_test: ''
   });
   const { toast } = useToast();
 
@@ -55,7 +56,8 @@ export default function SMTPConfigManager() {
           utilisateur_smtp: data.utilisateur_smtp,
           mot_de_passe_smtp: data.mot_de_passe_smtp,
           encryption_type: data.encryption_type,
-          actif: data.actif
+          actif: data.actif,
+          email_test: ''
         });
       }
     } catch (error: any) {
@@ -135,7 +137,7 @@ export default function SMTPConfigManager() {
           utilisateur_smtp: formData.utilisateur_smtp,
           mot_de_passe_smtp: formData.mot_de_passe_smtp,
           encryption_type: formData.encryption_type,
-          email_test: formData.utilisateur_smtp // Email de test
+          email_test: formData.email_test || formData.utilisateur_smtp
         }
       });
 
@@ -254,6 +256,24 @@ export default function SMTPConfigManager() {
               </Select>
             </div>
             
+            <div className="space-y-2">
+              <Label htmlFor="email_test">Email de test (optionnel)</Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="email_test"
+                  type="email"
+                  placeholder={formData.utilisateur_smtp || "email@exemple.com"}
+                  className="pl-10"
+                  value={formData.email_test}
+                  onChange={(e) => setFormData(prev => ({ ...prev, email_test: e.target.value }))}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Laissez vide pour utiliser l'adresse SMTP configurée
+              </p>
+            </div>
+
             <div className="flex items-center space-x-2">
               <Switch
                 id="actif"

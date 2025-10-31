@@ -1,7 +1,10 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@2.0.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -22,6 +25,8 @@ const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+
+  const supabase = createClient(supabaseUrl, supabaseKey);
 
   try {
     const { reunionId, destinataires, sujet, contenu, dateReunion }: EmailRequest = await req.json();
@@ -122,6 +127,28 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Email envoyé avec succès:", emailResponse);
 
+    // Logger dans l'historique des notifications pour chaque destinataire
+    const notificationLogs = destinataires.map(dest => ({
+      type_notification: 'reunion_cr',
+      destinataire_email: dest,
+      sujet: `📋 Compte-Rendu: ${sujet}`,
+      contenu: contenu,
+      statut: 'envoye',
+      variables_utilisees: {
+        reunionId,
+        dateReunion,
+        sujet,
+      },
+    }));
+
+    const { error: logError } = await supabase
+      .from('notifications_historique')
+      .insert(notificationLogs);
+
+    if (logError) {
+      console.error("Erreur lors du logging des notifications:", logError);
+    }
+
     return new Response(
       JSON.stringify({ 
         success: true, 
@@ -138,6 +165,31 @@ const handler = async (req: Request): Promise<Response> => {
     );
   } catch (error: any) {
     console.error("Erreur lors de l'envoi de l'email:", error);
+    
+    // Logger l'erreur pour chaque destinataire
+    try {
+      const { reunionId, destinataires, sujet, contenu, dateReunion } = await req.json();
+      const errorLogs = destinataires.map((dest: string) => ({
+        type_notification: 'reunion_cr',
+        destinataire_email: dest,
+        sujet: `📋 Compte-Rendu: ${sujet}`,
+        contenu: contenu,
+        statut: 'erreur',
+        erreur_message: error.message,
+        variables_utilisees: {
+          reunionId,
+          dateReunion,
+          sujet,
+        },
+      }));
+
+      await supabase
+        .from('notifications_historique')
+        .insert(errorLogs);
+    } catch (logError) {
+      console.error("Erreur lors du logging de l'erreur:", logError);
+    }
+
     return new Response(
       JSON.stringify({ 
         success: false, 

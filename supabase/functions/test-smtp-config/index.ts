@@ -1,5 +1,9 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import nodemailer from "npm:nodemailer@6.9.7";
+
+const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -21,6 +25,8 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const supabase = createClient(supabaseUrl, supabaseKey);
+
   try {
     const {
       serveur_smtp,
@@ -33,17 +39,15 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log(`Test SMTP: ${serveur_smtp}:${port_smtp}`);
 
-    // Simuler un test de connexion SMTP
-    // En production, vous pourriez utiliser une bibliothèque SMTP comme nodemailer
-    // Pour l'instant, on valide juste les paramètres
-    
+    // Validation des paramètres
     if (!serveur_smtp || !port_smtp || !utilisateur_smtp || !mot_de_passe_smtp) {
       throw new Error("Paramètres SMTP incomplets");
     }
 
     // Validation du format email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (email_test && !emailRegex.test(email_test)) {
+    const destinataireEmail = email_test || utilisateur_smtp;
+    if (!emailRegex.test(destinataireEmail)) {
       throw new Error("Format d'email invalide");
     }
 
@@ -58,22 +62,150 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Type de chiffrement invalide");
     }
 
-    // Simuler un délai de test
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    // Configuration nodemailer
+    const transportConfig: any = {
+      host: serveur_smtp,
+      port: port_smtp,
+      secure: encryption_type === 'SSL',
+      auth: {
+        user: utilisateur_smtp,
+        pass: mot_de_passe_smtp,
+      },
+    };
 
-    // En production, ici vous feriez la vraie connexion SMTP
-    // et l'envoi d'un email de test
+    // Configuration TLS si nécessaire
+    if (encryption_type === 'TLS' || encryption_type === 'NONE') {
+      transportConfig.tls = {
+        rejectUnauthorized: false
+      };
+    }
+
+    const transporter = nodemailer.createTransport(transportConfig);
+
+    // Envoi de l'email de test
+    const mailOptions = {
+      from: utilisateur_smtp,
+      to: destinataireEmail,
+      subject: "🔔 Test de Configuration SMTP - E2D",
+      html: `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <style>
+              body {
+                font-family: Arial, sans-serif;
+                line-height: 1.6;
+                color: #333;
+                max-width: 600px;
+                margin: 0 auto;
+                padding: 20px;
+              }
+              .header {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                padding: 30px;
+                border-radius: 10px 10px 0 0;
+                text-align: center;
+              }
+              .content {
+                background: #ffffff;
+                padding: 30px;
+                border: 1px solid #e0e0e0;
+                border-top: none;
+              }
+              .success-box {
+                background: #d4edda;
+                color: #155724;
+                padding: 15px;
+                border-left: 4px solid #28a745;
+                margin: 20px 0;
+                border-radius: 4px;
+              }
+              .info-list {
+                background: #f5f5f5;
+                padding: 15px;
+                border-radius: 4px;
+                margin: 15px 0;
+              }
+              .footer {
+                text-align: center;
+                padding: 20px;
+                color: #666;
+                font-size: 12px;
+                background: #f9f9f9;
+                border-radius: 0 0 10px 10px;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="header">
+              <h1>✅ Test de Configuration SMTP</h1>
+              <p>E2D Association</p>
+            </div>
+            
+            <div class="content">
+              <div class="success-box">
+                <strong>✓ Succès!</strong> Votre configuration SMTP fonctionne correctement.
+              </div>
+
+              <p>Cet email confirme que votre serveur SMTP est correctement configuré et peut envoyer des emails.</p>
+
+              <div class="info-list">
+                <p><strong>Informations de test:</strong></p>
+                <ul>
+                  <li><strong>Serveur:</strong> ${serveur_smtp}:${port_smtp}</li>
+                  <li><strong>Chiffrement:</strong> ${encryption_type}</li>
+                  <li><strong>Email expéditeur:</strong> ${utilisateur_smtp}</li>
+                  <li><strong>Date du test:</strong> ${new Date().toLocaleString('fr-FR')}</li>
+                </ul>
+              </div>
+
+              <p>Vous pouvez maintenant utiliser cette configuration pour envoyer des notifications automatiques à vos membres.</p>
+            </div>
+
+            <div class="footer">
+              <p>E2D Association - Système de Notifications</p>
+              <p>Cet email a été généré automatiquement lors d'un test de configuration.</p>
+            </div>
+          </body>
+        </html>
+      `,
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log("Email de test envoyé:", info.messageId);
+
+    // Logger dans l'historique des notifications
+    const { error: logError } = await supabase
+      .from('notifications_historique')
+      .insert([{
+        type_notification: 'test_smtp',
+        destinataire_email: destinataireEmail,
+        sujet: "🔔 Test de Configuration SMTP - E2D",
+        contenu: "Email de test de configuration SMTP",
+        statut: 'envoye',
+        variables_utilisees: {
+          serveur: serveur_smtp,
+          port: port_smtp,
+          encryption: encryption_type,
+        },
+      }]);
+
+    if (logError) {
+      console.error("Erreur lors du logging:", logError);
+    }
 
     return new Response(
       JSON.stringify({
         success: true,
-        message: "Connexion SMTP testée avec succès",
+        message: "Email de test envoyé avec succès",
         details: {
           serveur: serveur_smtp,
           port: port_smtp,
           utilisateur: utilisateur_smtp,
           encryption: encryption_type,
-          email_test: email_test || "Non fourni",
+          email_test: destinataireEmail,
+          messageId: info.messageId,
         },
       }),
       {
@@ -86,6 +218,24 @@ const handler = async (req: Request): Promise<Response> => {
     );
   } catch (error: any) {
     console.error("Erreur test SMTP:", error);
+    
+    // Logger l'erreur dans l'historique
+    try {
+      const { serveur_smtp, email_test, utilisateur_smtp } = await req.json();
+      await supabase
+        .from('notifications_historique')
+        .insert([{
+          type_notification: 'test_smtp',
+          destinataire_email: email_test || utilisateur_smtp,
+          sujet: "🔔 Test de Configuration SMTP - E2D",
+          contenu: "Tentative de test SMTP",
+          statut: 'erreur',
+          erreur_message: error.message,
+        }]);
+    } catch (logError) {
+      console.error("Erreur lors du logging de l'erreur:", logError);
+    }
+
     return new Response(
       JSON.stringify({
         success: false,

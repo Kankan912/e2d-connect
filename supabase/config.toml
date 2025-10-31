@@ -82,3 +82,15 @@ verify_jwt = true
 
 [functions.log-connexion]
 verify_jwt = false
+
+[functions.test-smtp-config]
+verify_jwt = false
+
+[functions.send-reunion-cr]
+verify_jwt = false
+
+[functions.send-notification]
+verify_jwt = false
+
+[functions.verify-cotisations-reunions]
+verify_jwt = false
