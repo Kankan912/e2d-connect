@@ -40,13 +40,13 @@ export default function SMTPConfigManager() {
 
   const loadConfig = async () => {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('smtp_config')
         .select('*')
         .limit(1)
-        .single();
+        .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') throw error;
+      if (error) throw error;
       
       if (data) {
         setConfig(data);
@@ -94,11 +94,11 @@ export default function SMTPConfigManager() {
       };
 
       const { error } = config
-        ? await (supabase as any)
+        ? await supabase
             .from('smtp_config')
             .update(configData)
             .eq('id', config.id)
-        : await (supabase as any)
+        : await supabase
             .from('smtp_config')
             .insert([configData]);
 

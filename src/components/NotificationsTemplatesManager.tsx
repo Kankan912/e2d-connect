@@ -82,11 +82,24 @@ export default function NotificationsTemplatesManager() {
 
   // Charger la config SMTP
   useEffect(() => {
+    let isMounted = true;
+    
     const loadSMTPConfig = async () => {
-      const { data } = await supabase.from('smtp_config').select('*').eq('actif', true).limit(1).single();
-      if (data) setSMTPConfig(data);
+      const { data } = await supabase
+        .from('smtp_config')
+        .select('*')
+        .eq('actif', true)
+        .limit(1)
+        .maybeSingle();
+      
+      if (isMounted && data) setSMTPConfig(data);
     };
+    
     loadSMTPConfig();
+    
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Filtrer templates
@@ -252,6 +265,21 @@ export default function NotificationsTemplatesManager() {
       ...prev,
       variables_disponibles: prev.variables_disponibles.filter(v => v !== variable)
     }));
+  };
+
+  const closeTestDialog = () => {
+    setIsTestDialogOpen(false);
+    setTimeout(() => {
+      setTestEmail('');
+      setSelectedTemplate(null);
+    }, 300);
+  };
+
+  const closeEditDialog = () => {
+    setIsDialogOpen(false);
+    setTimeout(() => {
+      resetForm();
+    }, 300);
   };
 
   const previewContent = (template: Template) => {
@@ -561,13 +589,14 @@ export default function NotificationsTemplatesManager() {
                     </p>
                   ) : (
                     <div className="flex flex-wrap gap-2">
-                      {formData.variables_disponibles.map(v => (
-                        <Badge key={v} variant="secondary" className="text-sm py-1 px-3">
+                      {formData.variables_disponibles.map((v, index) => (
+                        <Badge key={`${v}-${index}`} variant="secondary" className="text-sm py-1 px-3">
                           {`{{${v}}}`}
                           <button
                             type="button"
                             onClick={() => handleRemoveVariable(v)}
                             className="ml-2 hover:text-destructive"
+                            aria-label={`Supprimer la variable ${v}`}
                           >
                             <X className="h-3 w-3" />
                           </button>
@@ -583,7 +612,7 @@ export default function NotificationsTemplatesManager() {
             </Tabs>
 
             <div className="flex justify-end gap-2 pt-4 border-t">
-              <Button type="button" variant="outline" onClick={() => { setIsDialogOpen(false); resetForm(); }}>
+              <Button type="button" variant="outline" onClick={closeEditDialog}>
                 Annuler
               </Button>
               <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
@@ -641,12 +670,22 @@ export default function NotificationsTemplatesManager() {
               />
             </div>
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => { setIsTestDialogOpen(false); setTestEmail(''); }}>
+              <Button variant="outline" onClick={closeTestDialog}>
                 Annuler
               </Button>
               <Button
-                onClick={() => selectedTemplate && testEmailMutation.mutate({ template: selectedTemplate, email: testEmail })}
-                disabled={!testEmail || testEmailMutation.isPending}
+                onClick={() => {
+                  if (!selectedTemplate || !testEmail.trim()) {
+                    toast({
+                      title: 'Erreur',
+                      description: 'Veuillez saisir une adresse email valide',
+                      variant: 'destructive'
+                    });
+                    return;
+                  }
+                  testEmailMutation.mutate({ template: selectedTemplate, email: testEmail.trim() });
+                }}
+                disabled={!testEmail.trim() || testEmailMutation.isPending}
               >
                 <Send className="h-4 w-4 mr-2" />
                 Envoyer
