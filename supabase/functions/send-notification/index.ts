@@ -64,11 +64,11 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Configuration nodemailer
     const transportConfig: any = {
-      host: smtpConfig.serveur_smtp,
+      host: smtpConfig.serveur_smtp.trim(),
       port: smtpConfig.port_smtp,
       secure: smtpConfig.encryption_type === 'SSL',
       auth: {
-        user: smtpConfig.utilisateur_smtp,
+        user: smtpConfig.utilisateur_smtp.trim(),
         pass: smtpConfig.mot_de_passe_smtp,
       },
     };

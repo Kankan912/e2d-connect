@@ -28,7 +28,7 @@ const handler = async (req: Request): Promise<Response> => {
   const supabase = createClient(supabaseUrl, supabaseKey);
 
   try {
-    const {
+    let {
       serveur_smtp,
       port_smtp,
       utilisateur_smtp,
@@ -36,6 +36,11 @@ const handler = async (req: Request): Promise<Response> => {
       encryption_type,
       email_test,
     }: TestSMTPRequest = await req.json();
+
+    // Nettoyer les espaces pour éviter les erreurs DNS
+    serveur_smtp = serveur_smtp.trim();
+    utilisateur_smtp = utilisateur_smtp.trim();
+    if (email_test) email_test = email_test.trim();
 
     console.log(`Test SMTP: ${serveur_smtp}:${port_smtp}`);
 

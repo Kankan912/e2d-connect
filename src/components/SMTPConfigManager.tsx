@@ -190,7 +190,7 @@ export default function SMTPConfigManager() {
                     placeholder="smtp.gmail.com"
                     className="pl-10"
                     value={formData.serveur_smtp}
-                    onChange={(e) => setFormData(prev => ({ ...prev, serveur_smtp: e.target.value }))}
+                    onChange={(e) => setFormData(prev => ({ ...prev, serveur_smtp: e.target.value.trim() }))}
                     required
                   />
                 </div>
@@ -213,14 +213,14 @@ export default function SMTPConfigManager() {
               <Label htmlFor="utilisateur_smtp">Nom d'utilisateur *</Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="utilisateur_smtp"
-                  placeholder="votre-email@gmail.com"
-                  className="pl-10"
-                  value={formData.utilisateur_smtp}
-                  onChange={(e) => setFormData(prev => ({ ...prev, utilisateur_smtp: e.target.value }))}
-                  required
-                />
+                  <Input
+                    id="utilisateur_smtp"
+                    placeholder="votre-email@gmail.com"
+                    className="pl-10"
+                    value={formData.utilisateur_smtp}
+                    onChange={(e) => setFormData(prev => ({ ...prev, utilisateur_smtp: e.target.value.trim() }))}
+                    required
+                  />
               </div>
             </div>
             
