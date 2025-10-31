@@ -53,8 +53,8 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Remplacer les variables dans le sujet et le contenu
-    let sujet = template.sujet || '';
-    let contenu = template.contenu || '';
+    let sujet = template.template_sujet || '';
+    let contenu = template.template_contenu || '';
 
     Object.keys(variables).forEach(key => {
       const regex = new RegExp(`{{${key}}}`, 'g');
