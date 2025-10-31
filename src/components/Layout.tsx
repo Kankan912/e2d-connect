@@ -22,7 +22,8 @@ import {
   Activity,
   Wallet,
   Camera,
-  Bell
+  Bell,
+  BarChart3
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -46,8 +47,9 @@ const menuItems = [
   { id: "sport", label: "Sport", icon: Trophy, path: "/sport" },
   { id: "historique", label: "Historique Connexions", icon: FileText, path: "/historique-connexion" },
   { id: "eligibilite", label: "Éligibilité Gala", icon: Trophy, path: "/eligibilite-gala" },
-  { id: "rapports", label: "Rapports", icon: FileText, path: "/rapports" },
-  { id: "configuration", label: "Configuration", icon: Settings, path: "/configuration" },
+    { id: "rapports", label: "Rapports", icon: FileText, path: "/rapports" },
+    { id: "analytics", label: "Analytics Financières", icon: BarChart3, path: "/analytics" },
+    { id: "configuration", label: "Configuration", icon: Settings, path: "/configuration" },
 ];
 
 export default function Layout({ children, user }: LayoutProps) {

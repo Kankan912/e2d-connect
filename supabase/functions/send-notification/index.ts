@@ -83,7 +83,10 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Envoi de l'email
     const mailOptions = {
-      from: template.email_expediteur || smtpConfig.utilisateur_smtp,
+      from: template.email_expediteur 
+        ? `${template.email_expediteur.split('@')[0]} <${smtpConfig.utilisateur_smtp}>` 
+        : `E2D <${smtpConfig.utilisateur_smtp}>`,
+      replyTo: template.email_expediteur || smtpConfig.utilisateur_smtp,
       to: destinataire_email,
       subject: sujet,
       html: `

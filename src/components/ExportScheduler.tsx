@@ -7,6 +7,9 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Calendar, Clock, Download, Mail, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { exportToPDF } from '@/lib/pdfExport';
+import { exportToExcel } from '@/lib/excelUtils';
 
 interface ExportAutomatise {
   id: string;
@@ -59,25 +62,133 @@ export const ExportScheduler = () => {
     });
   };
 
-  const executerExportMaintenant = (exp: ExportAutomatise) => {
+  const executerExportMaintenant = async (exp: ExportAutomatise) => {
     toast({
       title: "Export en cours",
       description: `Génération du ${exp.nom}...`,
     });
     
-    // Simulation de l'export
-    setTimeout(() => {
+    try {
+      let donnees: any[] = [];
+      let titre = exp.nom;
+      let columns: any[] = [];
+      
+      // Récupérer les données selon le type
+      switch (exp.type) {
+        case 'rapport_financier':
+          const [cotisations, epargnes, prets, sanctions] = await Promise.all([
+            supabase.from('cotisations').select('*, membres(nom, prenom)'),
+            supabase.from('epargnes').select('*, membres(nom, prenom)'),
+            supabase.from('prets').select('*, membres(nom, prenom)'),
+            supabase.from('sanctions').select('*, membres(nom, prenom)')
+          ]);
+          
+          const totalCotis = cotisations.data?.reduce((s, c) => s + Number(c.montant), 0) || 0;
+          const totalEpargnes = epargnes.data?.reduce((s, e) => s + Number(e.montant), 0) || 0;
+          const totalPrets = prets.data?.reduce((s, p) => s + Number(p.montant), 0) || 0;
+          const totalSanctions = sanctions.data?.reduce((s, sa) => s + Number(sa.montant), 0) || 0;
+          
+          donnees = [
+            { type: 'Cotisations', montant: totalCotis, nombre: cotisations.data?.length || 0 },
+            { type: 'Épargnes', montant: totalEpargnes, nombre: epargnes.data?.length || 0 },
+            { type: 'Prêts', montant: totalPrets, nombre: prets.data?.length || 0 },
+            { type: 'Sanctions', montant: totalSanctions, nombre: sanctions.data?.length || 0 },
+            { type: 'TOTAL', montant: totalCotis + totalEpargnes - totalPrets + totalSanctions, nombre: '-' }
+          ];
+          
+          columns = [
+            { header: 'Type', dataKey: 'type' },
+            { header: 'Montant (FCFA)', dataKey: 'montant' },
+            { header: 'Nombre', dataKey: 'nombre' }
+          ];
+          break;
+          
+        case 'analytics':
+          const { data: cotisAnalytics } = await supabase
+            .from('cotisations')
+            .select('*, membres(nom, prenom), cotisations_types(nom)')
+            .order('date_paiement', { ascending: false })
+            .limit(100);
+          donnees = cotisAnalytics || [];
+          
+          columns = [
+            { header: 'Date', dataKey: 'date_paiement' },
+            { header: 'Membre', dataKey: 'membres' },
+            { header: 'Type', dataKey: 'cotisations_types' },
+            { header: 'Montant', dataKey: 'montant' }
+          ];
+          break;
+          
+        case 'cotisations':
+          const { data: cotisData } = await supabase
+            .from('cotisations')
+            .select('*, membres(nom, prenom), cotisations_types(nom)')
+            .order('date_paiement', { ascending: false });
+          donnees = cotisData || [];
+          
+          columns = [
+            { header: 'Date', dataKey: 'date_paiement' },
+            { header: 'Membre', dataKey: 'membres' },
+            { header: 'Type', dataKey: 'cotisations_types' },
+            { header: 'Montant', dataKey: 'montant' },
+            { header: 'Statut', dataKey: 'statut' }
+          ];
+          break;
+          
+        case 'prets':
+          const { data: pretsData } = await supabase
+            .from('prets')
+            .select('*, membres(nom, prenom)')
+            .order('date_pret', { ascending: false });
+          donnees = pretsData || [];
+          
+          columns = [
+            { header: 'Date', dataKey: 'date_pret' },
+            { header: 'Membre', dataKey: 'membres' },
+            { header: 'Montant', dataKey: 'montant' },
+            { header: 'Montant Payé', dataKey: 'montant_paye' },
+            { header: 'Échéance', dataKey: 'echeance' }
+          ];
+          break;
+      }
+      
+      // Générer le fichier selon le format
+      if (exp.format === 'PDF') {
+        exportToPDF({
+          title: titre,
+          filename: `${titre.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`,
+          columns: columns,
+          data: donnees
+        });
+      } else {
+        exportToExcel({
+          filename: `${titre.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}`,
+          sheetName: titre.substring(0, 30),
+          columns: columns,
+          data: donnees
+        });
+      }
+      
       toast({
         title: "Export terminé",
         description: `${exp.nom} a été généré avec succès.`,
       });
       
+      // Mettre à jour la date du dernier export
       setExports(exports.map(e => 
         e.id === exp.id 
           ? { ...e, dernierExport: new Date() }
           : e
       ));
-    }, 2000);
+      
+    } catch (error: any) {
+      console.error('Erreur export:', error);
+      toast({
+        title: "Erreur d'export",
+        description: error.message || "Une erreur s'est produite lors de l'export.",
+        variant: "destructive",
+      });
+    }
   };
 
   const getFrequenceBadgeColor = (frequence: string) => {

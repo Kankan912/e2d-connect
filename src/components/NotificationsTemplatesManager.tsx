@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -12,8 +12,9 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Edit, Trash2, Eye, Send, Mail, Filter, X } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, Send, Mail, Filter, X, Info } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
 interface Template {
@@ -50,6 +51,7 @@ export default function NotificationsTemplatesManager() {
   const [isTestDialogOpen, setIsTestDialogOpen] = useState(false);
   const [filterCategorie, setFilterCategorie] = useState<string>('all');
   const [testEmail, setTestEmail] = useState('');
+  const [smtpConfig, setSMTPConfig] = useState<any>(null);
 
   // Formulaire
   const [formData, setFormData] = useState({
@@ -77,6 +79,15 @@ export default function NotificationsTemplatesManager() {
       return data as Template[];
     }
   });
+
+  // Charger la config SMTP
+  useEffect(() => {
+    const loadSMTPConfig = async () => {
+      const { data } = await supabase.from('smtp_config').select('*').eq('actif', true).limit(1).single();
+      if (data) setSMTPConfig(data);
+    };
+    loadSMTPConfig();
+  }, []);
 
   // Filtrer templates
   const filteredTemplates = templates?.filter(t => 
@@ -456,14 +467,32 @@ export default function NotificationsTemplatesManager() {
                     </Select>
                   </div>
                   <div>
-                    <Label htmlFor="email_expediteur">Email expéditeur (optionnel)</Label>
+                    <Label htmlFor="email_expediteur" className="flex items-center gap-2">
+                      Email expéditeur (optionnel)
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Info className="h-3 w-3 text-muted-foreground cursor-help" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className="max-w-xs">
+                              Personnalise le nom d'affichage de l'expéditeur. 
+                              L'authentification SMTP reste inchangée.
+                            </p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </Label>
                     <Input
                       id="email_expediteur"
                       type="email"
                       value={formData.email_expediteur}
                       onChange={e => setFormData(prev => ({ ...prev, email_expediteur: e.target.value }))}
-                      placeholder="Si vide, utilise SMTP par défaut"
+                      placeholder="Exemple: tresorier@e2d.com"
                     />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Si vide, utilise: E2D &lt;{smtpConfig?.utilisateur_smtp || 'email-smtp'}&gt;
+                    </p>
                   </div>
                 </div>
 

@@ -13,6 +13,7 @@ interface Prediction {
   epargnesPredites: number;
   pretsPredits: number;
   tendance: 'hausse' | 'baisse' | 'stable';
+  confiance: number;
 }
 
 interface ObjectifBudgetaire {
@@ -66,21 +67,52 @@ export const PredictionsBudgetaires = () => {
         });
       }
 
-      // Calcul de la moyenne mobile et tendance
+      // Calcul de la moyenne mobile et tendance avec lissage exponentiel
+      const lissageExponentiel = (donnees: number[], alpha = 0.3) => {
+        if (donnees.length === 0) return [];
+        const lissees = [donnees[0]];
+        for (let i = 1; i < donnees.length; i++) {
+          lissees.push(alpha * donnees[i] + (1 - alpha) * lissees[i - 1]);
+        }
+        return lissees;
+      };
+
       const calculerTendance = (donnees: number[]) => {
         if (donnees.length < 3) return 0;
-        const derniersMois = donnees.slice(-3);
-        const moyenne = derniersMois.reduce((a, b) => a + b, 0) / derniersMois.length;
-        return moyenne;
+        const derniersMois = donnees.slice(-Math.min(6, donnees.length));
+        const poids = [0.1, 0.1, 0.15, 0.2, 0.2, 0.25].slice(-derniersMois.length);
+        const sommePoids = poids.reduce((a, b) => a + b, 0);
+        const moyennePonderee = derniersMois.reduce((acc, val, idx) => 
+          acc + val * poids[idx], 0
+        ) / sommePoids;
+        return moyennePonderee;
+      };
+
+      const calculerConfiance = (donnees: number[]) => {
+        if (donnees.length < 3) return 50;
+        const moyenne = donnees.reduce((a, b) => a + b, 0) / donnees.length;
+        if (moyenne === 0) return 30;
+        const variance = donnees.reduce((acc, val) => acc + Math.pow(val - moyenne, 2), 0) / donnees.length;
+        const ecartType = Math.sqrt(variance);
+        const coeffVariation = ecartType / moyenne;
+        return Math.max(0, Math.min(100, (1 - coeffVariation) * 100));
       };
 
       const cotisationsHistorique = historique.map(h => h.cotisations);
       const epargnesmHistorique = historique.map(h => h.epargnes);
       const pretsHistorique = historique.map(h => h.prets);
 
-      const moyenneCotisations = calculerTendance(cotisationsHistorique);
-      const moyenneEpargnes = calculerTendance(epargnesmHistorique);
-      const moyennePrets = calculerTendance(pretsHistorique);
+      const cotisationsLissees = lissageExponentiel(cotisationsHistorique);
+      const epargnesmLissees = lissageExponentiel(epargnesmHistorique);
+      const pretsLisses = lissageExponentiel(pretsHistorique);
+
+      const moyenneCotisations = calculerTendance(cotisationsLissees);
+      const moyenneEpargnes = calculerTendance(epargnesmLissees);
+      const moyennePrets = calculerTendance(pretsLisses);
+
+      const confianceCotisations = calculerConfiance(cotisationsHistorique);
+      const confianceEpargnes = calculerConfiance(epargnesmHistorique);
+      const confiancePrets = calculerConfiance(pretsHistorique);
 
       // Calcul de la croissance moyenne
       const calculerCroissance = (donnees: number[]) => {
@@ -96,9 +128,9 @@ export const PredictionsBudgetaires = () => {
           : 0;
       };
 
-      const croissanceCotisations = calculerCroissance(cotisationsHistorique);
-      const croissanceEpargnes = calculerCroissance(epargnesmHistorique);
-      const croissancePrets = calculerCroissance(pretsHistorique);
+      const croissanceCotisations = calculerCroissance(cotisationsLissees);
+      const croissanceEpargnes = calculerCroissance(epargnesmLissees);
+      const croissancePrets = calculerCroissance(pretsLisses);
 
       // Prédictions pour les 3 prochains mois
       const predictionsFutures: Prediction[] = [];
@@ -111,13 +143,15 @@ export const PredictionsBudgetaires = () => {
         const pretsPredits = moyennePrets * (1 + croissancePrets * i);
 
         const tendanceGlobale = (croissanceCotisations + croissanceEpargnes) / 2;
+        const confianceMoyenne = (confianceCotisations + confianceEpargnes + confiancePrets) / 3;
         
         predictionsFutures.push({
           mois: date.toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' }),
           cotisationsPredites: Math.max(0, cotisationsPredites),
           epargnesPredites: Math.max(0, epargnesPredites),
           pretsPredits: Math.max(0, pretsPredits),
-          tendance: tendanceGlobale > 0.05 ? 'hausse' : tendanceGlobale < -0.05 ? 'baisse' : 'stable'
+          tendance: tendanceGlobale > 0.05 ? 'hausse' : tendanceGlobale < -0.05 ? 'baisse' : 'stable',
+          confiance: Math.round(confianceMoyenne)
         });
       }
 
@@ -244,16 +278,28 @@ export const PredictionsBudgetaires = () => {
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium">{pred.mois}</span>
-                      <Badge variant={pred.tendance === 'hausse' ? 'default' : pred.tendance === 'baisse' ? 'destructive' : 'secondary'}>
-                        {pred.tendance === 'hausse' ? (
-                          <TrendingUp className="h-3 w-3 mr-1" />
-                        ) : pred.tendance === 'baisse' ? (
-                          <TrendingDown className="h-3 w-3 mr-1" />
-                        ) : (
-                          <Calendar className="h-3 w-3 mr-1" />
-                        )}
-                        {pred.tendance}
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        <Badge variant={pred.tendance === 'hausse' ? 'default' : pred.tendance === 'baisse' ? 'destructive' : 'secondary'}>
+                          {pred.tendance === 'hausse' ? (
+                            <TrendingUp className="h-3 w-3 mr-1" />
+                          ) : pred.tendance === 'baisse' ? (
+                            <TrendingDown className="h-3 w-3 mr-1" />
+                          ) : (
+                            <Calendar className="h-3 w-3 mr-1" />
+                          )}
+                          {pred.tendance}
+                        </Badge>
+                        <Badge 
+                          variant="outline" 
+                          className={
+                            pred.confiance > 70 ? 'text-green-600 border-green-600' : 
+                            pred.confiance > 50 ? 'text-yellow-600 border-yellow-600' : 
+                            'text-red-600 border-red-600'
+                          }
+                        >
+                          {pred.confiance}% fiable
+                        </Badge>
+                      </div>
                     </div>
                     <div className="text-xs text-muted-foreground space-y-1">
                       <div>Cotisations: {pred.cotisationsPredites.toLocaleString()} FCFA</div>
