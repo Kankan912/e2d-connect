@@ -116,14 +116,47 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
-    // Log successful account creation (Email functionality temporarily disabled)
-    console.log("User account created successfully. Email notification skipped.");
+    // Envoyer l'email de bienvenue automatiquement
+    let emailSent = false;
+    try {
+      const appUrl = Deno.env.get('APP_URL') || 'https://piyvinbuxpnquwzyugdj.supabase.co';
+      
+      console.log('Envoi email de bienvenue à:', email);
+      
+      const { data: emailData, error: emailError } = await supabaseAdmin.functions.invoke('send-notification', {
+        body: {
+          type_notification: 'creation_compte',
+          destinataire_email: email,
+          variables: {
+            nom,
+            prenom,
+            email,
+            password, // Le mot de passe temporaire (numéro de téléphone)
+            app_url: appUrl
+          }
+        }
+      });
+
+      if (emailError) {
+        console.error('Erreur lors de l\'envoi de l\'email de bienvenue:', emailError);
+        // Note: On ne bloque pas la création du compte même si l'email échoue
+      } else {
+        console.log('Email de bienvenue envoyé avec succès à:', email);
+        console.log('Résultat envoi email:', emailData);
+        emailSent = true;
+      }
+    } catch (emailException: any) {
+      console.error('Exception lors de l\'envoi de l\'email:', emailException.message);
+      // Ne pas faire échouer la création du compte
+    }
 
     return new Response(
       JSON.stringify({ 
         success: true, 
         user: userData.user,
-        message: 'Compte créé et email envoyé avec succès'
+        message: emailSent 
+          ? 'Compte créé et email de bienvenue envoyé avec succès' 
+          : 'Compte créé avec succès (email non envoyé - vérifier configuration SMTP)'
       }),
       {
         status: 200,
