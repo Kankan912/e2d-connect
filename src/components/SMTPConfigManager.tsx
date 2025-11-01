@@ -149,13 +149,19 @@ export default function SMTPConfigManager() {
           description: "Connexion SMTP testée avec succès",
         });
       } else {
-        throw new Error(data.error || 'Test échoué');
+        // Afficher le message d'aide si disponible
+        const errorMsg = data.help 
+          ? `${data.error}\n\n💡 ${data.help}`
+          : data.error || 'Test échoué';
+        throw new Error(errorMsg);
       }
     } catch (error: any) {
+      const errorMessage = error.message || "Erreur inconnue";
       toast({
-        title: "Erreur",
-        description: "Test de connexion échoué: " + error.message,
+        title: "Test échoué",
+        description: errorMessage,
         variant: "destructive",
+        duration: 10000, // Afficher plus longtemps pour lire le message d'aide
       });
     }
   };

@@ -85,7 +85,7 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Type de chiffrement invalide");
     }
 
-    // Configuration nodemailer
+    // Configuration nodemailer avec timeouts courts
     const transportConfig: any = {
       host: serveur_smtp,
       port: port_smtp,
@@ -94,6 +94,9 @@ const handler = async (req: Request): Promise<Response> => {
         user: utilisateur_smtp,
         pass: mot_de_passe_smtp,
       },
+      connectionTimeout: 10000, // 10 secondes
+      greetingTimeout: 10000,   // 10 secondes
+      socketTimeout: 15000,      // 15 secondes
     };
 
     // Configuration TLS si nécessaire
@@ -249,6 +252,33 @@ const handler = async (req: Request): Promise<Response> => {
       port: requestData?.port_smtp,
     });
     
+    // Déterminer le type d'erreur et le message approprié
+    let errorMessage = error.message;
+    let statusCode = 500;
+    let helpMessage = "";
+    
+    // Erreurs d'authentification (code client)
+    if (error.code === 'EAUTH' || error.responseCode === 535) {
+      statusCode = 400;
+      
+      // Message d'aide spécifique pour Outlook
+      if (errorMessage.includes('basic authentication is disabled')) {
+        helpMessage = "L'authentification basique est désactivée sur Outlook. Solutions : 1) Utilisez un mot de passe d'application, 2) Activez l'authentification basique dans les paramètres Outlook, 3) Utilisez Gmail avec un mot de passe d'application.";
+      } else {
+        helpMessage = "Vérifiez votre nom d'utilisateur et mot de passe SMTP.";
+      }
+    }
+    // Erreurs de timeout
+    else if (error.code === 'ETIMEDOUT' || error.code === 'ESOCKET') {
+      statusCode = 408;
+      helpMessage = "Le serveur SMTP ne répond pas. Vérifiez le serveur et le port.";
+    }
+    // Erreurs de connexion
+    else if (error.code === 'ECONNECTION' || error.code === 'ENOTFOUND') {
+      statusCode = 400;
+      helpMessage = "Impossible de se connecter au serveur SMTP. Vérifiez l'adresse du serveur.";
+    }
+    
     // Logger l'erreur dans l'historique
     try {
       if (requestData) {
@@ -261,11 +291,13 @@ const handler = async (req: Request): Promise<Response> => {
             sujet: "🔔 Test de Configuration SMTP - E2D",
             contenu: "Tentative de test SMTP",
             statut: 'erreur',
-            erreur_message: error.message,
+            erreur_message: errorMessage,
             variables_utilisees: {
               serveur: serveur_smtp,
               port: requestData.port_smtp,
               encryption: requestData.encryption_type,
+              code_erreur: error.code,
+              response_code: error.responseCode,
             },
           }]);
       } else {
@@ -278,10 +310,12 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message,
+        error: errorMessage,
+        help: helpMessage,
+        code: error.code,
       }),
       {
-        status: 500,
+        status: statusCode,
         headers: {
           "Content-Type": "application/json",
           ...corsHeaders,
