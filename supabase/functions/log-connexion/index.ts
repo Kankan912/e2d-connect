@@ -17,7 +17,13 @@ Deno.serve(async (req) => {
 
   try {
     const { statut = 'reussi', user_id } = await req.json().catch(() => ({ statut: 'reussi' }));
-    const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || null;
+    
+    // Extract first IP from x-forwarded-for (can contain multiple IPs separated by commas)
+    let ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || null;
+    if (ip && ip.includes(',')) {
+      ip = ip.split(',')[0].trim(); // Take only first IP
+    }
+    
     const userAgent = req.headers.get('user-agent') || null;
 
     // If no user_id provided, try to get from auth header
