@@ -27,6 +27,24 @@ const handler = async (req: Request): Promise<Response> => {
 
   const supabase = createClient(supabaseUrl, supabaseKey);
 
+  // Parse request body once and store it
+  let requestData: TestSMTPRequest | null = null;
+  try {
+    requestData = await req.json();
+  } catch (parseError) {
+    console.error("Erreur de parsing JSON:", parseError);
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: "Format de requête invalide. Attendu: JSON",
+      }),
+      {
+        status: 400,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      }
+    );
+  }
+
   try {
     let {
       serveur_smtp,
@@ -35,7 +53,7 @@ const handler = async (req: Request): Promise<Response> => {
       mot_de_passe_smtp,
       encryption_type,
       email_test,
-    }: TestSMTPRequest = await req.json();
+    } = requestData;
 
     // Nettoyer les espaces pour éviter les erreurs DNS
     serveur_smtp = serveur_smtp.trim();
@@ -222,21 +240,37 @@ const handler = async (req: Request): Promise<Response> => {
       }
     );
   } catch (error: any) {
-    console.error("Erreur test SMTP:", error);
+    console.error("Erreur test SMTP:", {
+      message: error.message,
+      code: error.code,
+      responseCode: error.responseCode,
+      command: error.command,
+      serveur: requestData?.serveur_smtp,
+      port: requestData?.port_smtp,
+    });
     
     // Logger l'erreur dans l'historique
     try {
-      const { serveur_smtp, email_test, utilisateur_smtp } = await req.json();
-      await supabase
-        .from('notifications_historique')
-        .insert([{
-          type_notification: 'test_smtp',
-          destinataire_email: email_test || utilisateur_smtp,
-          sujet: "🔔 Test de Configuration SMTP - E2D",
-          contenu: "Tentative de test SMTP",
-          statut: 'erreur',
-          erreur_message: error.message,
-        }]);
+      if (requestData) {
+        const { serveur_smtp, email_test, utilisateur_smtp } = requestData;
+        await supabase
+          .from('notifications_historique')
+          .insert([{
+            type_notification: 'test_smtp',
+            destinataire_email: email_test || utilisateur_smtp,
+            sujet: "🔔 Test de Configuration SMTP - E2D",
+            contenu: "Tentative de test SMTP",
+            statut: 'erreur',
+            erreur_message: error.message,
+            variables_utilisees: {
+              serveur: serveur_smtp,
+              port: requestData.port_smtp,
+              encryption: requestData.encryption_type,
+            },
+          }]);
+      } else {
+        console.warn("Impossible de logger l'erreur : données de requête non disponibles");
+      }
     } catch (logError) {
       console.error("Erreur lors du logging de l'erreur:", logError);
     }
