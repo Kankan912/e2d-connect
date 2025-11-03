@@ -18,6 +18,7 @@ const cotisationSchema = z.object({
   type_cotisation_id: z.string().min(1, "Le type de cotisation est requis"),
   montant: z.number().min(0, "Le montant doit être positif"),
   date_paiement: z.string().optional(),
+  exercice_id: z.string().optional(),
   statut: z.enum(['en_attente', 'payee', 'en_retard', 'exoneree']).default('en_attente'),
   notes: z.string().optional(),
 });
@@ -61,6 +62,18 @@ export default function CotisationForm({ onSuccess, initialData }: CotisationFor
     }
   });
 
+  const { data: exercices } = useQuery({
+    queryKey: ['exercices'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('exercices')
+        .select('*')
+        .order('date_debut', { ascending: false });
+      if (error) throw error;
+      return data;
+    }
+  });
+
   const form = useForm<CotisationFormData>({
     resolver: zodResolver(cotisationSchema),
     defaultValues: {
@@ -68,6 +81,7 @@ export default function CotisationForm({ onSuccess, initialData }: CotisationFor
       type_cotisation_id: initialData?.type_cotisation_id || '',
       montant: initialData?.montant || 0,
       date_paiement: initialData?.date_paiement || '',
+      exercice_id: initialData?.exercice_id || '',
       statut: initialData?.statut || 'en_attente',
       notes: initialData?.notes || '',
     },
@@ -81,6 +95,19 @@ export default function CotisationForm({ onSuccess, initialData }: CotisationFor
       form.setValue('montant', selectedType.montant_defaut);
     }
   }, [selectedType, form, initialData?.id]);
+
+  // Auto-remplir l'exercice_id basé sur la date de paiement
+  React.useEffect(() => {
+    const datePaiement = form.watch('date_paiement');
+    if (datePaiement && exercices) {
+      const exerciceMatch = exercices.find(ex => 
+        datePaiement >= ex.date_debut && datePaiement <= ex.date_fin
+      );
+      if (exerciceMatch) {
+        form.setValue('exercice_id', exerciceMatch.id);
+      }
+    }
+  }, [form.watch('date_paiement'), exercices, form]);
 
   const onSubmit = async (data: CotisationFormData) => {
     const operation = async () => {
@@ -200,6 +227,11 @@ export default function CotisationForm({ onSuccess, initialData }: CotisationFor
                 type="date"
                 {...form.register('date_paiement')}
               />
+              {form.watch('exercice_id') && (
+                <p className="text-xs text-muted-foreground">
+                  📊 Exercice: {exercices?.find(e => e.id === form.watch('exercice_id'))?.nom}
+                </p>
+              )}
             </div>
           </div>
 

@@ -40,6 +40,8 @@ interface Cotisation {
   date_paiement: string;
   statut: string;
   notes: string;
+  reunion_id?: string;
+  exercice_id?: string;
   membre: {
     nom: string;
     prenom: string;
@@ -70,6 +72,10 @@ const [showBeneficiaires, setShowBeneficiaires] = useState(false);
 const [selectedReunionId, setSelectedReunionId] = useState<string>("");
 const [reunions, setReunions] = useState<Array<{ id: string; sujet: string | null; date_reunion: string }>>([]);
 const [typeToEdit, setTypeToEdit] = useState<TypeCotisation | null>(null);
+const [exerciceId, setExerciceId] = useState<string>("");
+const [exercices, setExercices] = useState<Array<{ id: string; nom: string; date_debut: string; date_fin: string }>>([]);
+const [dateDebut, setDateDebut] = useState<string>("");
+const [dateFin, setDateFin] = useState<string>("");
 const { toast } = useToast();
 const navigate = useNavigate();
 
@@ -77,7 +83,21 @@ useEffect(() => {
   loadCotisations();
   loadTypesCotisations();
   loadReunions();
+  loadExercices();
 }, []);
+
+const loadExercices = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('exercices')
+      .select('id, nom, date_debut, date_fin')
+      .order('date_debut', { ascending: false });
+    if (error) throw error;
+    setExercices(data || []);
+  } catch (error) {
+    console.error('Erreur chargement exercices:', error);
+  }
+};
 
   const loadCotisations = async () => {
     try {
@@ -164,10 +184,38 @@ useRealtimeUpdates({
   enabled: true
 });
 
-  const filteredCotisations = cotisations.filter(cotisation =>
-    `${cotisation.membre?.nom} ${cotisation.membre?.prenom}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    cotisation.cotisations_types?.nom.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Filtrage hiérarchique : Exercice -> Réunion -> Dates personnalisées
+  const filteredCotisations = cotisations.filter(cotisation => {
+    // Filtre de recherche
+    const searchMatch = !searchTerm || 
+      `${cotisation.membre?.nom} ${cotisation.membre?.prenom}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      cotisation.cotisations_types?.nom.toLowerCase().includes(searchTerm.toLowerCase());
+    if (!searchMatch) return false;
+
+    // Niveau 1 : Filtre par exercice (via date_paiement)
+    if (exerciceId) {
+      const exercice = exercices.find(e => e.id === exerciceId);
+      if (exercice) {
+        const datePaiement = cotisation.date_paiement;
+        if (datePaiement < exercice.date_debut || datePaiement > exercice.date_fin) {
+          return false;
+        }
+      }
+    }
+
+    // Niveau 2 : Filtre par réunion
+    if (selectedReunionId) {
+      if (cotisation.reunion_id !== selectedReunionId) {
+        return false;
+      }
+    }
+
+    // Niveau 3 : Filtre par dates personnalisées (dans le cadre de l'exercice si sélectionné)
+    if (dateDebut && cotisation.date_paiement < dateDebut) return false;
+    if (dateFin && cotisation.date_paiement > dateFin) return false;
+
+    return true;
+  });
 
   const StatCard = ({ 
     title, 
@@ -252,48 +300,152 @@ useRealtimeUpdates({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <LogoHeader 
-        title="Gestion des Cotisations"
-        subtitle="Suivi des cotisations et contributions"
-      />
-<div className="flex justify-end">
-  <div className="flex gap-2 items-center">
-    <div className="w-64">
-      <Select value={selectedReunionId} onValueChange={(v) => setSelectedReunionId(v)}>
-        <SelectTrigger>
-          <SelectValue placeholder="Sélectionner une réunion" />
-        </SelectTrigger>
-        <SelectContent>
-          {reunions.map(r => (
-            <SelectItem key={r.id} value={r.id}>
-              {new Date(r.date_reunion).toLocaleDateString('fr-FR')} - {r.sujet || 'Réunion'}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
-    <Button 
-      variant="outline"
-      disabled={!selectedReunionId}
-      onClick={() => setShowBeneficiaires(true)}
-    >
-      Bénéficiaires Réunion
-    </Button>
-    <Button 
-      className="bg-gradient-to-r from-primary to-secondary"
-      onClick={() => setShowForm(true)}
-    >
-      <Plus className="w-4 h-4 mr-2" />
-      Nouvelle cotisation
-    </Button>
-    <Button 
-      variant="outline"
-      onClick={() => navigate("/cotisations-grid")}
-    >
-      Vue Grille
-    </Button>
-  </div>
-</div>
+      <div className="space-y-2">
+        <LogoHeader 
+          title="Gestion des Cotisations"
+          subtitle="Suivi des cotisations et contributions"
+        />
+        <div className="flex gap-2">
+          {exerciceId && <Badge variant="secondary">📊 Niveau 1: Exercice</Badge>}
+          {selectedReunionId && <Badge variant="secondary">🗓️ Niveau 2: Réunion</Badge>}
+          {(dateDebut || dateFin) && <Badge variant="secondary">📅 Niveau 3: Dates</Badge>}
+        </div>
+      </div>
+      {/* Filtres hiérarchiques */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Filtres hiérarchiques</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Niveau 1 : Exercice */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">📊 Niveau 1 : Exercice</label>
+              <Select value={exerciceId} onValueChange={(v) => {
+                setExerciceId(v);
+                setSelectedReunionId("");
+                setDateDebut("");
+                setDateFin("");
+              }}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Tous les exercices" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Tous les exercices</SelectItem>
+                  {exercices.map(ex => (
+                    <SelectItem key={ex.id} value={ex.id}>
+                      {ex.nom}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Niveau 2 : Réunion */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">🗓️ Niveau 2 : Réunion</label>
+              <Select 
+                value={selectedReunionId} 
+                onValueChange={(v) => {
+                  setSelectedReunionId(v);
+                  setDateDebut("");
+                  setDateFin("");
+                }}
+                disabled={!exerciceId}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={exerciceId ? "Toutes les réunions" : "Sélectionner un exercice d'abord"} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Toutes les réunions</SelectItem>
+                  {reunions
+                    .filter(r => {
+                      if (!exerciceId) return true;
+                      const ex = exercices.find(e => e.id === exerciceId);
+                      return ex && r.date_reunion >= ex.date_debut && r.date_reunion <= ex.date_fin;
+                    })
+                    .map(r => (
+                      <SelectItem key={r.id} value={r.id}>
+                        {new Date(r.date_reunion).toLocaleDateString('fr-FR')} - {r.sujet || 'Réunion'}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Niveau 3 : Dates personnalisées */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">📅 Niveau 3 : Dates personnalisées</label>
+              <div className="flex gap-2">
+                <Input
+                  type="date"
+                  placeholder="Date début"
+                  value={dateDebut}
+                  onChange={(e) => setDateDebut(e.target.value)}
+                  min={exerciceId ? exercices.find(e => e.id === exerciceId)?.date_debut : undefined}
+                  max={exerciceId ? exercices.find(e => e.id === exerciceId)?.date_fin : undefined}
+                  disabled={!exerciceId}
+                />
+                <Input
+                  type="date"
+                  placeholder="Date fin"
+                  value={dateFin}
+                  onChange={(e) => setDateFin(e.target.value)}
+                  min={exerciceId ? exercices.find(e => e.id === exerciceId)?.date_debut : undefined}
+                  max={exerciceId ? exercices.find(e => e.id === exerciceId)?.date_fin : undefined}
+                  disabled={!exerciceId}
+                />
+              </div>
+            </div>
+          </div>
+          
+          {exerciceId && (
+            <p className="text-xs text-muted-foreground mt-4">
+              💡 Les filtres sont hiérarchiques : d'abord l'exercice, puis la réunion (optionnel), puis les dates personnalisées (optionnel dans l'exercice).
+            </p>
+          )}
+
+          {exerciceId && (
+            <div className="mt-4 flex gap-2">
+              <Button 
+                variant="outline"
+                disabled={!selectedReunionId}
+                onClick={() => setShowBeneficiaires(true)}
+              >
+                Bénéficiaires Réunion
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={() => {
+                  setExerciceId("");
+                  setSelectedReunionId("");
+                  setDateDebut("");
+                  setDateFin("");
+                }}
+              >
+                Réinitialiser les filtres
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Actions */}
+      <div className="flex justify-end gap-2">
+        <Button 
+          className="bg-gradient-to-r from-primary to-secondary"
+          onClick={() => setShowForm(true)}
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Nouvelle cotisation
+        </Button>
+        <Button 
+          variant="outline"
+          onClick={() => navigate("/cotisations-grid")}
+        >
+          Vue Grille
+        </Button>
+      </div>
 
       {/* Stats Cards */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">

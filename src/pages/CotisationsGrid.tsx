@@ -67,11 +67,29 @@ export default function CotisationsGrid() {
     notes: "",
     date_paiement: new Date().toISOString().split('T')[0]
   });
+  const [exerciceId, setExerciceId] = useState<string>("");
+  const [exercices, setExercices] = useState<Array<{ id: string; nom: string; date_debut: string; date_fin: string }>>([]);
+  const [dateDebut, setDateDebut] = useState<string>("");
+  const [dateFin, setDateFin] = useState<string>("");
   const { toast } = useToast();
 
   useEffect(() => {
     loadData();
+    loadExercices();
   }, []);
+
+  const loadExercices = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('exercices')
+        .select('id, nom, date_debut, date_fin')
+        .order('date_debut', { ascending: false });
+      if (error) throw error;
+      setExercices(data || []);
+    } catch (error) {
+      console.error('Erreur chargement exercices:', error);
+    }
+  };
 
   const loadData = async () => {
     try {
@@ -260,6 +278,28 @@ export default function CotisationsGrid() {
     );
   };
 
+  // Filtrage hiérarchique des cotisations
+  const filteredCotisationsMap = Object.fromEntries(
+    Object.entries(cotisations).filter(([key, cot]) => {
+      // Niveau 1 : Filtre par exercice
+      if (exerciceId) {
+        const exercice = exercices.find(e => e.id === exerciceId);
+        if (exercice) {
+          const datePaiement = cot.date_paiement;
+          if (datePaiement < exercice.date_debut || datePaiement > exercice.date_fin) {
+            return false;
+          }
+        }
+      }
+
+      // Niveau 2 : Filtre par dates personnalisées
+      if (dateDebut && cot.date_paiement < dateDebut) return false;
+      if (dateFin && cot.date_paiement > dateFin) return false;
+
+      return true;
+    })
+  );
+
   const filteredMembres = membres.filter(membre =>
     `${membre.nom} ${membre.prenom}`.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -287,17 +327,91 @@ export default function CotisationsGrid() {
           Quitter le mode grille
         </Button>
       </div>
-      <div className="flex justify-end">
-        <div className="relative">
-          <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Rechercher un membre..."
-            className="pl-10 w-64"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-      </div>
+      {/* Filtres hiérarchiques */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Filtres hiérarchiques</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Niveau 1 : Exercice */}
+            <div className="space-y-2">
+              <Label>📊 Niveau 1 : Exercice</Label>
+              <select
+                className="w-full p-2 border rounded-md"
+                value={exerciceId}
+                onChange={(e) => {
+                  setExerciceId(e.target.value);
+                  setDateDebut("");
+                  setDateFin("");
+                }}
+              >
+                <option value="">Tous les exercices</option>
+                {exercices.map(ex => (
+                  <option key={ex.id} value={ex.id}>
+                    {ex.nom}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Niveau 2 : Dates personnalisées */}
+            <div className="space-y-2">
+              <Label>📅 Niveau 2 : Date début</Label>
+              <Input
+                type="date"
+                value={dateDebut}
+                onChange={(e) => setDateDebut(e.target.value)}
+                min={exerciceId ? exercices.find(e => e.id === exerciceId)?.date_debut : undefined}
+                max={exerciceId ? exercices.find(e => e.id === exerciceId)?.date_fin : undefined}
+                disabled={!exerciceId}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>📅 Niveau 2 : Date fin</Label>
+              <Input
+                type="date"
+                value={dateFin}
+                onChange={(e) => setDateFin(e.target.value)}
+                min={exerciceId ? exercices.find(e => e.id === exerciceId)?.date_debut : undefined}
+                max={exerciceId ? exercices.find(e => e.id === exerciceId)?.date_fin : undefined}
+                disabled={!exerciceId}
+              />
+            </div>
+          </div>
+
+          {exerciceId && (
+            <p className="text-xs text-muted-foreground mt-4">
+              💡 Filtrage hiérarchique : sélectionnez d'abord l'exercice, puis affinez avec les dates personnalisées.
+            </p>
+          )}
+
+          <div className="mt-4 flex gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Rechercher un membre..."
+                className="pl-10"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            {exerciceId && (
+              <Button 
+                variant="outline"
+                onClick={() => {
+                  setExerciceId("");
+                  setDateDebut("");
+                  setDateFin("");
+                }}
+              >
+                Réinitialiser
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Grille des cotisations */}
       <Card>
@@ -349,7 +463,7 @@ export default function CotisationsGrid() {
                     {/* Cellules des cotisations */}
                     {typesCotisations.map((type) => {
                       const key = `${membre.id}-${type.id}`;
-                      const cotisation = cotisations[key];
+                      const cotisation = filteredCotisationsMap[key];
                       
                       return (
                         <div 

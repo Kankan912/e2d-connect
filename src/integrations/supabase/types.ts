@@ -58,6 +58,68 @@ export type Database = {
           },
         ]
       }
+      adhesions: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          membre_id: string | null
+          message: string | null
+          montant_paye: number
+          nom: string
+          payment_id: string | null
+          payment_method: string
+          payment_status: string
+          prenom: string
+          processed: boolean
+          telephone: string
+          type_adhesion: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          membre_id?: string | null
+          message?: string | null
+          montant_paye: number
+          nom: string
+          payment_id?: string | null
+          payment_method: string
+          payment_status?: string
+          prenom: string
+          processed?: boolean
+          telephone: string
+          type_adhesion: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          membre_id?: string | null
+          message?: string | null
+          montant_paye?: number
+          nom?: string
+          payment_id?: string | null
+          payment_method?: string
+          payment_status?: string
+          prenom?: string
+          processed?: boolean
+          telephone?: string
+          type_adhesion?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "adhesions_membre_id_fkey"
+            columns: ["membre_id"]
+            isOneToOne: false
+            referencedRelation: "membres"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       aides: {
         Row: {
           beneficiaire_id: string
@@ -209,6 +271,7 @@ export type Database = {
         Row: {
           created_at: string | null
           date_paiement: string | null
+          exercice_id: string | null
           id: string
           justificatif_url: string | null
           membre_id: string | null
@@ -221,6 +284,7 @@ export type Database = {
         Insert: {
           created_at?: string | null
           date_paiement?: string | null
+          exercice_id?: string | null
           id?: string
           justificatif_url?: string | null
           membre_id?: string | null
@@ -233,6 +297,7 @@ export type Database = {
         Update: {
           created_at?: string | null
           date_paiement?: string | null
+          exercice_id?: string | null
           id?: string
           justificatif_url?: string | null
           membre_id?: string | null
@@ -243,6 +308,13 @@ export type Database = {
           type_cotisation_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "cotisations_exercice_id_fkey"
+            columns: ["exercice_id"]
+            isOneToOne: false
+            referencedRelation: "exercices"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "cotisations_membre_id_fkey"
             columns: ["membre_id"]
@@ -317,6 +389,78 @@ export type Database = {
           montant_defaut?: number | null
           nom?: string
           obligatoire?: boolean | null
+        }
+        Relationships: []
+      }
+      donations: {
+        Row: {
+          amount: number
+          bank_transfer_reference: string | null
+          created_at: string
+          currency: string
+          donor_email: string
+          donor_message: string | null
+          donor_name: string
+          donor_phone: string | null
+          fiscal_receipt_sent: boolean
+          fiscal_receipt_url: string | null
+          helloasso_payment_id: string | null
+          id: string
+          is_recurring: boolean
+          payment_method: string
+          payment_status: string
+          paypal_transaction_id: string | null
+          recurring_frequency: string | null
+          stripe_customer_id: string | null
+          stripe_payment_id: string | null
+          transaction_metadata: Json | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          bank_transfer_reference?: string | null
+          created_at?: string
+          currency?: string
+          donor_email: string
+          donor_message?: string | null
+          donor_name: string
+          donor_phone?: string | null
+          fiscal_receipt_sent?: boolean
+          fiscal_receipt_url?: string | null
+          helloasso_payment_id?: string | null
+          id?: string
+          is_recurring?: boolean
+          payment_method: string
+          payment_status?: string
+          paypal_transaction_id?: string | null
+          recurring_frequency?: string | null
+          stripe_customer_id?: string | null
+          stripe_payment_id?: string | null
+          transaction_metadata?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          bank_transfer_reference?: string | null
+          created_at?: string
+          currency?: string
+          donor_email?: string
+          donor_message?: string | null
+          donor_name?: string
+          donor_phone?: string | null
+          fiscal_receipt_sent?: boolean
+          fiscal_receipt_url?: string | null
+          helloasso_payment_id?: string | null
+          id?: string
+          is_recurring?: boolean
+          payment_method?: string
+          payment_status?: string
+          paypal_transaction_id?: string | null
+          recurring_frequency?: string | null
+          stripe_customer_id?: string | null
+          stripe_payment_id?: string | null
+          transaction_metadata?: Json | null
+          updated_at?: string
         }
         Relationships: []
       }
@@ -1077,6 +1221,44 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_configs: {
+        Row: {
+          config_data: Json
+          created_at: string
+          id: string
+          is_active: boolean
+          provider: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          config_data?: Json
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          provider: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          config_data?: Json
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          provider?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_configs_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       phoenix_adherents: {
         Row: {
           adhesion_payee: boolean | null
@@ -1707,6 +1889,48 @@ export type Database = {
           },
         ]
       }
+      profiles: {
+        Row: {
+          created_at: string | null
+          date_inscription: string | null
+          est_adherent_phoenix: boolean | null
+          est_membre_e2d: boolean | null
+          id: string
+          nom: string
+          photo_url: string | null
+          prenom: string
+          statut: string | null
+          telephone: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          date_inscription?: string | null
+          est_adherent_phoenix?: boolean | null
+          est_membre_e2d?: boolean | null
+          id: string
+          nom: string
+          photo_url?: string | null
+          prenom: string
+          statut?: string | null
+          telephone?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          date_inscription?: string | null
+          est_adherent_phoenix?: boolean | null
+          est_membre_e2d?: boolean | null
+          id?: string
+          nom?: string
+          photo_url?: string | null
+          prenom?: string
+          statut?: string | null
+          telephone?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       rapports_seances: {
         Row: {
           created_at: string
@@ -1733,6 +1957,65 @@ export type Database = {
           sujet?: string
         }
         Relationships: []
+      }
+      recurring_donations: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          donation_id: string
+          donor_email: string
+          frequency: string
+          id: string
+          last_payment_date: string | null
+          next_payment_date: string | null
+          paypal_subscription_id: string | null
+          status: string
+          stripe_subscription_id: string | null
+          total_payments: number
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string
+          donation_id: string
+          donor_email: string
+          frequency: string
+          id?: string
+          last_payment_date?: string | null
+          next_payment_date?: string | null
+          paypal_subscription_id?: string | null
+          status?: string
+          stripe_subscription_id?: string | null
+          total_payments?: number
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          donation_id?: string
+          donor_email?: string
+          frequency?: string
+          id?: string
+          last_payment_date?: string | null
+          next_payment_date?: string | null
+          paypal_subscription_id?: string | null
+          status?: string
+          stripe_subscription_id?: string | null
+          total_payments?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recurring_donations_donation_id_fkey"
+            columns: ["donation_id"]
+            isOneToOne: false
+            referencedRelation: "donations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       reunion_beneficiaires: {
         Row: {
@@ -2058,6 +2341,303 @@ export type Database = {
           id?: string
           montant?: number
           nom?: string
+        }
+        Relationships: []
+      }
+      site_about: {
+        Row: {
+          actif: boolean
+          created_at: string
+          histoire_contenu: string
+          histoire_titre: string
+          id: string
+          sous_titre: string
+          titre: string
+          updated_at: string
+          valeurs: Json
+        }
+        Insert: {
+          actif?: boolean
+          created_at?: string
+          histoire_contenu: string
+          histoire_titre?: string
+          id?: string
+          sous_titre?: string
+          titre?: string
+          updated_at?: string
+          valeurs?: Json
+        }
+        Update: {
+          actif?: boolean
+          created_at?: string
+          histoire_contenu?: string
+          histoire_titre?: string
+          id?: string
+          sous_titre?: string
+          titre?: string
+          updated_at?: string
+          valeurs?: Json
+        }
+        Relationships: []
+      }
+      site_activities: {
+        Row: {
+          actif: boolean
+          created_at: string
+          description: string
+          features: Json
+          icon: string
+          id: string
+          ordre: number
+          titre: string
+          updated_at: string
+        }
+        Insert: {
+          actif?: boolean
+          created_at?: string
+          description: string
+          features?: Json
+          icon: string
+          id?: string
+          ordre?: number
+          titre: string
+          updated_at?: string
+        }
+        Update: {
+          actif?: boolean
+          created_at?: string
+          description?: string
+          features?: Json
+          icon?: string
+          id?: string
+          ordre?: number
+          titre?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      site_config: {
+        Row: {
+          categorie: string
+          cle: string
+          created_at: string
+          description: string | null
+          id: string
+          type: string
+          updated_at: string
+          valeur: string
+        }
+        Insert: {
+          categorie?: string
+          cle: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          type?: string
+          updated_at?: string
+          valeur: string
+        }
+        Update: {
+          categorie?: string
+          cle?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          type?: string
+          updated_at?: string
+          valeur?: string
+        }
+        Relationships: []
+      }
+      site_events: {
+        Row: {
+          actif: boolean
+          created_at: string
+          date: string
+          description: string | null
+          heure: string | null
+          id: string
+          image_url: string | null
+          lieu: string
+          media_source: string | null
+          ordre: number
+          titre: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          actif?: boolean
+          created_at?: string
+          date: string
+          description?: string | null
+          heure?: string | null
+          id?: string
+          image_url?: string | null
+          lieu: string
+          media_source?: string | null
+          ordre?: number
+          titre: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          actif?: boolean
+          created_at?: string
+          date?: string
+          description?: string | null
+          heure?: string | null
+          id?: string
+          image_url?: string | null
+          lieu?: string
+          media_source?: string | null
+          ordre?: number
+          titre?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      site_gallery: {
+        Row: {
+          actif: boolean
+          categorie: string
+          created_at: string
+          id: string
+          image_url: string | null
+          media_source: string | null
+          ordre: number
+          titre: string
+          updated_at: string
+          video_url: string | null
+        }
+        Insert: {
+          actif?: boolean
+          categorie: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          media_source?: string | null
+          ordre?: number
+          titre: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Update: {
+          actif?: boolean
+          categorie?: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          media_source?: string | null
+          ordre?: number
+          titre?: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Relationships: []
+      }
+      site_hero: {
+        Row: {
+          actif: boolean
+          badge_text: string
+          bouton_1_lien: string
+          bouton_1_texte: string
+          bouton_2_lien: string
+          bouton_2_texte: string
+          created_at: string
+          id: string
+          image_url: string
+          media_source: string | null
+          sous_titre: string
+          stat_1_label: string
+          stat_1_nombre: number
+          stat_2_label: string
+          stat_2_nombre: number
+          stat_3_label: string
+          stat_3_nombre: number
+          titre: string
+          updated_at: string
+        }
+        Insert: {
+          actif?: boolean
+          badge_text?: string
+          bouton_1_lien?: string
+          bouton_1_texte?: string
+          bouton_2_lien?: string
+          bouton_2_texte?: string
+          created_at?: string
+          id?: string
+          image_url: string
+          media_source?: string | null
+          sous_titre: string
+          stat_1_label?: string
+          stat_1_nombre?: number
+          stat_2_label?: string
+          stat_2_nombre?: number
+          stat_3_label?: string
+          stat_3_nombre?: number
+          titre: string
+          updated_at?: string
+        }
+        Update: {
+          actif?: boolean
+          badge_text?: string
+          bouton_1_lien?: string
+          bouton_1_texte?: string
+          bouton_2_lien?: string
+          bouton_2_texte?: string
+          created_at?: string
+          id?: string
+          image_url?: string
+          media_source?: string | null
+          sous_titre?: string
+          stat_1_label?: string
+          stat_1_nombre?: number
+          stat_2_label?: string
+          stat_2_nombre?: number
+          stat_3_label?: string
+          stat_3_nombre?: number
+          titre?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      site_partners: {
+        Row: {
+          actif: boolean
+          created_at: string
+          description: string | null
+          id: string
+          logo_url: string
+          media_source: string | null
+          nom: string
+          ordre: number
+          site_web: string | null
+          updated_at: string
+        }
+        Insert: {
+          actif?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          logo_url: string
+          media_source?: string | null
+          nom: string
+          ordre?: number
+          site_web?: string | null
+          updated_at?: string
+        }
+        Update: {
+          actif?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          logo_url?: string
+          media_source?: string | null
+          nom?: string
+          ordre?: number
+          site_web?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
@@ -2514,6 +3094,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -2536,10 +3137,27 @@ export type Database = {
         Args: { montant_paye: number; montant_total: number }
         Returns: string
       }
-      has_role: { Args: { role_name: string }; Returns: boolean }
+      get_user_role: {
+        Args: { _user_id: string }
+        Returns: Database["public"]["Enums"]["app_role"]
+      }
+      has_role:
+        | {
+            Args: {
+              _role: Database["public"]["Enums"]["app_role"]
+              _user_id: string
+            }
+            Returns: boolean
+          }
+        | { Args: { role_name: string }; Returns: boolean }
     }
     Enums: {
-      [_ in never]: never
+      app_role:
+        | "membre"
+        | "admin"
+        | "tresorier"
+        | "secretaire"
+        | "responsable_sportif"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2666,6 +3284,14 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: [
+        "membre",
+        "admin",
+        "tresorier",
+        "secretaire",
+        "responsable_sportif",
+      ],
+    },
   },
 } as const
