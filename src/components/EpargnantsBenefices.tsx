@@ -36,6 +36,13 @@ interface EpargneWithMembre {
   };
 }
 
+interface Reunion {
+  id: string;
+  date_reunion: string;
+  statut: string;
+  type_reunion: string;
+}
+
 export default function EpargnantsBenefices() {
   const [epargnants, setEpargnants] = useState<EpargnantData[]>([]);
   const [totalInteretsPrets, setTotalInteretsPrets] = useState(0);
@@ -43,6 +50,8 @@ export default function EpargnantsBenefices() {
   const [loading, setLoading] = useState(true);
   const [exercices, setExercices] = useState<Exercice[]>([]);
   const [selectedExercice, setSelectedExercice] = useState<string>('all');
+  const [reunions, setReunions] = useState<Reunion[]>([]);
+  const [selectedReunion, setSelectedReunion] = useState<string>('all');
   const { toast } = useToast();
 
   useEffect(() => {
@@ -50,8 +59,25 @@ export default function EpargnantsBenefices() {
   }, []);
 
   useEffect(() => {
-    loadEpargnantsBenefices();
-  }, [selectedExercice]);
+    if (exercices.length > 0 || selectedExercice === 'all') {
+      loadEpargnantsBenefices();
+    }
+  }, [selectedExercice, exercices]);
+
+  // Charger les réunions quand l'exercice change
+  useEffect(() => {
+    if (exercices.length > 0) {
+      setSelectedReunion('all');
+      loadReunions();
+    }
+  }, [selectedExercice, exercices]);
+
+  // Recharger les bénéfices quand la réunion change
+  useEffect(() => {
+    if (exercices.length > 0 || selectedExercice === 'all') {
+      loadEpargnantsBenefices();
+    }
+  }, [selectedReunion]);
 
   const loadExercices = async () => {
     try {
@@ -72,6 +98,37 @@ export default function EpargnantsBenefices() {
     }
   };
 
+  const loadReunions = async () => {
+    try {
+      let reunionsQuery = supabase
+        .from('reunions')
+        .select('id, date_reunion, statut, type_reunion')
+        .order('date_reunion', { ascending: false });
+
+      // Filtrer par exercice si sélectionné
+      if (selectedExercice && selectedExercice !== 'all') {
+        const exercice = exercices.find(ex => ex.id === selectedExercice);
+        if (exercice) {
+          reunionsQuery = reunionsQuery
+            .gte('date_reunion', exercice.date_debut)
+            .lte('date_reunion', exercice.date_fin);
+        }
+      }
+
+      const { data, error } = await reunionsQuery;
+
+      if (error) throw error;
+      setReunions(data || []);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
+      toast({
+        title: "Erreur",
+        description: "Erreur chargement réunions: " + errorMessage,
+        variant: "destructive"
+      });
+    }
+  };
+
   const loadEpargnantsBenefices = async () => {
     try {
       // 1. Calculer le total des épargnes actives
@@ -84,7 +141,16 @@ export default function EpargnantsBenefices() {
         epargnesQuery = epargnesQuery.eq('exercice_id', selectedExercice);
       }
 
+      // Filtrer par réunion si sélectionné
+      if (selectedReunion && selectedReunion !== 'all') {
+        epargnesQuery = epargnesQuery.eq('reunion_id', selectedReunion);
+      }
+
       const { data: epargnesData, error: epargnesError } = await epargnesQuery;
+
+      console.log('🔍 Exercice sélectionné:', selectedExercice);
+      console.log('🔍 Réunion sélectionnée:', selectedReunion);
+      console.log('📊 Épargnes récupérées:', epargnesData?.length || 0);
 
       if (epargnesError) throw epargnesError;
 
@@ -105,6 +171,8 @@ export default function EpargnantsBenefices() {
       }
 
       const { data: pretsData, error: pretsError } = await pretsQuery;
+
+      console.log('💰 Prêts récupérés:', pretsData?.length || 0);
 
       if (pretsError) throw pretsError;
 
@@ -164,7 +232,9 @@ export default function EpargnantsBenefices() {
         variant: "destructive",
       });
     } finally {
-      setLoading(false);
+      if (loading) {
+        setLoading(false);
+      }
     }
   };
 
@@ -190,9 +260,13 @@ export default function EpargnantsBenefices() {
         metadata: {
           author: 'E2D',
           dateGeneration: new Date(),
-          periode: selectedExercice !== 'all' 
-            ? exercices.find(e => e.id === selectedExercice)?.nom || 'Tous exercices'
-            : 'Tous exercices',
+          periode: selectedReunion !== 'all'
+            ? reunions.find(r => r.id === selectedReunion)?.date_reunion 
+              ? `Réunion du ${new Date(reunions.find(r => r.id === selectedReunion)!.date_reunion).toLocaleDateString('fr-FR')}`
+              : 'Toutes réunions'
+            : selectedExercice !== 'all' 
+              ? exercices.find(e => e.id === selectedExercice)?.nom || 'Tous exercices'
+              : 'Tous exercices',
           association: 'Association E2D'
         },
         stats: [
@@ -246,6 +320,21 @@ export default function EpargnantsBenefices() {
               ))}
             </SelectContent>
           </Select>
+          
+          <Select value={selectedReunion} onValueChange={setSelectedReunion}>
+            <SelectTrigger className="w-[250px]">
+              <SelectValue placeholder="Toutes réunions" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Toutes réunions</SelectItem>
+              {reunions.map(reunion => (
+                <SelectItem key={reunion.id} value={reunion.id}>
+                  {new Date(reunion.date_reunion).toLocaleDateString('fr-FR')} - {reunion.type_reunion}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          
           <Button onClick={handleExport} variant="outline">
             <Download className="w-4 h-4 mr-2" />
             Exporter PDF
