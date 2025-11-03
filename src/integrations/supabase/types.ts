@@ -204,6 +204,51 @@ export type Database = {
         }
         Relationships: []
       }
+      alertes_budgetaires: {
+        Row: {
+          categorie: string
+          created_at: string | null
+          description: string | null
+          id: string
+          niveau: string
+          recommandation: string | null
+          resolu: boolean | null
+          resolu_le: string | null
+          seuil: number | null
+          titre: string
+          updated_at: string | null
+          valeur_actuelle: number | null
+        }
+        Insert: {
+          categorie: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          niveau: string
+          recommandation?: string | null
+          resolu?: boolean | null
+          resolu_le?: string | null
+          seuil?: number | null
+          titre: string
+          updated_at?: string | null
+          valeur_actuelle?: number | null
+        }
+        Update: {
+          categorie?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          niveau?: string
+          recommandation?: string | null
+          resolu?: boolean | null
+          resolu_le?: string | null
+          seuil?: number | null
+          titre?: string
+          updated_at?: string | null
+          valeur_actuelle?: number | null
+        }
+        Relationships: []
+      }
       beneficiaires_config: {
         Row: {
           actif: boolean
@@ -603,6 +648,51 @@ export type Database = {
           nom?: string
           plafond_fond_caisse?: number | null
           statut?: string
+        }
+        Relationships: []
+      }
+      exports_programmes: {
+        Row: {
+          actif: boolean | null
+          configuration: Json | null
+          created_at: string | null
+          dernier_export: string | null
+          format: string
+          frequence: string
+          id: string
+          jour_execution: number | null
+          nom: string
+          prochain_export: string | null
+          type: string
+          updated_at: string | null
+        }
+        Insert: {
+          actif?: boolean | null
+          configuration?: Json | null
+          created_at?: string | null
+          dernier_export?: string | null
+          format: string
+          frequence: string
+          id?: string
+          jour_execution?: number | null
+          nom: string
+          prochain_export?: string | null
+          type: string
+          updated_at?: string | null
+        }
+        Update: {
+          actif?: boolean | null
+          configuration?: Json | null
+          created_at?: string | null
+          dernier_export?: string | null
+          format?: string
+          frequence?: string
+          id?: string
+          jour_execution?: number | null
+          nom?: string
+          prochain_export?: string | null
+          type?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
