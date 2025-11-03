@@ -264,6 +264,23 @@ export default function CotisationsGrid() {
     const handleValidatePayment = async (e: React.MouseEvent) => {
       e.stopPropagation();
       
+      // Validation 1 : Vérifier que le montant > 0
+      if (!cotisation.montant || cotisation.montant <= 0) {
+        toast({
+          title: "Validation impossible",
+          description: "Le montant doit être supérieur à 0 FCFA",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Validation 2 : Demander confirmation
+      const confirmer = window.confirm(
+        `Confirmer le paiement de ${cotisation.montant.toLocaleString()} FCFA pour ${membre.prenom} ${membre.nom} ?`
+      );
+      
+      if (!confirmer) return;
+      
       try {
         const { error } = await supabase
           .from('cotisations')
@@ -276,14 +293,15 @@ export default function CotisationsGrid() {
         if (error) throw error;
         
         toast({
-          title: "Paiement validé",
-          description: `Cotisation de ${membre.prenom} ${membre.nom} validée`,
+          title: "✅ Paiement validé",
+          description: `${cotisation.montant.toLocaleString()} FCFA - ${membre.prenom} ${membre.nom}`,
         });
         
         loadData();
       } catch (error: any) {
+        console.error('[VALIDATION_PAIEMENT] Erreur:', error);
         toast({
-          title: "Erreur",
+          title: "Erreur de validation",
           description: error.message,
           variant: "destructive",
         });

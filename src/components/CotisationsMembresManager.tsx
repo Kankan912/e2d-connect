@@ -29,6 +29,8 @@ export default function CotisationsMembresManager() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [montants, setMontants] = useState<Record<string, string>>({});
+  const [exerciceActif, setExerciceActif] = useState<{id: string, nom: string} | null>(null);
+  const [typeCotisationDefaut, setTypeCotisationDefaut] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -37,6 +39,27 @@ export default function CotisationsMembresManager() {
 
   const loadData = async () => {
     try {
+      // 1. Charger l'exercice actif
+      const { data: exercice, error: exerciceError } = await supabase
+        .from('exercices')
+        .select('id, nom')
+        .eq('statut', 'actif')
+        .single();
+      
+      if (exerciceError) throw exerciceError;
+      setExerciceActif(exercice);
+
+      // 2. Charger le premier type de cotisation actif (pour insertions)
+      const { data: typesCotisation, error: typesError } = await supabase
+        .from('cotisations_types')
+        .select('id')
+        .limit(1)
+        .single();
+      
+      if (typesError) throw typesError;
+      setTypeCotisationDefaut(typesCotisation.id);
+
+      // 3. Charger membres et cotisations personnalisées
       const [membresRes, cotisationsRes] = await Promise.all([
         supabase
           .from('membres')
@@ -44,8 +67,9 @@ export default function CotisationsMembresManager() {
           .eq('statut', 'actif')
           .order('nom', { ascending: true }),
         supabase
-          .from('cotisations_minimales')
-          .select('*')
+          .from('cotisations_membres')
+          .select('id, membre_id, montant_personnalise, actif')
+          .eq('exercice_id', exercice.id)
           .eq('actif', true)
       ]);
 
@@ -53,18 +77,27 @@ export default function CotisationsMembresManager() {
       if (cotisationsRes.error) throw cotisationsRes.error;
 
       setMembres(membresRes.data || []);
-      setCotisations(cotisationsRes.data || []);
+      
+      // Transformer pour correspondre à l'ancienne structure
+      const cotisationsTransformees = (cotisationsRes.data || []).map(cot => ({
+        id: cot.id,
+        membre_id: cot.membre_id,
+        montant_mensuel: cot.montant_personnalise,
+        actif: cot.actif
+      }));
+      
+      setCotisations(cotisationsTransformees);
 
       // Initialiser les montants
       const initialMontants: Record<string, string> = {};
-      (cotisationsRes.data || []).forEach(cot => {
+      cotisationsTransformees.forEach(cot => {
         initialMontants[cot.membre_id] = cot.montant_mensuel.toString();
       });
       setMontants(initialMontants);
     } catch (error: any) {
       toast({
         title: "Erreur",
-        description: "Impossible de charger les données",
+        description: error.message || "Impossible de charger les données",
         variant: "destructive",
       });
     } finally {
@@ -77,27 +110,45 @@ export default function CotisationsMembresManager() {
   };
 
   const saveCotisation = async (membreId: string) => {
+    if (!exerciceActif || !typeCotisationDefaut) {
+      toast({
+        title: "Erreur",
+        description: "Aucun exercice actif ou type de cotisation trouvé",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setSaving(true);
     try {
       const montant = parseFloat(montants[membreId] || '0');
+      
+      if (montant < 0) {
+        throw new Error("Le montant ne peut pas être négatif");
+      }
       
       const existingCot = cotisations.find(c => c.membre_id === membreId);
       
       if (existingCot) {
         // Mise à jour
         const { error } = await supabase
-          .from('cotisations_minimales')
-          .update({ montant_mensuel: montant })
+          .from('cotisations_membres')
+          .update({ 
+            montant_personnalise: montant,
+            updated_at: new Date().toISOString()
+          })
           .eq('id', existingCot.id);
         
         if (error) throw error;
       } else {
         // Création
         const { error } = await supabase
-          .from('cotisations_minimales')
+          .from('cotisations_membres')
           .insert({
             membre_id: membreId,
-            montant_mensuel: montant,
+            type_cotisation_id: typeCotisationDefaut,
+            exercice_id: exerciceActif.id,
+            montant_personnalise: montant,
             actif: true
           });
         
@@ -106,7 +157,7 @@ export default function CotisationsMembresManager() {
 
       toast({
         title: "Succès",
-        description: "Cotisation mensuelle mise à jour",
+        description: `Cotisation personnalisée mise à jour pour ${exerciceActif.nom}`,
       });
 
       loadData();
@@ -144,6 +195,11 @@ export default function CotisationsMembresManager() {
         <p className="text-sm text-muted-foreground">
           Définissez un montant de cotisation mensuelle spécifique pour chaque membre
         </p>
+        {exerciceActif && (
+          <Badge variant="outline" className="mt-2 w-fit">
+            Exercice actif : {exerciceActif.nom}
+          </Badge>
+        )}
       </CardHeader>
       <CardContent>
         <Table>
