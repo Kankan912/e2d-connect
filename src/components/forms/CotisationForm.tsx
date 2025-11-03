@@ -281,14 +281,14 @@ export default function CotisationForm({ onSuccess, initialData }: CotisationFor
           <div className="space-y-2">
             <Label htmlFor="reunion_id">Réunion associée (optionnel)</Label>
             <Select 
-              value={form.watch('reunion_id') || ""} 
-              onValueChange={(value) => form.setValue('reunion_id', value || '')}
+              value={form.watch('reunion_id') || "none"} 
+              onValueChange={(value) => form.setValue('reunion_id', value === "none" ? '' : value)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Aucune réunion" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Aucune réunion</SelectItem>
+                <SelectItem value="none">Aucune réunion</SelectItem>
                 {reunions
                   ?.filter(r => {
                     const exerciceId = form.watch('exercice_id');
