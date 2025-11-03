@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { useIsMobile } from '@/hooks/use-mobile';
 import { 
   Table, 
   TableBody, 
@@ -73,6 +74,7 @@ export default function CotisationsGrid() {
   const [dateDebut, setDateDebut] = useState<string>("");
   const [dateFin, setDateFin] = useState<string>("");
   const { toast } = useToast();
+  const isMobile = useIsMobile(); // CORRECTION #14: Détection mobile
 
   useEffect(() => {
     loadData();
@@ -538,7 +540,7 @@ export default function CotisationsGrid() {
             )}
           </div>
           
-          {/* Boutons export */}
+          {/* CORRECTION #13: Boutons export filtrés avec compteur */}
           <div className="mt-4 flex gap-2 flex-wrap">
             <Button 
               variant="outline"
@@ -555,11 +557,17 @@ export default function CotisationsGrid() {
                     statut: cot.statut
                   };
                 });
+                
+                toast({
+                  title: "Export en cours",
+                  description: `${exportData.length} cotisations filtrées seront exportées`,
+                });
+                
                 exportCotisationsExcel(exportData);
               }}
             >
               <FileSpreadsheet className="w-4 h-4 mr-2" />
-              Exporter Excel (filtrées)
+              Excel ({Object.keys(filteredCotisationsMap).length})
             </Button>
             <Button 
               variant="outline"
@@ -576,11 +584,17 @@ export default function CotisationsGrid() {
                     statut: cot.statut
                   };
                 });
+                
+                toast({
+                  title: "Export en cours",
+                  description: `${exportData.length} cotisations filtrées seront exportées`,
+                });
+                
                 exportCotisationsToPDF(exportData);
               }}
             >
               <FileText className="w-4 h-4 mr-2" />
-              Exporter PDF (filtrées)
+              PDF ({Object.keys(filteredCotisationsMap).length})
             </Button>
           </div>
         </CardContent>
@@ -595,8 +609,9 @@ export default function CotisationsGrid() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <ScrollArea className="w-full">
-            <div className="overflow-x-auto">
+          {/* CORRECTION #14: ScrollArea pour mobile responsive */}
+          <ScrollArea className={isMobile ? "w-full whitespace-nowrap" : "w-full"}>
+            <div className={isMobile ? "overflow-x-auto min-w-[800px]" : "overflow-x-auto"}>
               <div className="min-w-full">
                 {/* En-tête avec types de cotisations */}
                 <div className="grid grid-cols-1 gap-4" style={{

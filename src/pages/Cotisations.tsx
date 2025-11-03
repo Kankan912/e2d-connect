@@ -479,6 +479,7 @@ useRealtimeUpdates({
               <Button variant="outline" onClick={() => navigate("/cotisations-grid")}>
                 Vue Grille
               </Button>
+              {/* CORRECTION #13: Exports filtrés */}
               <Button 
                 variant="outline"
                 onClick={() => {
@@ -490,11 +491,17 @@ useRealtimeUpdates({
                     statut: cot.statut,
                     notes: cot.notes || ''
                   }));
+                  
+                  toast({
+                    title: "Export en cours",
+                    description: `${dataToExport.length} cotisations filtrées seront exportées`,
+                  });
+                  
                   exportCotisationsExcel(dataToExport);
                 }}
               >
                 <FileSpreadsheet className="w-4 h-4 mr-2" />
-                Excel
+                Excel ({filteredCotisations.length})
               </Button>
               <Button 
                 variant="outline"
@@ -506,11 +513,17 @@ useRealtimeUpdates({
                     date_paiement: cot.date_paiement,
                     statut: cot.statut
                   }));
+                  
+                  toast({
+                    title: "Export en cours",
+                    description: `${dataToExport.length} cotisations filtrées seront exportées`,
+                  });
+                  
                   exportCotisationsToPDF(dataToExport);
                 }}
               >
                 <FileText className="w-4 h-4 mr-2" />
-                PDF
+                PDF ({filteredCotisations.length})
               </Button>
             </div>
           </AccordionContent>

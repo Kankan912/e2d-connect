@@ -40,6 +40,35 @@ class Logger {
       console.log(`✅ [SUCCESS] ${message}`, data !== undefined ? data : '');
     }
   }
+
+  // CORRECTION #16: Logger structuré avec contexte
+  logWithContext(level: LogLevel, message: string, context: LogContext) {
+    const timestamp = new Date().toISOString();
+    const emoji = level === 'error' ? '❌' : level === 'warn' ? '⚠️' : level === 'debug' ? '🐛' : 'ℹ️';
+    
+    const formattedLog = {
+      timestamp,
+      level,
+      message,
+      component: context.component,
+      action: context.action,
+      data: context.data
+    };
+
+    if (this.isDevelopment || this.debugMode || level === 'error') {
+      const consoleMethod = level === 'error' ? 'error' : level === 'warn' ? 'warn' : 'log';
+      console[consoleMethod](
+        `${emoji} [${level.toUpperCase()}] [${context.component || 'UNKNOWN'}] ${message}`,
+        formattedLog
+      );
+    }
+
+    // En production, envoyer les erreurs à un service externe (Sentry, LogRocket)
+    if (!this.isDevelopment && level === 'error') {
+      // TODO: Intégration Sentry
+      console.error('[PRODUCTION ERROR]', formattedLog);
+    }
+  }
 }
 
 export const logger = new Logger();

@@ -161,10 +161,19 @@ export default function BeneficiairesReunionManager({ reunionId }: Props) {
         });
 
         if (notifError) {
-          console.error('[BENEFICIAIRE] Erreur envoi notification:', notifError);
-          // Ne pas bloquer le processus principal
+          // CORRECTION #16: Logger structuré avec contexte
+          logger.logWithContext('error', 'Erreur envoi notification', {
+            component: 'BeneficiairesReunionManager',
+            action: 'sendNotification',
+            data: { error: notifError }
+          });
         } else {
-          console.log('[BENEFICIAIRE] Notification paiement bénéficiaire envoyée');
+          // CORRECTION #16: Logger structuré avec contexte
+          logger.logWithContext('info', 'Notification paiement bénéficiaire envoyée', {
+            component: 'BeneficiairesReunionManager',
+            action: 'confirmerPaiement',
+            data: { beneficiaireId, montant: beneficiaire.montant_benefice }
+          });
         }
       }
 

@@ -1,6 +1,8 @@
 import { ReactNode } from 'react';
 import { usePermissions } from '@/hooks/usePermissions';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { ShieldAlert } from 'lucide-react';
 import { logger } from '@/lib/logger';
 
@@ -24,23 +26,43 @@ export function PermissionGuard({
   }
 
   if (!hasPermission(resource, action)) {
-    logger.info('[PERMISSION_GUARD] Access blocked', {
-      resource,
-      action,
-      userRole,
-      component: 'PermissionGuard'
+    // CORRECTION #16: Logger structuré avec contexte
+    logger.logWithContext('warn', 'Access blocked', {
+      component: 'PermissionGuard',
+      action: 'blockAccess',
+      data: { resource, action: action, userRole }
     });
     
+    // CORRECTION #15: Message d'erreur contextuel amélioré
     return fallback || (
-      <Alert variant="destructive">
+      <Alert className="m-4">
         <ShieldAlert className="h-4 w-4" />
-        <AlertTitle>Accès restreint</AlertTitle>
-        <AlertDescription>
-          Vous n'avez pas la permission de {action} sur {resource}.
-          <br />
-          Rôle actuel : <strong>{userRole || 'Aucun'}</strong>
-          <br />
-          💡 Contactez un administrateur pour obtenir cette permission.
+        <AlertTitle>Accès Refusé</AlertTitle>
+        <AlertDescription className="space-y-3">
+          <p>
+            Vous n'avez pas la permission <Badge variant="destructive" className="mx-1">{action}</Badge> 
+            sur la ressource <Badge className="mx-1">{resource}</Badge>.
+          </p>
+          <p className="text-xs text-muted-foreground">
+            💡 Contactez un administrateur pour obtenir cette permission. 
+            Votre rôle actuel : <strong>{userRole || 'Aucun'}</strong>
+          </p>
+          <div className="flex gap-2 mt-4">
+            <Button 
+              size="sm" 
+              variant="outline" 
+              onClick={() => window.history.back()}
+            >
+              ← Retour
+            </Button>
+            <Button 
+              size="sm" 
+              variant="outline" 
+              onClick={() => window.location.href = '/configuration'}
+            >
+              ⚙️ Configuration
+            </Button>
+          </div>
         </AlertDescription>
       </Alert>
     );

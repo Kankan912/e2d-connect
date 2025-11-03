@@ -88,11 +88,11 @@ export function usePermissions() {
 
     const result = perm?.granted || false;
     
-    logger.debug('[PERMISSIONS] Check permission', {
-      resource,
-      action,
-      userRole,
-      granted: result
+    // CORRECTION #16: Logger structuré avec contexte
+    logger.logWithContext('debug', 'Checking permission', {
+      component: 'usePermissions',
+      action: 'checkPermission',
+      data: { resource, action, userRole, granted: result }
     });
 
     return result;
@@ -100,7 +100,12 @@ export function usePermissions() {
 
   const requirePermission = (resource: string, action: string): void => {
     if (!hasPermission(resource, action)) {
-      logger.warn('[PERMISSIONS] Access denied', { resource, action, userRole });
+      // CORRECTION #16: Logger structuré avec contexte
+      logger.logWithContext('warn', 'Access denied', {
+        component: 'usePermissions',
+        action: 'requirePermission',
+        data: { resource, action, userRole }
+      });
       toast({
         title: "Accès refusé",
         description: `Vous n'avez pas la permission de ${action} sur ${resource}`,

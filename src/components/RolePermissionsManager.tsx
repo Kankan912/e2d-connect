@@ -11,7 +11,13 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
-import { Shield, Save, Users } from "lucide-react";
+import { 
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Shield, Save, Users, Zap, CheckSquare, XSquare, Copy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -122,6 +128,50 @@ export default function RolePermissionsManager() {
         granted: true
       }]);
     }
+  };
+
+  // CORRECTION #15: Actions rapides permissions
+  const grantAllPermissions = (roleId: string) => {
+    const updatedPerms = AVAILABLE_PERMISSIONS.map(perm => ({
+      role_id: roleId,
+      resource: perm.resource,
+      permission: perm.permission,
+      granted: true
+    }));
+    setPermissions(prev => {
+      const filtered = prev.filter(p => p.role_id !== roleId);
+      return [...filtered, ...updatedPerms];
+    });
+    toast({
+      title: "Succès",
+      description: `Toutes les permissions activées pour ${roles.find(r => r.id === roleId)?.name}`,
+    });
+  };
+
+  const revokeAllPermissions = (roleId: string) => {
+    setPermissions(prev => prev.filter(p => p.role_id !== roleId));
+    toast({
+      title: "Succès",
+      description: `Toutes les permissions désactivées pour ${roles.find(r => r.id === roleId)?.name}`,
+    });
+  };
+
+  const copyPermissions = (sourceRoleId: string, targetRoleId: string) => {
+    const sourcePerms = permissions.filter(p => p.role_id === sourceRoleId && p.granted);
+    const targetPerms = sourcePerms.map(p => ({
+      ...p,
+      role_id: targetRoleId
+    }));
+    
+    setPermissions(prev => {
+      const filtered = prev.filter(p => p.role_id !== targetRoleId);
+      return [...filtered, ...targetPerms];
+    });
+    
+    toast({
+      title: "Succès",
+      description: `${sourcePerms.length} permissions copiées de ${roles.find(r => r.id === sourceRoleId)?.name} vers ${roles.find(r => r.id === targetRoleId)?.name}`,
+    });
   };
 
   const savePermissions = async () => {
@@ -251,6 +301,58 @@ export default function RolePermissionsManager() {
           {saving ? "Sauvegarde..." : "Sauvegarder"}
         </Button>
       </div>
+
+      {/* CORRECTION #15: Accordéon Actions rapides */}
+      <Accordion type="single" collapsible className="mb-6">
+        <AccordionItem value="quick-actions">
+          <AccordionTrigger>
+            <div className="flex items-center gap-2">
+              <Zap className="h-4 w-4" />
+              Actions Rapides
+            </div>
+          </AccordionTrigger>
+          <AccordionContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4">
+              {roles.map(role => (
+                <Card key={role.id} className="border-2">
+                  <CardContent className="p-4 space-y-2">
+                    <h4 className="font-semibold mb-3">{role.name}</h4>
+                    <Button 
+                      onClick={() => grantAllPermissions(role.id)} 
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                    >
+                      <CheckSquare className="w-4 h-4 mr-2" />
+                      Tout activer
+                    </Button>
+                    <Button 
+                      onClick={() => revokeAllPermissions(role.id)} 
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                    >
+                      <XSquare className="w-4 h-4 mr-2" />
+                      Tout désactiver
+                    </Button>
+                    {role.name !== 'administrateur' && roles.find(r => r.name === 'administrateur') && (
+                      <Button 
+                        onClick={() => copyPermissions(roles.find(r => r.name === 'administrateur')!.id, role.id)} 
+                        variant="outline"
+                        size="sm"
+                        className="w-full"
+                      >
+                        <Copy className="w-4 h-4 mr-2" />
+                        Copier admin
+                      </Button>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
 
       <Card>
         <CardHeader>
