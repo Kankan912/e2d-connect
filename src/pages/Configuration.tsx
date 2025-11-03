@@ -7,6 +7,8 @@ import AdminCreateAccount from "@/components/AdminCreateAccount";
 import BackupManager from "@/components/BackupManager";
 import RolePermissionsManager from "@/components/RolePermissionsManager";
 import RoleManager from "@/components/RoleManager";
+import { PermissionGuard } from '@/components/PermissionGuard';
+import PermissionsAuditViewer from '@/components/PermissionsAuditViewer';
 import TontineBeneficiairesManager from "@/components/TontineBeneficiairesManager";
 import { SystemeNotifications } from "@/components/SystemeNotifications";
 import LogoHeader from "@/components/LogoHeader";
@@ -189,10 +191,13 @@ export default function Configuration() {
             </CardContent>
           </Card>
           
-          <div className="grid gap-6 md:grid-cols-2">
-            <RoleManager />
-            <RolePermissionsManager />
-          </div>
+          <PermissionGuard resource="permissions" action="update">
+            <div className="grid gap-6 md:grid-cols-2">
+              <RoleManager />
+              <RolePermissionsManager />
+            </div>
+            <PermissionsAuditViewer />
+          </PermissionGuard>
         </TabsContent>
 
         <TabsContent value="cotisations" className="space-y-6">

@@ -26,6 +26,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import MembreForm from "@/components/forms/MembreForm";
 import { useNavigate } from "react-router-dom";
+import { PermissionGuard } from '@/components/PermissionGuard';
 
 interface Membre {
   id: string;
@@ -188,16 +189,18 @@ export default function Membres() {
             Gérez les membres de l'association E2D
           </p>
         </div>
-        <Button 
-          className="bg-gradient-to-r from-primary to-primary-light"
-          onClick={() => {
-            setSelectedMembre(null);
-            setShowForm(true);
-          }}
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Nouveau membre
-        </Button>
+        <PermissionGuard resource="membres" action="create">
+          <Button 
+            className="bg-gradient-to-r from-primary to-primary-light"
+            onClick={() => {
+              setSelectedMembre(null);
+              setShowForm(true);
+            }}
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Nouveau membre
+          </Button>
+        </PermissionGuard>
       </div>
 
       {/* Stats Cards */}

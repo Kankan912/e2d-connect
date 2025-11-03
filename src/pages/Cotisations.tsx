@@ -34,6 +34,7 @@ import MembreCotisationConfigForm from "@/components/forms/MembreCotisationConfi
 import BeneficiairesReunion from "@/components/BeneficiairesReunion";
 import LogoHeader from "@/components/LogoHeader";
 import { logger } from "@/lib/logger";
+import { PermissionGuard } from '@/components/PermissionGuard';
 
 import type { CotisationWithRelations, TypeCotisation, StatutCotisation } from '@/lib/types/cotisations';
 
@@ -427,13 +428,15 @@ useRealtimeUpdates({
 
       {/* Actions */}
       <div className="flex justify-end gap-2">
-        <Button 
-          className="bg-gradient-to-r from-primary to-secondary"
-          onClick={() => setShowForm(true)}
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Nouvelle cotisation
-        </Button>
+        <PermissionGuard resource="cotisations" action="create">
+          <Button 
+            className="bg-gradient-to-r from-primary to-secondary"
+            onClick={() => setShowForm(true)}
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Nouvelle cotisation
+          </Button>
+        </PermissionGuard>
         <Button 
           variant="outline"
           onClick={() => navigate("/cotisations-grid")}
