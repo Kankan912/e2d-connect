@@ -260,11 +260,55 @@ export default function CotisationsGrid() {
       }
     };
 
+    // Gestionnaire validation rapide
+    const handleValidatePayment = async (e: React.MouseEvent) => {
+      e.stopPropagation();
+      
+      try {
+        const { error } = await supabase
+          .from('cotisations')
+          .update({ 
+            statut: 'paye',
+            date_paiement: new Date().toISOString().split('T')[0]
+          })
+          .eq('id', cotisation.id);
+        
+        if (error) throw error;
+        
+        toast({
+          title: "Paiement validé",
+          description: `Cotisation de ${membre.prenom} ${membre.nom} validée`,
+        });
+        
+        loadData();
+      } catch (error: any) {
+        toast({
+          title: "Erreur",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
+    };
+
     return (
       <div className="p-2 border rounded hover:bg-muted/50 cursor-pointer transition-colors">
         <div className="flex justify-between items-start mb-1">
           {getStatutBadge(cotisation.statut)}
-          <Edit className="w-3 h-3 text-muted-foreground" />
+          <div className="flex gap-1">
+            {/* Bouton validation rapide si en_attente ou en_retard */}
+            {(cotisation.statut === 'en_attente' || cotisation.statut === 'en_retard') && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-5 w-5 p-0"
+                onClick={handleValidatePayment}
+                title="Valider le paiement"
+              >
+                <CheckCircle className="w-3 h-3 text-success" />
+              </Button>
+            )}
+            <Edit className="w-3 h-3 text-muted-foreground" />
+          </div>
         </div>
         <div className="text-sm font-medium text-primary">
           {cotisation.montant.toLocaleString()} FCFA

@@ -338,6 +338,61 @@ export type Database = {
           },
         ]
       }
+      cotisations_membres: {
+        Row: {
+          actif: boolean
+          created_at: string
+          exercice_id: string
+          id: string
+          membre_id: string
+          montant_personnalise: number
+          type_cotisation_id: string
+          updated_at: string
+        }
+        Insert: {
+          actif?: boolean
+          created_at?: string
+          exercice_id: string
+          id?: string
+          membre_id: string
+          montant_personnalise?: number
+          type_cotisation_id: string
+          updated_at?: string
+        }
+        Update: {
+          actif?: boolean
+          created_at?: string
+          exercice_id?: string
+          id?: string
+          membre_id?: string
+          montant_personnalise?: number
+          type_cotisation_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cotisations_membres_exercice_id_fkey"
+            columns: ["exercice_id"]
+            isOneToOne: false
+            referencedRelation: "exercices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cotisations_membres_membre_id_fkey"
+            columns: ["membre_id"]
+            isOneToOne: false
+            referencedRelation: "membres"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cotisations_membres_type_cotisation_id_fkey"
+            columns: ["type_cotisation_id"]
+            isOneToOne: false
+            referencedRelation: "cotisations_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cotisations_minimales: {
         Row: {
           actif: boolean
@@ -3129,6 +3184,14 @@ export type Database = {
         Returns: number
       }
       get_current_user_role: { Args: never; Returns: string }
+      get_montant_cotisation_membre: {
+        Args: {
+          _exercice_id: string
+          _membre_id: string
+          _type_cotisation_id: string
+        }
+        Returns: number
+      }
       get_pret_status: {
         Args: { echeance: string; montant_paye: number; montant_total: number }
         Returns: string

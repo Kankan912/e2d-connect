@@ -127,40 +127,70 @@ export default function RolePermissionsManager() {
   const savePermissions = async () => {
     setSaving(true);
     try {
-      // Supprimer toutes les permissions existantes
-      const { error: deleteError } = await supabase
+      // 1. Récupérer toutes les permissions existantes
+      const { data: existingPerms, error: fetchError } = await supabase
         .from('role_permissions')
-        .delete()
-        .neq('role_id', '');
+        .select('id, role_id, resource, permission, granted');
+      
+      if (fetchError) throw fetchError;
 
-      if (deleteError) throw deleteError;
+      // 2. Créer des Maps pour comparaison
+      const existingMap = new Map(
+        (existingPerms || []).map(p => [`${p.role_id}-${p.resource}-${p.permission}`, p])
+      );
+      
+      const currentMap = new Map(
+        permissions.map(p => [`${p.role_id}-${p.resource}-${p.permission}`, p])
+      );
 
-      // Insérer les nouvelles permissions
-      const permissionsToInsert = permissions
-        .filter(p => p.granted)
-        .map(p => ({
-          role_id: p.role_id,
-          resource: p.resource,
-          permission: p.permission,
-          granted: p.granted
-        }));
+      // 3. Identifier les opérations
+      const toDelete: string[] = [];
+      const toUpdate: any[] = [];
+      const toInsert: any[] = [];
 
-      if (permissionsToInsert.length > 0) {
-        const { error: insertError } = await supabase
-          .from('role_permissions')
-          .insert(permissionsToInsert);
+      // Parcourir les permissions existantes
+      existingMap.forEach((existing, key) => {
+        const current = currentMap.get(key);
+        if (!current) {
+          // Permission supprimée
+          toDelete.push(existing.id);
+        } else if (existing.granted !== current.granted) {
+          // Permission modifiée
+          toUpdate.push({ id: existing.id, granted: current.granted });
+        }
+      });
 
-        if (insertError) throw insertError;
-      }
+      // Parcourir les nouvelles permissions
+      currentMap.forEach((current, key) => {
+        if (!existingMap.has(key) && current.granted) {
+          // Nouvelle permission
+          toInsert.push({
+            role_id: current.role_id,
+            resource: current.resource,
+            permission: current.permission,
+            granted: current.granted
+          });
+        }
+      });
+
+      // 4. Exécuter les opérations via Edge Function (avec transaction)
+      const { data: result, error: saveError } = await supabase.functions.invoke('save-permissions', {
+        body: { toDelete, toUpdate, toInsert }
+      });
+
+      if (saveError) throw saveError;
 
       toast({
         title: "Succès",
-        description: "Permissions mises à jour avec succès",
+        description: `${result.inserted} créées, ${result.updated} modifiées, ${result.deleted} supprimées`,
       });
+
+      await loadData(); // Recharger les données
     } catch (error: any) {
+      console.error('Erreur sauvegarde permissions:', error);
       toast({
-        title: "Erreur",
-        description: "Impossible de sauvegarder les permissions",
+        title: "Erreur de sauvegarde",
+        description: error.message || "Impossible de sauvegarder les permissions",
         variant: "destructive",
       });
     } finally {
