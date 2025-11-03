@@ -23,7 +23,9 @@ import {
   Clock,
   AlertTriangle,
   Edit,
-  Settings
+  Settings,
+  FileSpreadsheet,
+  FileText
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -35,6 +37,10 @@ import BeneficiairesReunion from "@/components/BeneficiairesReunion";
 import LogoHeader from "@/components/LogoHeader";
 import { logger } from "@/lib/logger";
 import { PermissionGuard } from '@/components/PermissionGuard';
+import { exportCotisationsExcel } from '@/lib/excelUtils';
+import { exportCotisationsToPDF } from '@/lib/pdfExport';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 import type { CotisationWithRelations, TypeCotisation, StatutCotisation } from '@/lib/types/cotisations';
 
@@ -58,6 +64,7 @@ const [dateDebut, setDateDebut] = useState<string>("");
 const [dateFin, setDateFin] = useState<string>("");
 const { toast } = useToast();
 const navigate = useNavigate();
+const isMobile = useIsMobile();
 
 useEffect(() => {
   loadCotisations();
@@ -426,24 +433,89 @@ useRealtimeUpdates({
         </CardContent>
       </Card>
 
-      {/* Actions */}
-      <div className="flex justify-end gap-2">
-        <PermissionGuard resource="cotisations" action="create">
-          <Button 
-            className="bg-gradient-to-r from-primary to-secondary"
-            onClick={() => setShowForm(true)}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Nouvelle cotisation
-          </Button>
-        </PermissionGuard>
-        <Button 
-          variant="outline"
-          onClick={() => navigate("/cotisations-grid")}
-        >
-          Vue Grille
-        </Button>
-      </div>
+      {/* Accordéon Actions rapides */}
+      <Accordion type="single" collapsible className="mb-4">
+        <AccordionItem value="actions-cotisations">
+          <AccordionTrigger>Actions rapides (Cotisations)</AccordionTrigger>
+          <AccordionContent>
+            <div className="flex gap-2 flex-wrap">
+              <PermissionGuard resource="cotisations" action="create">
+                <Button onClick={() => setShowForm(true)}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Nouvelle cotisation
+                </Button>
+              </PermissionGuard>
+              <PermissionGuard resource="cotisations" action="update">
+                <Button 
+                  variant="outline" 
+                  onClick={async () => {
+                    const enAttente = filteredCotisations.filter(c => c.statut === 'en_attente');
+                    if (enAttente.length === 0) {
+                      toast({ title: "Aucun paiement en attente", variant: "default" });
+                      return;
+                    }
+                    
+                    const confirm = window.confirm(`Valider ${enAttente.length} paiements en attente ?`);
+                    if (!confirm) return;
+                    
+                    try {
+                      const { error } = await supabase
+                        .from('cotisations')
+                        .update({ statut: 'paye', date_paiement: new Date().toISOString().split('T')[0] })
+                        .in('id', enAttente.map(c => c.id));
+                      
+                      if (error) throw error;
+                      toast({ title: `✅ ${enAttente.length} paiements validés` });
+                      loadCotisations();
+                    } catch (error: any) {
+                      toast({ title: "Erreur", description: error.message, variant: "destructive" });
+                    }
+                  }}
+                >
+                  <CheckCircle className="w-4 h-4 mr-2" />
+                  Valider tous les paiements en attente
+                </Button>
+              </PermissionGuard>
+              <Button variant="outline" onClick={() => navigate("/cotisations-grid")}>
+                Vue Grille
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={() => {
+                  const dataToExport = filteredCotisations.map(cot => ({
+                    membre_nom: `${cot.membre.prenom} ${cot.membre.nom}`,
+                    type_nom: cot.cotisations_types.nom,
+                    montant: cot.montant,
+                    date_paiement: cot.date_paiement,
+                    statut: cot.statut,
+                    notes: cot.notes || ''
+                  }));
+                  exportCotisationsExcel(dataToExport);
+                }}
+              >
+                <FileSpreadsheet className="w-4 h-4 mr-2" />
+                Excel
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={() => {
+                  const dataToExport = filteredCotisations.map(cot => ({
+                    membre_nom: `${cot.membre.prenom} ${cot.membre.nom}`,
+                    type_nom: cot.cotisations_types.nom,
+                    montant: cot.montant,
+                    date_paiement: cot.date_paiement,
+                    statut: cot.statut
+                  }));
+                  exportCotisationsToPDF(dataToExport);
+                }}
+              >
+                <FileText className="w-4 h-4 mr-2" />
+                PDF
+              </Button>
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
 
       {/* Stats Cards */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
@@ -550,62 +622,94 @@ useRealtimeUpdates({
         </CardHeader>
         
         <CardContent>
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Membre</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Montant</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Statut</TableHead>
-                  <TableHead>Notes</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredCotisations.map((cotisation) => (
-                  <TableRow key={cotisation.id} className="hover:bg-muted/50">
-                    <TableCell className="font-medium">
-                      {cotisation.membre?.nom} {cotisation.membre?.prenom}
-                    </TableCell>
-                    
-                    <TableCell>
+          {isMobile ? (
+            <div className="space-y-4">
+              {filteredCotisations.map((cotisation) => (
+                <Card key={cotisation.id}>
+                  <CardContent className="p-4">
+                    <div className="flex justify-between items-start mb-2">
                       <div>
-                        <p className="font-medium">{cotisation.cotisations_types?.nom}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {cotisation.cotisations_types?.description}
-                        </p>
+                        <p className="font-medium">{cotisation.membre.prenom} {cotisation.membre.nom}</p>
+                        <p className="text-sm text-muted-foreground">{cotisation.cotisations_types.nom}</p>
                       </div>
-                    </TableCell>
-                    
-                    <TableCell className="font-bold text-primary">
-                      {cotisation.montant.toLocaleString()} FCFA
-                    </TableCell>
-                    
-                    <TableCell className="text-muted-foreground">
-                      {new Date(cotisation.date_paiement).toLocaleDateString('fr-FR')}
-                    </TableCell>
-                    
-                    <TableCell>
                       {getStatutBadge(cotisation.statut)}
-                    </TableCell>
-                    
-                    <TableCell className="text-muted-foreground">
-                      {cotisation.notes || "-"}
-                    </TableCell>
-                  </TableRow>
-                ))}
-                
-                {filteredCotisations.length === 0 && (
+                    </div>
+                    <div className="flex justify-between items-center mt-4">
+                      <span className="text-lg font-bold text-primary">{cotisation.montant.toLocaleString()} FCFA</span>
+                      <Button size="sm" variant="ghost">
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      {new Date(cotisation.date_paiement).toLocaleDateString('fr-FR')}
+                    </p>
+                  </CardContent>
+                </Card>
+              ))}
+              {filteredCotisations.length === 0 && (
+                <div className="text-center py-8 text-muted-foreground">
+                  {searchTerm ? "Aucune cotisation trouvée" : "Aucune cotisation enregistrée"}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                      {searchTerm ? "Aucune cotisation trouvée" : "Aucune cotisation enregistrée"}
-                    </TableCell>
+                    <TableHead>Membre</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Montant</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Statut</TableHead>
+                    <TableHead>Notes</TableHead>
                   </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
+                </TableHeader>
+                <TableBody>
+                  {filteredCotisations.map((cotisation) => (
+                    <TableRow key={cotisation.id} className="hover:bg-muted/50">
+                      <TableCell className="font-medium">
+                        {cotisation.membre?.nom} {cotisation.membre?.prenom}
+                      </TableCell>
+                      
+                      <TableCell>
+                        <div>
+                          <p className="font-medium">{cotisation.cotisations_types?.nom}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {cotisation.cotisations_types?.description}
+                          </p>
+                        </div>
+                      </TableCell>
+                      
+                      <TableCell className="font-bold text-primary">
+                        {cotisation.montant.toLocaleString()} FCFA
+                      </TableCell>
+                      
+                      <TableCell className="text-muted-foreground">
+                        {new Date(cotisation.date_paiement).toLocaleDateString('fr-FR')}
+                      </TableCell>
+                      
+                      <TableCell>
+                        {getStatutBadge(cotisation.statut)}
+                      </TableCell>
+                      
+                      <TableCell className="text-muted-foreground">
+                        {cotisation.notes || "-"}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  
+                  {filteredCotisations.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                        {searchTerm ? "Aucune cotisation trouvée" : "Aucune cotisation enregistrée"}
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </CardContent>
       </Card>
 

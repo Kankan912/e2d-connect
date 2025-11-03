@@ -22,13 +22,18 @@ import {
   CheckCircle,
   Clock,
   AlertTriangle,
-  Edit
+  Edit,
+  FileSpreadsheet,
+  FileText
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import LogoHeader from "@/components/LogoHeader";
 import { logger } from "@/lib/logger";
 import AlertesCotisations from "@/components/AlertesCotisations";
+import { exportCotisationsExcel } from '@/lib/excelUtils';
+import { exportCotisationsToPDF } from '@/lib/pdfExport';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
 import type { TypeCotisation, StatutCotisation } from '@/lib/types/cotisations';
 
@@ -515,6 +520,52 @@ export default function CotisationsGrid() {
               </Button>
             )}
           </div>
+          
+          {/* Boutons export */}
+          <div className="mt-4 flex gap-2 flex-wrap">
+            <Button 
+              variant="outline"
+              onClick={() => {
+                const exportData = Object.entries(filteredCotisationsMap).map(([key, cot]) => {
+                  const [membreId, typeId] = key.split('-');
+                  const membre = membres.find(m => m.id === membreId);
+                  const type = typesCotisations.find(t => t.id === typeId);
+                  return {
+                    membre_nom: `${membre?.prenom} ${membre?.nom}`,
+                    type_nom: type?.nom || '',
+                    montant: cot.montant,
+                    date_paiement: cot.date_paiement,
+                    statut: cot.statut
+                  };
+                });
+                exportCotisationsExcel(exportData);
+              }}
+            >
+              <FileSpreadsheet className="w-4 h-4 mr-2" />
+              Exporter Excel (filtrées)
+            </Button>
+            <Button 
+              variant="outline"
+              onClick={() => {
+                const exportData = Object.entries(filteredCotisationsMap).map(([key, cot]) => {
+                  const [membreId, typeId] = key.split('-');
+                  const membre = membres.find(m => m.id === membreId);
+                  const type = typesCotisations.find(t => t.id === typeId);
+                  return {
+                    membre_nom: `${membre?.prenom} ${membre?.nom}`,
+                    type_nom: type?.nom || '',
+                    montant: cot.montant,
+                    date_paiement: cot.date_paiement,
+                    statut: cot.statut
+                  };
+                });
+                exportCotisationsToPDF(exportData);
+              }}
+            >
+              <FileText className="w-4 h-4 mr-2" />
+              Exporter PDF (filtrées)
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
@@ -527,91 +578,94 @@ export default function CotisationsGrid() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <div className="min-w-full">
-              {/* En-tête avec types de cotisations */}
-              <div className="grid grid-cols-1 gap-4" style={{
-                gridTemplateColumns: `200px repeat(${typesCotisations.length}, 180px)`
-              }}>
-                {/* Coin supérieur gauche */}
-                <div className="p-4 bg-muted rounded-lg">
-                  <div className="font-semibold text-sm">Membre / Type</div>
-                </div>
-                
-                {/* En-têtes des types de cotisations */}
-                {typesCotisations.map((type) => (
-                  <div key={type.id} className="p-4 bg-muted rounded-lg">
-                    <div className="font-semibold text-sm mb-1">{type.nom}</div>
-                    <div className="text-xs text-muted-foreground mb-2">{type.description}</div>
-                    <div className="text-xs font-medium text-primary">
-                      {type.montant_defaut?.toLocaleString()} FCFA
-                    </div>
-                    {type.obligatoire && (
-                      <Badge variant="outline" className="text-xs mt-1">Obligatoire</Badge>
-                    )}
+          <ScrollArea className="w-full">
+            <div className="overflow-x-auto">
+              <div className="min-w-full">
+                {/* En-tête avec types de cotisations */}
+                <div className="grid grid-cols-1 gap-4" style={{
+                  gridTemplateColumns: `200px repeat(${typesCotisations.length}, 180px)`
+                }}>
+                  {/* Coin supérieur gauche */}
+                  <div className="p-4 bg-muted rounded-lg">
+                    <div className="font-semibold text-sm">Membre / Type</div>
                   </div>
-                ))}
-              </div>
-
-              {/* Lignes des membres */}
-              <div className="mt-4 space-y-2">
-                {filteredMembres.map((membre) => (
-                  <div key={membre.id} className="grid gap-4" style={{
-                    gridTemplateColumns: `200px repeat(${typesCotisations.length}, 180px)`
-                  }}>
-                    {/* Nom du membre */}
-                    <div className="p-4 bg-card rounded-lg border">
-                      <div className="font-medium text-sm">{membre.nom} {membre.prenom}</div>
-                      <div className="text-xs text-muted-foreground">{membre.email}</div>
+                  
+                  {/* En-têtes des types de cotisations */}
+                  {typesCotisations.map((type) => (
+                    <div key={type.id} className="p-4 bg-muted rounded-lg">
+                      <div className="font-semibold text-sm mb-1">{type.nom}</div>
+                      <div className="text-xs text-muted-foreground mb-2">{type.description}</div>
+                      <div className="text-xs font-medium text-primary">
+                        {type.montant_defaut?.toLocaleString()} FCFA
+                      </div>
+                      {type.obligatoire && (
+                        <Badge variant="outline" className="text-xs mt-1">Obligatoire</Badge>
+                      )}
                     </div>
-                    
-                    {/* Cellules des cotisations */}
-                    {typesCotisations.map((type) => {
-                      const key = `${membre.id}-${type.id}`;
-                      const cotisation = filteredCotisationsMap[key];
+                  ))}
+                </div>
+
+                {/* Lignes des membres */}
+                <div className="mt-4 space-y-2">
+                  {filteredMembres.map((membre) => (
+                    <div key={membre.id} className="grid gap-4" style={{
+                      gridTemplateColumns: `200px repeat(${typesCotisations.length}, 180px)`
+                    }}>
+                      {/* Nom du membre */}
+                      <div className="p-4 bg-card rounded-lg border">
+                        <div className="font-medium text-sm">{membre.nom} {membre.prenom}</div>
+                        <div className="text-xs text-muted-foreground">{membre.email}</div>
+                      </div>
                       
-                      return (
-                        <div 
-                          key={`${membre.id}-${type.id}`} 
-                          onClick={() => handleCellClick(membre, type)}
-                          className="cursor-pointer"
-                        >
-                          {(type.nom.toLowerCase().includes('huile') || type.nom.toLowerCase().includes('savon')) ? (
-                            <div className="p-2 border rounded hover:bg-muted/50 transition-colors h-16 flex items-center justify-center">
-                              <input
-                                type="checkbox"
-                                checked={cotisation?.statut === 'paye'}
-                                onChange={(e) => {
-                                  e.stopPropagation();
-                                  const montant = e.target.checked ? (type.montant_defaut || 0) : 0;
-                                  const statut = e.target.checked ? 'paye' : 'impaye';
-                                  if (e.target.checked) {
-                                    handleMontantChange(membre.id, type.id, montant.toString());
-                                  } else {
-                                    updateCotisationStatut(membre.id, type.id, statut);
-                                  }
-                                }}
-                                className="h-5 w-5"
-                                onClick={(e) => e.stopPropagation()}
-                              />
-                            </div>
-                          ) : (
-                            getCellContent(membre, type)
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                ))}
-              </div>
-
-              {filteredMembres.length === 0 && (
-                <div className="text-center py-8 text-muted-foreground">
-                  {searchTerm ? "Aucun membre trouvé" : "Aucun membre enregistré"}
+                      {/* Cellules des cotisations */}
+                      {typesCotisations.map((type) => {
+                        const key = `${membre.id}-${type.id}`;
+                        const cotisation = filteredCotisationsMap[key];
+                        
+                        return (
+                          <div 
+                            key={`${membre.id}-${type.id}`} 
+                            onClick={() => handleCellClick(membre, type)}
+                            className="cursor-pointer"
+                          >
+                            {(type.nom.toLowerCase().includes('huile') || type.nom.toLowerCase().includes('savon')) ? (
+                              <div className="p-2 border rounded hover:bg-muted/50 transition-colors h-16 flex items-center justify-center">
+                                <input
+                                  type="checkbox"
+                                  checked={cotisation?.statut === 'paye'}
+                                  onChange={(e) => {
+                                    e.stopPropagation();
+                                    const montant = e.target.checked ? (type.montant_defaut || 0) : 0;
+                                    const statut = e.target.checked ? 'paye' : 'impaye';
+                                    if (e.target.checked) {
+                                      handleMontantChange(membre.id, type.id, montant.toString());
+                                    } else {
+                                      updateCotisationStatut(membre.id, type.id, statut);
+                                    }
+                                  }}
+                                  className="h-5 w-5"
+                                  onClick={(e) => e.stopPropagation()}
+                                />
+                              </div>
+                            ) : (
+                              getCellContent(membre, type)
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ))}
                 </div>
-              )}
+
+                {filteredMembres.length === 0 && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    {searchTerm ? "Aucun membre trouvé" : "Aucun membre enregistré"}
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+            <ScrollBar orientation="horizontal" />
+          </ScrollArea>
         </CardContent>
       </Card>
 

@@ -2,6 +2,7 @@ import { ReactNode } from 'react';
 import { usePermissions } from '@/hooks/usePermissions';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ShieldAlert } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 interface PermissionGuardProps {
   resource: string;
@@ -23,6 +24,13 @@ export function PermissionGuard({
   }
 
   if (!hasPermission(resource, action)) {
+    logger.info('[PERMISSION_GUARD] Access blocked', {
+      resource,
+      action,
+      userRole,
+      component: 'PermissionGuard'
+    });
+    
     return fallback || (
       <Alert variant="destructive">
         <ShieldAlert className="h-4 w-4" />
@@ -31,6 +39,8 @@ export function PermissionGuard({
           Vous n'avez pas la permission de {action} sur {resource}.
           <br />
           Rôle actuel : <strong>{userRole || 'Aucun'}</strong>
+          <br />
+          💡 Contactez un administrateur pour obtenir cette permission.
         </AlertDescription>
       </Alert>
     );

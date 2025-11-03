@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { logger } from '@/lib/logger';
 
 interface Permission {
   resource: string;
@@ -85,11 +86,21 @@ export function usePermissions() {
       p => p.resource === resource && p.action === action
     );
 
-    return perm?.granted || false;
+    const result = perm?.granted || false;
+    
+    logger.debug('[PERMISSIONS] Check permission', {
+      resource,
+      action,
+      userRole,
+      granted: result
+    });
+
+    return result;
   };
 
   const requirePermission = (resource: string, action: string): void => {
     if (!hasPermission(resource, action)) {
+      logger.warn('[PERMISSIONS] Access denied', { resource, action, userRole });
       toast({
         title: "Accès refusé",
         description: `Vous n'avez pas la permission de ${action} sur ${resource}`,

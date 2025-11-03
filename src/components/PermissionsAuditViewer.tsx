@@ -4,6 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { Shield } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 interface AuditLog {
   id: string;
@@ -24,6 +25,7 @@ export default function PermissionsAuditViewer() {
   }, []);
 
   const loadAuditLogs = async () => {
+    logger.debug('[AUDIT_VIEWER] Loading audit logs');
     try {
       const { data, error } = await supabase
         .from('permissions_audit')
@@ -32,9 +34,10 @@ export default function PermissionsAuditViewer() {
         .limit(50);
 
       if (error) throw error;
+      logger.success('[AUDIT_VIEWER] Loaded logs', { count: data?.length });
       setLogs(data || []);
     } catch (error) {
-      console.error('[AUDIT] Erreur chargement:', error);
+      logger.error('[AUDIT_VIEWER] Failed to load logs', error);
     } finally {
       setLoading(false);
     }
