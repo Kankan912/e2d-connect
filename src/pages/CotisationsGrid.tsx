@@ -28,6 +28,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import LogoHeader from "@/components/LogoHeader";
 import { logger } from "@/lib/logger";
+import AlertesCotisations from "@/components/AlertesCotisations";
 
 import type { TypeCotisation, StatutCotisation } from '@/lib/types/cotisations';
 
@@ -247,16 +248,26 @@ export default function CotisationsGrid() {
       );
     }
 
-    const getStatutBadge = (statut: string) => {
+    const getStatutBadge = (statut: string, datePaiement: string) => {
+      const isPast = new Date(datePaiement) < new Date();
+      const opacityClass = isPast ? "opacity-60" : "";
+      const pastPrefix = isPast ? "📅 " : "";
+      
       switch (statut) {
         case 'paye':
-          return <Badge className="bg-success text-success-foreground text-xs"><CheckCircle className="w-3 h-3 mr-1" />Payé</Badge>;
+          return <Badge className={`bg-success text-success-foreground text-xs ${opacityClass}`}>
+            <CheckCircle className="w-3 h-3 mr-1" />{pastPrefix}Payé
+          </Badge>;
         case 'en_attente':
-          return <Badge variant="secondary" className="text-xs"><Clock className="w-3 h-3 mr-1" />En attente</Badge>;
+          return <Badge variant="secondary" className={`text-xs ${opacityClass}`}>
+            <Clock className="w-3 h-3 mr-1" />{pastPrefix}En attente
+          </Badge>;
         case 'en_retard':
-          return <Badge className="bg-destructive text-destructive-foreground text-xs"><AlertTriangle className="w-3 h-3 mr-1" />En retard</Badge>;
+          return <Badge className={`bg-destructive text-destructive-foreground text-xs ${opacityClass}`}>
+            <AlertTriangle className="w-3 h-3 mr-1" />{pastPrefix}En retard
+          </Badge>;
         default:
-          return <Badge variant="outline" className="text-xs">{statut}</Badge>;
+          return <Badge variant="outline" className={`text-xs ${opacityClass}`}>{pastPrefix}{statut}</Badge>;
       }
     };
 
@@ -311,7 +322,7 @@ export default function CotisationsGrid() {
     return (
       <div className="p-2 border rounded hover:bg-muted/50 cursor-pointer transition-colors">
         <div className="flex justify-between items-start mb-1">
-          {getStatutBadge(cotisation.statut)}
+          {getStatutBadge(cotisation.statut, cotisation.date_paiement)}
           <div className="flex gap-1">
             {/* Bouton validation rapide si en_attente ou en_retard */}
             {(cotisation.statut === 'en_attente' || cotisation.statut === 'en_retard') && (
@@ -387,6 +398,40 @@ export default function CotisationsGrid() {
           Quitter le mode grille
         </Button>
       </div>
+
+      {/* Alertes automatiques */}
+      <AlertesCotisations />
+
+      {/* Légende des statuts */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex items-center gap-6 flex-wrap">
+            <div className="font-semibold text-sm mr-2">Légende des statuts :</div>
+            <div className="flex items-center gap-2">
+              <Badge className="bg-success text-success-foreground text-xs">
+                <CheckCircle className="w-3 h-3 mr-1" />Payé
+              </Badge>
+              <span className="text-xs text-muted-foreground">= Cotisation réglée</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary" className="text-xs">
+                <Clock className="w-3 h-3 mr-1" />En attente
+              </Badge>
+              <span className="text-xs text-muted-foreground">= Paiement attendu</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge className="bg-destructive text-destructive-foreground text-xs">
+                <AlertTriangle className="w-3 h-3 mr-1" />En retard
+              </Badge>
+              <span className="text-xs text-muted-foreground">= Échéance dépassée</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge className="opacity-60 text-xs">📅 Passé</Badge>
+              <span className="text-xs text-muted-foreground">= Date antérieure</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
       {/* Filtres hiérarchiques */}
       <Card>
         <CardHeader>
