@@ -193,7 +193,7 @@ useRealtimeUpdates({
     if (!searchMatch) return false;
 
     // Niveau 1 : Filtre par exercice (via date_paiement)
-    if (exerciceId) {
+    if (exerciceId && exerciceId !== "") {
       const exercice = exercices.find(e => e.id === exerciceId);
       if (exercice) {
         const datePaiement = cotisation.date_paiement;
@@ -288,10 +288,10 @@ useRealtimeUpdates({
     );
   }
 
-  const totalCotisations = cotisations.reduce((sum, c) => sum + c.montant, 0);
-  const cotisationsPayees = cotisations.filter(c => c.statut === 'paye').length;
-  const cotisationsEnRetard = cotisations.filter(c => c.statut === 'en_retard').length;
-  const cotisationsMois = cotisations.filter(c => {
+  const totalCotisations = filteredCotisations.reduce((sum, c) => sum + c.montant, 0);
+  const cotisationsPayees = filteredCotisations.filter(c => c.statut === 'paye').length;
+  const cotisationsEnRetard = filteredCotisations.filter(c => c.statut === 'en_retard').length;
+  const cotisationsMois = filteredCotisations.filter(c => {
     const date = new Date(c.date_paiement);
     const now = new Date();
     return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
@@ -399,10 +399,25 @@ useRealtimeUpdates({
             </div>
           </div>
           
-          {exerciceId && (
-            <p className="text-xs text-muted-foreground mt-4">
-              💡 Les filtres sont hiérarchiques : d'abord l'exercice, puis la réunion (optionnel), puis les dates personnalisées (optionnel dans l'exercice).
-            </p>
+          {exerciceId && exerciceId !== "" && (
+            <div className="mt-4 p-3 bg-muted/50 rounded-lg">
+              <p className="text-sm text-muted-foreground flex items-center gap-2 flex-wrap">
+                <span>🔍 <strong>Filtres actifs :</strong></span>
+                <Badge variant="secondary">
+                  Exercice: {exercices?.find(e => e.id === exerciceId)?.nom}
+                </Badge>
+                {selectedReunionId && selectedReunionId !== "" && (
+                  <Badge variant="secondary">
+                    Réunion: {reunions?.find(r => r.id === selectedReunionId)?.sujet || 'Sélectionnée'}
+                  </Badge>
+                )}
+                {(dateDebut || dateFin) && (
+                  <Badge variant="secondary">
+                    Dates: {dateDebut ? new Date(dateDebut).toLocaleDateString('fr-FR') : '...'} - {dateFin ? new Date(dateFin).toLocaleDateString('fr-FR') : '...'}
+                  </Badge>
+                )}
+              </p>
+            </div>
           )}
 
           {exerciceId && (

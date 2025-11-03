@@ -282,7 +282,7 @@ export default function CotisationsGrid() {
   const filteredCotisationsMap = Object.fromEntries(
     Object.entries(cotisations).filter(([key, cot]) => {
       // Niveau 1 : Filtre par exercice
-      if (exerciceId) {
+      if (exerciceId && exerciceId !== "") {
         const exercice = exercices.find(e => e.id === exerciceId);
         if (exercice) {
           const datePaiement = cot.date_paiement;

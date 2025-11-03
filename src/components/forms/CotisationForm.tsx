@@ -19,6 +19,7 @@ const cotisationSchema = z.object({
   montant: z.number().min(0, "Le montant doit être positif"),
   date_paiement: z.string().optional(),
   exercice_id: z.string().optional(),
+  reunion_id: z.string().optional(),
   statut: z.enum(['en_attente', 'payee', 'en_retard', 'exoneree']).default('en_attente'),
   notes: z.string().optional(),
 });
@@ -74,6 +75,19 @@ export default function CotisationForm({ onSuccess, initialData }: CotisationFor
     }
   });
 
+  const { data: reunions } = useQuery({
+    queryKey: ['reunions-recent'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('reunions')
+        .select('id, sujet, date_reunion')
+        .order('date_reunion', { ascending: false })
+        .limit(20);
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const form = useForm<CotisationFormData>({
     resolver: zodResolver(cotisationSchema),
     defaultValues: {
@@ -82,6 +96,7 @@ export default function CotisationForm({ onSuccess, initialData }: CotisationFor
       montant: initialData?.montant || 0,
       date_paiement: initialData?.date_paiement || '',
       exercice_id: initialData?.exercice_id || '',
+      reunion_id: initialData?.reunion_id || '',
       statut: initialData?.statut || 'en_attente',
       notes: initialData?.notes || '',
     },
@@ -261,6 +276,34 @@ export default function CotisationForm({ onSuccess, initialData }: CotisationFor
               rows={3}
               {...form.register('notes')}
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="reunion_id">Réunion associée (optionnel)</Label>
+            <Select 
+              value={form.watch('reunion_id') || ""} 
+              onValueChange={(value) => form.setValue('reunion_id', value || '')}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Aucune réunion" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Aucune réunion</SelectItem>
+                {reunions
+                  ?.filter(r => {
+                    const exerciceId = form.watch('exercice_id');
+                    if (!exerciceId) return true;
+                    const ex = exercices?.find(e => e.id === exerciceId);
+                    if (!ex) return true;
+                    return r.date_reunion >= ex.date_debut && r.date_reunion <= ex.date_fin;
+                  })
+                  .map(r => (
+                    <SelectItem key={r.id} value={r.id}>
+                      {new Date(r.date_reunion).toLocaleDateString('fr-FR')} - {r.sujet || 'Réunion'}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <Button 
