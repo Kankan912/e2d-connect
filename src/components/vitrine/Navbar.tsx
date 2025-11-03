@@ -50,7 +50,7 @@ const Navbar = () => {
           <Link to="/site" className="flex items-center space-x-3 group">
             <img src={logoE2D} alt="Logo E2D" className="h-12 w-auto transition-transform group-hover:scale-105" />
             <span className={`text-xl font-bold transition-colors ${isScrolled ? "text-foreground" : "text-white"}`}>
-              E2D Connect
+              Association E2D
             </span>
           </Link>
 
@@ -72,22 +72,8 @@ const Navbar = () => {
           {/* CTA Buttons */}
           <div className="hidden lg:flex items-center space-x-3">
             <Button
-              variant="outline"
-              onClick={() => navigate("/site/adhesion")}
-              className={isScrolled ? "" : "border-white text-white hover:bg-white hover:text-primary"}
-            >
-              Adhérer
-            </Button>
-            <Button
-              onClick={() => navigate("/site/don")}
-              className="bg-gradient-to-r from-primary to-secondary hover:opacity-90"
-            >
-              Faire un don
-            </Button>
-            <Button
-              variant="ghost"
               onClick={() => navigate("/portal")}
-              className={isScrolled ? "" : "text-white hover:bg-white/10"}
+              className="bg-cyan-500 hover:bg-cyan-600 text-white"
             >
               Portail Membre
             </Button>
@@ -117,27 +103,7 @@ const Navbar = () => {
                 ))}
                 <div className="pt-4 space-y-3 border-t">
                   <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={() => {
-                      navigate("/site/adhesion");
-                      setIsMobileMenuOpen(false);
-                    }}
-                  >
-                    Adhérer
-                  </Button>
-                  <Button
-                    className="w-full bg-gradient-to-r from-primary to-secondary"
-                    onClick={() => {
-                      navigate("/site/don");
-                      setIsMobileMenuOpen(false);
-                    }}
-                  >
-                    Faire un don
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    className="w-full"
+                    className="w-full bg-cyan-500 hover:bg-cyan-600 text-white"
                     onClick={() => {
                       navigate("/portal");
                       setIsMobileMenuOpen(false);
