@@ -15,6 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useRealtimeUpdates } from '@/hooks/useRealtimeUpdates';
 import { format, startOfDay, endOfDay } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { logger } from '@/lib/logger';
 
 interface FondOperation {
   id: string;
@@ -106,7 +107,7 @@ export const FondDeCaisse: React.FC = () => {
         .order('created_at', { ascending: false });
 
       if (operationsError) {
-        console.error('Erreur opérations:', operationsError);
+        logger.error('Erreur opérations', operationsError);
         toast({
           title: "Erreur",
           description: "Impossible de charger les opérations",
@@ -138,7 +139,7 @@ export const FondDeCaisse: React.FC = () => {
         .limit(10);
 
       if (cloturesError) {
-        console.error('Erreur clôtures:', cloturesError);
+        logger.error('Erreur clôtures', cloturesError);
       } else {
         const formattedClotures = cloturesData?.map(cloture => ({
           ...cloture,
@@ -149,7 +150,7 @@ export const FondDeCaisse: React.FC = () => {
       }
 
     } catch (error) {
-      console.error('Erreur lors du chargement:', error);
+      logger.error('Erreur lors du chargement', error);
       toast({
         title: "Erreur",
         description: "Erreur lors du chargement des données",
@@ -198,7 +199,7 @@ export const FondDeCaisse: React.FC = () => {
       setSoldeActuel(soldeOuverture + totalEntrees - totalSorties);
 
     } catch (error) {
-      console.error('Erreur calcul solde:', error);
+      logger.error('Erreur calcul solde', error);
     }
   };
 
@@ -272,7 +273,7 @@ export const FondDeCaisse: React.FC = () => {
       loadData();
 
     } catch (error: any) {
-      console.error('Erreur ajout opération:', error);
+      logger.error('Erreur ajout opération', error);
       toast({
         title: "Erreur",
         description: "Impossible d'ajouter l'opération",
@@ -349,7 +350,7 @@ export const FondDeCaisse: React.FC = () => {
       loadData();
 
     } catch (error: any) {
-      console.error('Erreur clôture:', error);
+      logger.error('Erreur clôture', error);
       toast({
         title: "Erreur",
         description: "Impossible de clôturer la journée",

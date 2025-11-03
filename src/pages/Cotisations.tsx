@@ -33,6 +33,7 @@ import CotisationTypeForm from "@/components/forms/CotisationTypeForm";
 import MembreCotisationConfigForm from "@/components/forms/MembreCotisationConfigForm";
 import BeneficiairesReunion from "@/components/BeneficiairesReunion";
 import LogoHeader from "@/components/LogoHeader";
+import { logger } from "@/lib/logger";
 
 interface Cotisation {
   id: string;
@@ -153,7 +154,7 @@ const loadExercices = async () => {
       if (error) throw error;
       setTypesCotisations(data || []);
     } catch (error: any) {
-      console.error('Erreur lors du chargement des types:', error);
+      logger.error('Erreur lors du chargement des types', error);
     }
 };
 
@@ -167,7 +168,7 @@ const loadReunions = async () => {
     if (error) throw error;
     setReunions(data || []);
   } catch (error) {
-    console.error('Erreur chargement réunions:', error);
+    logger.error('Erreur chargement réunions', error);
   }
 };
 

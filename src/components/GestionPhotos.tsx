@@ -23,6 +23,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useRealtimeUpdates } from '@/hooks/useRealtimeUpdates';
+import { logger } from '@/lib/logger';
 
 interface Membre {
   id: string;
@@ -90,7 +91,7 @@ export const GestionPhotos: React.FC = () => {
                 }
               }
             } catch (error) {
-              console.error('Erreur chargement info photo:', error);
+              logger.error('Erreur chargement info photo', error);
             }
           }
           return membre;
@@ -99,7 +100,7 @@ export const GestionPhotos: React.FC = () => {
 
       setMembres(membresEnriches);
     } catch (error) {
-      console.error('Erreur chargement membres:', error);
+      logger.error('Erreur chargement membres', error);
       toast({
         title: "Erreur",
         description: "Impossible de charger la liste des membres",
@@ -131,7 +132,7 @@ export const GestionPhotos: React.FC = () => {
     if (!uploadingId) return;
 
     try {
-      console.log('🚀 Début upload photo pour membre:', uploadingId);
+      logger.info('Début upload photo pour membre', { membreId: uploadingId });
       
       // Validation du fichier
       if (file.size > 5 * 1024 * 1024) { // 5MB max
@@ -142,7 +143,7 @@ export const GestionPhotos: React.FC = () => {
         throw new Error('Le fichier doit être une image');
       }
 
-      console.log('✅ Validation fichier OK:', {
+      logger.info('Validation fichier OK', {
         size: file.size,
         type: file.type,
         name: file.name
@@ -151,7 +152,7 @@ export const GestionPhotos: React.FC = () => {
       // Générer un nom unique pour le fichier
       const fileExt = file.name.split('.').pop();
       const fileName = `${uploadingId}/avatar_${Date.now()}.${fileExt}`;
-      console.log('📁 Nom du fichier généré:', fileName);
+      logger.info('Nom du fichier généré', { fileName });
 
       // Upload vers Supabase Storage
       const { data: uploadData, error: uploadError } = await supabase.storage
@@ -161,29 +162,29 @@ export const GestionPhotos: React.FC = () => {
         });
 
       if (uploadError) {
-        console.error('❌ Erreur upload storage:', uploadError);
+        logger.error('Erreur upload storage', uploadError);
         throw uploadError;
       }
 
-      console.log('✅ Upload storage réussi:', uploadData);
+      logger.success('Upload storage réussi', uploadData);
 
       // Obtenir l'URL publique
       const { data: { publicUrl } } = supabase.storage
         .from('membre-photos')
         .getPublicUrl(fileName);
 
-      console.log('🔗 URL publique générée:', publicUrl);
+      logger.info('URL publique générée', { publicUrl });
 
       // Vérifier que l'URL est accessible
       try {
         const testResponse = await fetch(publicUrl, { method: 'HEAD' });
-        console.log('🌐 Test accessibilité URL:', testResponse.status);
+        logger.info('Test accessibilité URL', { status: testResponse.status });
       } catch (testError) {
-        console.warn('⚠️ URL potentiellement non accessible:', testError);
+        logger.warn('URL potentiellement non accessible', testError);
       }
 
       // Mettre à jour le profil du membre
-      console.log('💾 Mise à jour base de données...');
+      logger.info('Mise à jour base de données...');
       const { data: updateData, error: updateError } = await supabase
         .from('membres')
         .update({ photo_url: publicUrl })
@@ -191,11 +192,11 @@ export const GestionPhotos: React.FC = () => {
         .select();
 
       if (updateError) {
-        console.error('❌ Erreur mise à jour DB:', updateError);
+        logger.error('Erreur mise à jour DB', updateError);
         throw updateError;
       }
 
-      console.log('✅ Mise à jour DB réussie:', updateData);
+      logger.success('Mise à jour DB réussie', updateData);
 
       toast({
         title: "Succès",
@@ -204,10 +205,10 @@ export const GestionPhotos: React.FC = () => {
 
       // Forcer le rechargement des données
       await loadMembres();
-      console.log('🔄 Rechargement des données terminé');
+      logger.info('Rechargement des données terminé');
 
     } catch (error: any) {
-      console.error('💥 Erreur upload photo:', error);
+      logger.error('Erreur upload photo', error);
       toast({
         title: "Erreur",
         description: error.message || "Impossible d'uploader la photo",
@@ -232,7 +233,7 @@ export const GestionPhotos: React.FC = () => {
           .remove([filePath]);
 
         if (deleteError) {
-          console.error('Erreur suppression storage:', deleteError);
+          logger.error('Erreur suppression storage', deleteError);
         }
       }
 
@@ -253,7 +254,7 @@ export const GestionPhotos: React.FC = () => {
       setSelectedMembre(null);
 
     } catch (error: any) {
-      console.error('Erreur suppression photo:', error);
+      logger.error('Erreur suppression photo', error);
       toast({
         title: "Erreur",
         description: "Impossible de supprimer la photo",
@@ -284,7 +285,7 @@ export const GestionPhotos: React.FC = () => {
         description: "Photo téléchargée"
       });
     } catch (error) {
-      console.error('Erreur téléchargement:', error);
+      logger.error('Erreur téléchargement', error);
       toast({
         title: "Erreur",
         description: "Impossible de télécharger la photo",

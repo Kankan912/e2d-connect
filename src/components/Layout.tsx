@@ -28,6 +28,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import logoE2D from "@/assets/logo-e2d.png";
+import { logger } from "@/lib/logger";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -63,7 +64,7 @@ export default function Layout({ children, user }: LayoutProps) {
       await supabase.auth.signOut();
     } catch (error) {
       // Ignorer les erreurs 403/Session not found et naviguer quand même
-      console.warn('Logout error (ignored):', error);
+      logger.warn('Logout error (ignored)', error);
     } finally {
       navigate("/auth");
       toast({

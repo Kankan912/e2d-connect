@@ -24,6 +24,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useRealtimeUpdates } from '@/hooks/useRealtimeUpdates';
 import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { logger } from '@/lib/logger';
 
 interface ActiviteMembre {
   id: string;
@@ -80,7 +81,7 @@ export const HistoriqueMembre: React.FC<HistoriqueMembreProps> = ({ membreId }) 
       if (error) throw error;
       setMembre(data);
     } catch (error) {
-      console.error('Erreur chargement membre:', error);
+      logger.error('Erreur chargement membre', error);
     }
   };
 
@@ -137,7 +138,7 @@ export const HistoriqueMembre: React.FC<HistoriqueMembreProps> = ({ membreId }) 
 
       setActivites(allActivites.slice(0, 100));
     } catch (error) {
-      console.error('Erreur chargement activités:', error);
+      logger.error('Erreur chargement activités', error);
     }
   };
 
@@ -228,7 +229,7 @@ export const HistoriqueMembre: React.FC<HistoriqueMembreProps> = ({ membreId }) 
 
       setStatistiques(stats);
     } catch (error) {
-      console.error('Erreur chargement statistiques:', error);
+      logger.error('Erreur chargement statistiques', error);
     }
   };
 
@@ -241,7 +242,7 @@ export const HistoriqueMembre: React.FC<HistoriqueMembreProps> = ({ membreId }) 
         loadStatistiques()
       ]);
     } catch (error) {
-      console.error('Erreur chargement données:', error);
+      logger.error('Erreur chargement données', error);
       toast({
         title: "Erreur",
         description: "Impossible de charger l'historique du membre",
@@ -306,7 +307,7 @@ export const HistoriqueMembre: React.FC<HistoriqueMembreProps> = ({ membreId }) 
         description: "Fonctionnalité d'export à implémenter"
       });
     } catch (error) {
-      console.error('Erreur export:', error);
+      logger.error('Erreur export', error);
     }
   };
 

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 interface Props {
   children: React.ReactNode;
@@ -22,7 +23,7 @@ export class NotificationsErrorBoundary extends React.Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('NotificationsTemplatesManager Error:', error, errorInfo);
+    logger.error('NotificationsTemplatesManager Error', error, { data: errorInfo });
   }
 
   render() {

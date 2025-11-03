@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import LogoHeader from '@/components/LogoHeader';
 import { ExportService } from '@/lib/exportService';
+import { logger } from '@/lib/logger';
 
 interface EpargnantData {
   membre_id: string;
@@ -148,9 +149,9 @@ export default function EpargnantsBenefices() {
 
       const { data: epargnesData, error: epargnesError } = await epargnesQuery;
 
-      console.log('🔍 Exercice sélectionné:', selectedExercice);
-      console.log('🔍 Réunion sélectionnée:', selectedReunion);
-      console.log('📊 Épargnes récupérées:', epargnesData?.length || 0);
+      logger.debug('Exercice sélectionné', { exercice: selectedExercice });
+      logger.debug('Réunion sélectionnée', { reunion: selectedReunion });
+      logger.debug('Épargnes récupérées', { count: epargnesData?.length || 0 });
 
       if (epargnesError) throw epargnesError;
 
@@ -172,7 +173,7 @@ export default function EpargnantsBenefices() {
 
       const { data: pretsData, error: pretsError } = await pretsQuery;
 
-      console.log('💰 Prêts récupérés:', pretsData?.length || 0);
+      logger.debug('Prêts récupérés', { count: pretsData?.length || 0 });
 
       if (pretsError) throw pretsError;
 

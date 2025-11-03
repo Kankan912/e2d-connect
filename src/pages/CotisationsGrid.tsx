@@ -27,6 +27,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import LogoHeader from "@/components/LogoHeader";
+import { logger } from "@/lib/logger";
 
 interface Membre {
   id: string;

@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { logger } from "@/lib/logger";
 import { useNavigate } from "react-router-dom";
 import { Mail, Lock, User, Phone } from "lucide-react";
 import logoE2D from "@/assets/logo-e2d.png";
@@ -61,7 +62,7 @@ export default function AuthForm() {
           body: { statut: 'reussi' }
         });
       } catch (logError) {
-        console.warn('⚠️ Log connexion échoué (non critique):', logError);
+        logger.warn('Log connexion échoué (non critique)', logError);
       }
       
       navigate("/");

@@ -13,6 +13,7 @@ import {
   AlertCircle
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from "@/lib/logger";
 
 interface DashboardStats {
   totalMembres: number;
@@ -83,7 +84,7 @@ export default function Dashboard() {
         tauxPresence: 85 // Mock data pour le MVP
       });
     } catch (error) {
-      console.error('Erreur lors du chargement des données:', error);
+      logger.error('Erreur lors du chargement des données', error);
     } finally {
       setLoading(false);
     }
