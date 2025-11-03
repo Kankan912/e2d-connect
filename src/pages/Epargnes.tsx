@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Edit, TrendingUp, PiggyBank, DollarSign, Calculator, Download, Filter, X } from "lucide-react";
+import { Plus, Edit, TrendingUp, PiggyBank, DollarSign, Calculator, Download, Filter, X, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -60,11 +60,19 @@ export default function Epargnes() {
   const [loading, setLoading] = useState(true);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [selectedEpargne, setSelectedEpargne] = useState<Epargne | null>(null);
-  const [filtres, setFiltres] = useState({
+  const [filtresTemporaires, setFiltresTemporaires] = useState({
     dateDebut: "",
     dateFin: "",
-    membreId: "",
-    exerciceId: "",
+    membreId: "all",
+    exerciceId: "all",
+    montantMin: "",
+    montantMax: ""
+  });
+  const [filtresAppliques, setFiltresAppliques] = useState({
+    dateDebut: "",
+    dateFin: "",
+    membreId: "all",
+    exerciceId: "all",
     montantMin: "",
     montantMax: ""
   });
@@ -77,6 +85,26 @@ export default function Epargnes() {
   });
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  // Auto-remplir les dates selon l'exercice sélectionné
+  useEffect(() => {
+    if (filtresTemporaires.exerciceId && filtresTemporaires.exerciceId !== "all") {
+      const exercice = exercices.find(ex => ex.id === filtresTemporaires.exerciceId);
+      if (exercice) {
+        setFiltresTemporaires(prev => ({
+          ...prev,
+          dateDebut: exercice.date_debut,
+          dateFin: exercice.date_fin
+        }));
+      }
+    } else if (filtresTemporaires.exerciceId === "all") {
+      setFiltresTemporaires(prev => ({
+        ...prev,
+        dateDebut: "",
+        dateFin: ""
+      }));
+    }
+  }, [filtresTemporaires.exerciceId, exercices]);
 
   useEffect(() => {
     fetchEpargnes();
@@ -241,30 +269,30 @@ export default function Epargnes() {
   // Fonction de filtrage avancé
   const epargneFiltrees = epargnes.filter(epargne => {
     // Filtre par date
-    if (filtres.dateDebut && new Date(epargne.date_depot) < new Date(filtres.dateDebut)) {
+    if (filtresAppliques.dateDebut && new Date(epargne.date_depot) < new Date(filtresAppliques.dateDebut)) {
       return false;
     }
-    if (filtres.dateFin && new Date(epargne.date_depot) > new Date(filtres.dateFin)) {
+    if (filtresAppliques.dateFin && new Date(epargne.date_depot) > new Date(filtresAppliques.dateFin)) {
       return false;
     }
     
     // Filtre par membre
-    if (filtres.membreId && filtres.membreId !== "all" && epargne.membre_id !== filtres.membreId) {
+    if (filtresAppliques.membreId && filtresAppliques.membreId !== "all" && epargne.membre_id !== filtresAppliques.membreId) {
       return false;
     }
     
     // Filtre par exercice
-    if (filtres.exerciceId && filtres.exerciceId !== "all" && epargne.exercice_id !== filtres.exerciceId) {
+    if (filtresAppliques.exerciceId && filtresAppliques.exerciceId !== "all" && epargne.exercice_id !== filtresAppliques.exerciceId) {
       return false;
     }
     
     // Filtre par montant minimum
-    if (filtres.montantMin && epargne.montant < parseFloat(filtres.montantMin)) {
+    if (filtresAppliques.montantMin && epargne.montant < parseFloat(filtresAppliques.montantMin)) {
       return false;
     }
     
     // Filtre par montant maximum
-    if (filtres.montantMax && epargne.montant > parseFloat(filtres.montantMax)) {
+    if (filtresAppliques.montantMax && epargne.montant > parseFloat(filtresAppliques.montantMax)) {
       return false;
     }
     
@@ -331,21 +359,6 @@ export default function Epargnes() {
               <Filter className="h-4 w-4" />
               Filtres Avancés
             </CardTitle>
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={() => setFiltres({
-                dateDebut: "",
-                dateFin: "",
-                membreId: "",
-                exerciceId: "",
-                montantMin: "",
-                montantMax: ""
-              })}
-            >
-              <X className="h-4 w-4 mr-2" />
-              Réinitialiser
-            </Button>
           </div>
         </CardHeader>
         <CardContent>
@@ -356,8 +369,8 @@ export default function Epargnes() {
               <Input
                 id="dateDebut"
                 type="date"
-                value={filtres.dateDebut}
-                onChange={(e) => setFiltres(prev => ({ ...prev, dateDebut: e.target.value }))}
+                value={filtresTemporaires.dateDebut}
+                onChange={(e) => setFiltresTemporaires(prev => ({ ...prev, dateDebut: e.target.value }))}
               />
             </div>
             
@@ -366,8 +379,8 @@ export default function Epargnes() {
               <Input
                 id="dateFin"
                 type="date"
-                value={filtres.dateFin}
-                onChange={(e) => setFiltres(prev => ({ ...prev, dateFin: e.target.value }))}
+                value={filtresTemporaires.dateFin}
+                onChange={(e) => setFiltresTemporaires(prev => ({ ...prev, dateFin: e.target.value }))}
               />
             </div>
 
@@ -375,8 +388,8 @@ export default function Epargnes() {
             <div className="space-y-2">
               <Label htmlFor="membreFiltre">Membre</Label>
               <Select 
-                value={filtres.membreId} 
-                onValueChange={(value) => setFiltres(prev => ({ ...prev, membreId: value }))}
+                value={filtresTemporaires.membreId} 
+                onValueChange={(value) => setFiltresTemporaires(prev => ({ ...prev, membreId: value }))}
               >
                 <SelectTrigger id="membreFiltre">
                   <SelectValue placeholder="Tous les membres" />
@@ -396,8 +409,8 @@ export default function Epargnes() {
             <div className="space-y-2">
               <Label htmlFor="exerciceFiltre">Exercice</Label>
               <Select 
-                value={filtres.exerciceId} 
-                onValueChange={(value) => setFiltres(prev => ({ ...prev, exerciceId: value }))}
+                value={filtresTemporaires.exerciceId} 
+                onValueChange={(value) => setFiltresTemporaires(prev => ({ ...prev, exerciceId: value }))}
               >
                 <SelectTrigger id="exerciceFiltre">
                   <SelectValue placeholder="Tous les exercices" />
@@ -420,8 +433,8 @@ export default function Epargnes() {
                 id="montantMin"
                 type="number"
                 placeholder="0"
-                value={filtres.montantMin}
-                onChange={(e) => setFiltres(prev => ({ ...prev, montantMin: e.target.value }))}
+                value={filtresTemporaires.montantMin}
+                onChange={(e) => setFiltresTemporaires(prev => ({ ...prev, montantMin: e.target.value }))}
               />
             </div>
 
@@ -431,10 +444,39 @@ export default function Epargnes() {
                 id="montantMax"
                 type="number"
                 placeholder="Illimité"
-                value={filtres.montantMax}
-                onChange={(e) => setFiltres(prev => ({ ...prev, montantMax: e.target.value }))}
+                value={filtresTemporaires.montantMax}
+                onChange={(e) => setFiltresTemporaires(prev => ({ ...prev, montantMax: e.target.value }))}
               />
             </div>
+          </div>
+
+          {/* Boutons d'action */}
+          <div className="flex gap-2 mt-6">
+            <Button 
+              onClick={() => setFiltresAppliques(filtresTemporaires)}
+              className="flex-1"
+            >
+              <Search className="h-4 w-4 mr-2" />
+              Rechercher
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                const resetFiltres = {
+                  dateDebut: "",
+                  dateFin: "",
+                  membreId: "all",
+                  exerciceId: "all",
+                  montantMin: "",
+                  montantMax: ""
+                };
+                setFiltresTemporaires(resetFiltres);
+                setFiltresAppliques(resetFiltres);
+              }}
+            >
+              <X className="h-4 w-4 mr-2" />
+              Réinitialiser
+            </Button>
           </div>
 
           {/* Indicateur de résultats filtrés */}

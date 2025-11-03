@@ -77,7 +77,7 @@ export default function EpargnantsBenefices() {
       // 1. Calculer le total des épargnes actives
       let epargnesQuery = supabase
         .from('epargnes')
-        .select('montant, membre_id, membres!membre_id(nom, prenom)')
+        .select('montant, membre_id, membres!inner(nom, prenom)')
         .eq('statut', 'actif');
 
       if (selectedExercice && selectedExercice !== 'all') {
@@ -88,11 +88,23 @@ export default function EpargnantsBenefices() {
 
       if (epargnesError) throw epargnesError;
 
-      // 2. Calculer le total des intérêts des prêts
-      const { data: pretsData, error: pretsError } = await supabase
+      // 2. Calculer le total des intérêts des prêts - filtrer par exercice si applicable
+      let pretsQuery = supabase
         .from('prets')
-        .select('montant, taux_interet, reconductions')
+        .select('montant, taux_interet, reconductions, date_pret')
         .in('statut', ['en_cours', 'reconduit']);
+
+      // Si un exercice est sélectionné, filtrer les prêts par date
+      if (selectedExercice && selectedExercice !== 'all') {
+        const exercice = exercices.find(ex => ex.id === selectedExercice);
+        if (exercice) {
+          pretsQuery = pretsQuery
+            .gte('date_pret', exercice.date_debut)
+            .lte('date_pret', exercice.date_fin);
+        }
+      }
+
+      const { data: pretsData, error: pretsError } = await pretsQuery;
 
       if (pretsError) throw pretsError;
 
