@@ -46,12 +46,12 @@ const [loading, setLoading] = useState(true);
 const [searchTerm, setSearchTerm] = useState("");
 const [showForm, setShowForm] = useState(false);
 const [showTypeForm, setShowTypeForm] = useState(false);
-const [showConfigForm, setShowConfigForm] = useState(false);
-const [showBeneficiaires, setShowBeneficiaires] = useState(false);
-const [selectedReunionId, setSelectedReunionId] = useState<string>("");
-const [reunions, setReunions] = useState<Array<{ id: string; sujet: string | null; date_reunion: string }>>([]);
-const [typeToEdit, setTypeToEdit] = useState<TypeCotisation | null>(null);
-const [exerciceId, setExerciceId] = useState<string>("");
+  const [showConfigForm, setShowConfigForm] = useState(false);
+  const [showBeneficiaires, setShowBeneficiaires] = useState(false);
+  const [selectedReunionId, setSelectedReunionId] = useState<string>("all");
+  const [reunions, setReunions] = useState<Array<{ id: string; sujet: string | null; date_reunion: string }>>([]);
+  const [typeToEdit, setTypeToEdit] = useState<TypeCotisation | null>(null);
+  const [exerciceId, setExerciceId] = useState<string>("all");
 const [exercices, setExercices] = useState<Array<{ id: string; nom: string; date_debut: string; date_fin: string }>>([]);
 const [dateDebut, setDateDebut] = useState<string>("");
 const [dateFin, setDateFin] = useState<string>("");
@@ -173,7 +173,7 @@ useRealtimeUpdates({
     if (!searchMatch) return false;
 
     // Niveau 1 : Filtre par exercice (via date_paiement)
-    if (exerciceId && exerciceId !== "") {
+    if (exerciceId && exerciceId !== "all") {
       const exercice = exercices.find(e => e.id === exerciceId);
       if (exercice) {
         const datePaiement = cotisation.date_paiement;
@@ -184,7 +184,7 @@ useRealtimeUpdates({
     }
 
     // Niveau 2 : Filtre par réunion
-    if (selectedReunionId) {
+    if (selectedReunionId && selectedReunionId !== "all") {
       if (cotisation.reunion_id !== selectedReunionId) {
         return false;
       }
@@ -286,8 +286,8 @@ useRealtimeUpdates({
           subtitle="Suivi des cotisations et contributions"
         />
         <div className="flex gap-2">
-          {exerciceId && <Badge variant="secondary">📊 Niveau 1: Exercice</Badge>}
-          {selectedReunionId && <Badge variant="secondary">🗓️ Niveau 2: Réunion</Badge>}
+          {exerciceId && exerciceId !== "all" && <Badge variant="secondary">📊 Niveau 1: Exercice</Badge>}
+          {selectedReunionId && selectedReunionId !== "all" && <Badge variant="secondary">🗓️ Niveau 2: Réunion</Badge>}
           {(dateDebut || dateFin) && <Badge variant="secondary">📅 Niveau 3: Dates</Badge>}
         </div>
       </div>
@@ -303,7 +303,7 @@ useRealtimeUpdates({
               <label className="text-sm font-medium">📊 Niveau 1 : Exercice</label>
               <Select value={exerciceId} onValueChange={(v) => {
                 setExerciceId(v);
-                setSelectedReunionId("");
+                setSelectedReunionId("all");
                 setDateDebut("");
                 setDateFin("");
               }}>
@@ -311,7 +311,7 @@ useRealtimeUpdates({
                   <SelectValue placeholder="Tous les exercices" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Tous les exercices</SelectItem>
+                  <SelectItem value="all">Tous les exercices</SelectItem>
                   {exercices.map(ex => (
                     <SelectItem key={ex.id} value={ex.id}>
                       {ex.nom}
@@ -331,13 +331,13 @@ useRealtimeUpdates({
                   setDateDebut("");
                   setDateFin("");
                 }}
-                disabled={!exerciceId}
+                disabled={!exerciceId || exerciceId === "all"}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder={exerciceId ? "Toutes les réunions" : "Sélectionner un exercice d'abord"} />
+                  <SelectValue placeholder={exerciceId && exerciceId !== "all" ? "Toutes les réunions" : "Sélectionner un exercice d'abord"} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Toutes les réunions</SelectItem>
+                  <SelectItem value="all">Toutes les réunions</SelectItem>
                   {reunions
                     .filter(r => {
                       if (!exerciceId) return true;
@@ -362,31 +362,31 @@ useRealtimeUpdates({
                   placeholder="Date début"
                   value={dateDebut}
                   onChange={(e) => setDateDebut(e.target.value)}
-                  min={exerciceId ? exercices.find(e => e.id === exerciceId)?.date_debut : undefined}
-                  max={exerciceId ? exercices.find(e => e.id === exerciceId)?.date_fin : undefined}
-                  disabled={!exerciceId}
+                  min={exerciceId && exerciceId !== "all" ? exercices.find(e => e.id === exerciceId)?.date_debut : undefined}
+                  max={exerciceId && exerciceId !== "all" ? exercices.find(e => e.id === exerciceId)?.date_fin : undefined}
+                  disabled={!exerciceId || exerciceId === "all"}
                 />
                 <Input
                   type="date"
                   placeholder="Date fin"
                   value={dateFin}
                   onChange={(e) => setDateFin(e.target.value)}
-                  min={exerciceId ? exercices.find(e => e.id === exerciceId)?.date_debut : undefined}
-                  max={exerciceId ? exercices.find(e => e.id === exerciceId)?.date_fin : undefined}
-                  disabled={!exerciceId}
+                  min={exerciceId && exerciceId !== "all" ? exercices.find(e => e.id === exerciceId)?.date_debut : undefined}
+                  max={exerciceId && exerciceId !== "all" ? exercices.find(e => e.id === exerciceId)?.date_fin : undefined}
+                  disabled={!exerciceId || exerciceId === "all"}
                 />
               </div>
             </div>
           </div>
           
-          {exerciceId && exerciceId !== "" && (
+          {exerciceId && exerciceId !== "all" && (
             <div className="mt-4 p-3 bg-muted/50 rounded-lg">
               <p className="text-sm text-muted-foreground flex items-center gap-2 flex-wrap">
                 <span>🔍 <strong>Filtres actifs :</strong></span>
                 <Badge variant="secondary">
                   Exercice: {exercices?.find(e => e.id === exerciceId)?.nom}
                 </Badge>
-                {selectedReunionId && selectedReunionId !== "" && (
+                {selectedReunionId && selectedReunionId !== "all" && (
                   <Badge variant="secondary">
                     Réunion: {reunions?.find(r => r.id === selectedReunionId)?.sujet || 'Sélectionnée'}
                   </Badge>
@@ -412,8 +412,8 @@ useRealtimeUpdates({
               <Button 
                 variant="outline"
                 onClick={() => {
-                  setExerciceId("");
-                  setSelectedReunionId("");
+                  setExerciceId("all");
+                  setSelectedReunionId("all");
                   setDateDebut("");
                   setDateFin("");
                 }}
