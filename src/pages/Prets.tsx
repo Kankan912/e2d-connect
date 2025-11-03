@@ -25,7 +25,9 @@ import {
   Clock,
   AlertTriangle,
   TrendingUp,
-  RefreshCw
+  RefreshCw,
+  Edit,
+  Trash2
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -71,6 +73,7 @@ export default function Prets() {
   const [selectedPretId, setSelectedPretId] = useState<string | null>(null);
   const [selectedPret, setSelectedPret] = useState<Pret | null>(null);
   const [sanctionsImpayees, setSanctionsImpayees] = useState(0);
+  const [editingPretData, setEditingPretData] = useState<any>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -164,6 +167,46 @@ export default function Prets() {
   const handleReconduction = (pretId: string) => {
     setSelectedPretId(pretId);
     setShowReconductionModal(true);
+  };
+
+  const handleEdit = (pret: Pret) => {
+    setEditingPretData({
+      id: pret.id,
+      membre_id: pret.membre.nom, // Le form attend l'ID mais on affichera le nom
+      montant: pret.montant,
+      taux_interet: pret.taux_interet,
+      date_pret: pret.date_pret,
+      echeance: pret.echeance,
+      statut: pret.statut,
+      notes: pret.notes,
+      avaliste_id: pret.avaliste?.nom
+    });
+    setShowForm(true);
+  };
+
+  const handleDelete = async (pretId: string) => {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer ce prêt ?')) return;
+
+    try {
+      const { error } = await supabase
+        .from('prets')
+        .delete()
+        .eq('id', pretId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Succès",
+        description: "Prêt supprimé avec succès",
+      });
+      loadPrets();
+    } catch (error: any) {
+      toast({
+        title: "Erreur",
+        description: error.message || "Impossible de supprimer le prêt",
+        variant: "destructive",
+      });
+    }
   };
 
   const filteredPrets = prets.filter(pret => {
@@ -443,6 +486,23 @@ export default function Prets() {
                       <Button 
                         size="sm" 
                         variant="outline"
+                        onClick={() => handleEdit(pret)}
+                      >
+                        <Edit className="w-4 h-4 mr-1" />
+                        Modifier
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => handleDelete(pret.id)}
+                        className="text-destructive hover:bg-destructive/10"
+                      >
+                        <Trash2 className="w-4 h-4 mr-1" />
+                        Supprimer
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
                         onClick={() => handlePayment(pret.id)}
                         disabled={pret.statut === 'rembourse'}
                         className="bg-success/10 hover:bg-success/20 text-success border-success/20"
@@ -486,8 +546,12 @@ export default function Prets() {
 
       <PretForm
         open={showForm}
-        onOpenChange={setShowForm}
+        onOpenChange={(open) => {
+          setShowForm(open);
+          if (!open) setEditingPretData(null);
+        }}
         onSuccess={loadPrets}
+        initialData={editingPretData}
       />
 
       {/* Modales de paiement et reconduction */}

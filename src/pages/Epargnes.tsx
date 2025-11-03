@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Edit, TrendingUp, PiggyBank, DollarSign, Calculator, Download, Filter, X, Search } from "lucide-react";
+import { Plus, Edit, TrendingUp, PiggyBank, DollarSign, Calculator, Download, Filter, X, Search, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -263,6 +263,31 @@ export default function Epargnes() {
       notes: epargne.notes || ""
     });
     setShowAddDialog(true);
+  };
+
+  const handleDelete = async (epargneId: string) => {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer cette épargne ?')) return;
+
+    try {
+      const { error } = await supabase
+        .from('epargnes')
+        .delete()
+        .eq('id', epargneId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Succès",
+        description: "Épargne supprimée avec succès",
+      });
+      fetchEpargnes();
+    } catch (error: any) {
+      toast({
+        title: "Erreur",
+        description: error.message || "Impossible de supprimer l'épargne",
+        variant: "destructive",
+      });
+    }
   };
 
   const totalEpargnes = epargnes.reduce((sum, epargne) => sum + epargne.montant, 0);
@@ -790,6 +815,15 @@ export default function Epargnes() {
                   <Button variant="outline" size="sm" onClick={() => openEditDialog(epargne)}>
                     <Edit className="w-4 h-4 mr-1" />
                     Modifier
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => handleDelete(epargne.id)}
+                    className="text-destructive hover:bg-destructive/10"
+                  >
+                    <Trash2 className="w-4 h-4 mr-1" />
+                    Supprimer
                   </Button>
                 </div>
               </CardContent>
