@@ -3,10 +3,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { CheckCircle, Clock, DollarSign, Users } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery } from '@tanstack/react-query';
+import { calculateSoldeNetBeneficiaire, type SoldeNetDetail } from '@/lib/beneficiairesCalculs';
+import { logger } from '@/lib/logger';
 
 interface BeneficiaireReunion {
   id: string;
@@ -34,6 +37,7 @@ interface Props {
 export default function BeneficiairesReunionManager({ reunionId }: Props) {
   const [beneficiaires, setBeneficiaires] = useState<BeneficiaireReunion[]>([]);
   const [loading, setLoading] = useState(true);
+  const [soldesNets, setSoldesNets] = useState<Record<string, SoldeNetDetail>>({}); // CORRECTION 11
   const { toast } = useToast();
 
   const { data: reunions } = useQuery({
@@ -76,7 +80,30 @@ export default function BeneficiairesReunionManager({ reunionId }: Props) {
 
       const { data, error } = await query;
       if (error) throw error;
-      setBeneficiaires(data || []);
+      
+      const result = data || [];
+      setBeneficiaires(result);
+      
+      // CORRECTION 11: Calculer soldes nets pour chaque bénéficiaire
+      // Trouver l'exercice actif
+      const { data: exerciceActif } = await supabase
+        .from('exercices')
+        .select('id')
+        .eq('statut', 'actif')
+        .single();
+      
+      if (exerciceActif) {
+        const soldesMap: Record<string, SoldeNetDetail> = {};
+        for (const beneficiaire of result) {
+          const solde = await calculateSoldeNetBeneficiaire(
+            beneficiaire.membre_id,
+            exerciceActif.id
+          );
+          soldesMap[beneficiaire.id] = solde;
+        }
+        setSoldesNets(soldesMap);
+      }
+      
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
       toast({
@@ -89,11 +116,13 @@ export default function BeneficiairesReunionManager({ reunionId }: Props) {
     }
   };
 
+  // CORRECTION 10: Notification automatique paiement bénéficiaire
   const handleConfirmerPaiement = async (beneficiaireId: string) => {
     if (!confirm('Confirmer le paiement de ce bénéficiaire ?')) return;
 
     try {
-      const { error } = await supabase
+      // 1. Mise à jour statut dans la DB
+      const { error: updateError } = await supabase
         .from('reunion_beneficiaires')
         .update({
           statut: 'paye',
@@ -101,11 +130,47 @@ export default function BeneficiairesReunionManager({ reunionId }: Props) {
         })
         .eq('id', beneficiaireId);
 
-      if (error) throw error;
+      if (updateError) throw updateError;
+
+      // 2. Récupérer infos bénéficiaire
+      const beneficiaire = beneficiaires.find(b => b.id === beneficiaireId);
+      if (!beneficiaire) throw new Error('Bénéficiaire introuvable');
+
+      // 3. Récupérer email du membre
+      const { data: membre, error: membreError } = await supabase
+        .from('membres')
+        .select('email, nom, prenom')
+        .eq('id', beneficiaire.membre_id)
+        .single();
+
+      if (membreError || !membre?.email) {
+        console.warn('[BENEFICIAIRE] Email membre introuvable, skip notification');
+      } else {
+        // 4. Envoyer notification
+        const { error: notifError } = await supabase.functions.invoke('send-notification', {
+          body: {
+            type_notification: 'paiement_beneficiaire',
+            destinataire_email: membre.email,
+            variables: {
+              membre_nom: `${membre.prenom} ${membre.nom}`,
+              montant: beneficiaire.montant_benefice.toLocaleString(),
+              date_paiement: new Date().toLocaleDateString('fr-FR'),
+              reunion_sujet: beneficiaire.reunions?.sujet || 'Réunion'
+            }
+          }
+        });
+
+        if (notifError) {
+          console.error('[BENEFICIAIRE] Erreur envoi notification:', notifError);
+          // Ne pas bloquer le processus principal
+        } else {
+          console.log('[BENEFICIAIRE] Notification paiement bénéficiaire envoyée');
+        }
+      }
 
       toast({
         title: "Succès",
-        description: "Paiement confirmé avec succès",
+        description: "Paiement confirmé et notification envoyée",
       });
 
       loadBeneficiaires();
@@ -213,7 +278,9 @@ export default function BeneficiairesReunionManager({ reunionId }: Props) {
               <TableRow>
                 <TableHead>Bénéficiaire</TableHead>
                 {!reunionId && <TableHead>Réunion</TableHead>}
-                <TableHead>Montant</TableHead>
+                <TableHead>Montant Brut</TableHead>
+                <TableHead>Déductions</TableHead>
+                <TableHead>Solde Net</TableHead>
                 <TableHead>Date prévue</TableHead>
                 <TableHead>Statut</TableHead>
                 <TableHead>Date paiement</TableHead>
@@ -221,53 +288,96 @@ export default function BeneficiairesReunionManager({ reunionId }: Props) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {beneficiaires.map((beneficiaire) => (
-                <TableRow key={beneficiaire.id}>
-                  <TableCell className="font-medium">
-                    {beneficiaire.membres?.prenom} {beneficiaire.membres?.nom}
-                  </TableCell>
-                  {!reunionId && (
-                    <TableCell>
-                      <div className="text-sm">
-                        <div>{beneficiaire.reunions?.sujet}</div>
-                        <div className="text-muted-foreground">
-                          {new Date(beneficiaire.reunions?.date_reunion || '').toLocaleDateString('fr-FR')}
-                        </div>
-                      </div>
+              {beneficiaires.map((beneficiaire) => {
+                const soldeNet = soldesNets[beneficiaire.id];
+                return (
+                  <TableRow key={beneficiaire.id}>
+                    <TableCell className="font-medium">
+                      {beneficiaire.membres?.prenom} {beneficiaire.membres?.nom}
                     </TableCell>
-                  )}
-                  <TableCell className="font-bold text-primary">
-                    {beneficiaire.montant_benefice.toLocaleString()} FCFA
-                  </TableCell>
-                  <TableCell>
-                    {new Date(beneficiaire.date_benefice_prevue).toLocaleDateString('fr-FR')}
-                  </TableCell>
-                  <TableCell>{getStatutBadge(beneficiaire.statut)}</TableCell>
-                  <TableCell>
-                    {beneficiaire.date_paiement_reel ? (
-                      new Date(beneficiaire.date_paiement_reel).toLocaleDateString('fr-FR')
-                    ) : (
-                      <span className="text-muted-foreground">-</span>
+                    {!reunionId && (
+                      <TableCell>
+                        <div className="text-sm">
+                          <div>{beneficiaire.reunions?.sujet}</div>
+                          <div className="text-muted-foreground">
+                            {new Date(beneficiaire.reunions?.date_reunion || '').toLocaleDateString('fr-FR')}
+                          </div>
+                        </div>
+                      </TableCell>
                     )}
-                  </TableCell>
-                  <TableCell>
-                    {beneficiaire.statut === 'prevu' && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleConfirmerPaiement(beneficiaire.id)}
-                        className="bg-success/10 hover:bg-success/20 text-success border-success/20"
-                      >
-                        <CheckCircle className="w-4 h-4 mr-1" />
-                        Confirmer paiement
-                      </Button>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
+                    <TableCell className="font-bold text-primary">
+                      {beneficiaire.montant_benefice.toLocaleString()} FCFA
+                    </TableCell>
+                    <TableCell>
+                      {soldeNet ? (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <Badge variant="outline" className="cursor-help">
+                                -{soldeNet.totalDeductions.toLocaleString()} FCFA
+                              </Badge>
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-xs">
+                              <div className="text-xs space-y-1">
+                                <div className="font-semibold border-b pb-1 mb-1">Détail des déductions:</div>
+                                <div className="flex justify-between">
+                                  <span>Sanctions:</span>
+                                  <span className="font-medium">{soldeNet.sanctionsImpayees.toLocaleString()} FCFA</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span>Fonds sport:</span>
+                                  <span className="font-medium">{soldeNet.fondsSport.toLocaleString()} FCFA</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span>Fonds invest:</span>
+                                  <span className="font-medium">{soldeNet.fondsInvest.toLocaleString()} FCFA</span>
+                                </div>
+                                {soldeNet.pourcentageDeduction > 20 && (
+                                  <div className="text-orange-500 text-xs mt-1 pt-1 border-t">
+                                    ⚠️ Déduction importante ({soldeNet.pourcentageDeduction.toFixed(1)}%)
+                                  </div>
+                                )}
+                              </div>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      ) : (
+                        <Badge variant="secondary">Calcul...</Badge>
+                      )}
+                    </TableCell>
+                    <TableCell className="font-bold text-success">
+                      {soldeNet ? soldeNet.soldeNet.toLocaleString() : '...'} FCFA
+                    </TableCell>
+                    <TableCell>
+                      {new Date(beneficiaire.date_benefice_prevue).toLocaleDateString('fr-FR')}
+                    </TableCell>
+                    <TableCell>{getStatutBadge(beneficiaire.statut)}</TableCell>
+                    <TableCell>
+                      {beneficiaire.date_paiement_reel ? (
+                        new Date(beneficiaire.date_paiement_reel).toLocaleDateString('fr-FR')
+                      ) : (
+                        <span className="text-muted-foreground">-</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {beneficiaire.statut === 'prevu' && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleConfirmerPaiement(beneficiaire.id)}
+                          className="bg-success/10 hover:bg-success/20 text-success border-success/20"
+                        >
+                          <CheckCircle className="w-4 h-4 mr-1" />
+                          Confirmer paiement
+                        </Button>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
               {beneficiaires.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={reunionId ? 6 : 7} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={reunionId ? 8 : 9} className="text-center py-8 text-muted-foreground">
                     Aucun bénéficiaire enregistré
                   </TableCell>
                 </TableRow>

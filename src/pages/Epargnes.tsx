@@ -77,6 +77,7 @@ export default function Epargnes() {
     montantMin: "",
     montantMax: ""
   });
+  const [loadingFiltre, setLoadingFiltre] = useState(false); // CORRECTION 8
   const [formData, setFormData] = useState({
     membre_id: "",
     montant: "",
@@ -452,15 +453,29 @@ export default function Epargnes() {
               </Select>
             </div>
 
-            {/* Filtre par exercice */}
+            {/* Filtre par exercice - CORRECTION 8: Ajout spinner */}
             <div className="space-y-2">
               <Label htmlFor="exerciceFiltre">Exercice</Label>
               <Select 
                 value={filtresTemporaires.exerciceId} 
-                onValueChange={(value) => setFiltresTemporaires(prev => ({ ...prev, exerciceId: value }))}
+                disabled={loadingFiltre}
+                onValueChange={async (value) => {
+                  setLoadingFiltre(true);
+                  setFiltresTemporaires(prev => ({ ...prev, exerciceId: value }));
+                  // Debounce pour éviter trop de re-renders
+                  await new Promise(resolve => setTimeout(resolve, 300));
+                  setLoadingFiltre(false);
+                }}
               >
-                <SelectTrigger id="exerciceFiltre">
-                  <SelectValue placeholder="Tous les exercices" />
+                <SelectTrigger id="exerciceFiltre" className={loadingFiltre ? 'opacity-50' : ''}>
+                  {loadingFiltre ? (
+                    <div className="flex items-center gap-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                      <span>Chargement...</span>
+                    </div>
+                  ) : (
+                    <SelectValue placeholder="Tous les exercices" />
+                  )}
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Tous les exercices</SelectItem>

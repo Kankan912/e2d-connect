@@ -97,3 +97,6 @@ verify_jwt = false
 
 [functions.save-permissions]
 verify_jwt = true
+
+[functions.check-annual-cotisations-closure]
+verify_jwt = false

@@ -280,6 +280,10 @@ export default function CotisationsGrid() {
           return <Badge className={`bg-destructive text-destructive-foreground text-xs ${opacityClass}`}>
             <AlertTriangle className="w-3 h-3 mr-1" />{pastPrefix}En retard
           </Badge>;
+        case 'en_retard_annuel':
+          return <Badge className="bg-orange-500 text-white text-xs">
+            <AlertTriangle className="w-3 h-3 mr-1" />⚠️ Clôture proche
+          </Badge>;
         default:
           return <Badge variant="outline" className={`text-xs ${opacityClass}`}>{pastPrefix}{statut}</Badge>;
       }

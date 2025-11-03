@@ -542,6 +542,66 @@ export default function MembreFiche() {
         </TabsContent>
 
         <TabsContent value="sanctions" className="space-y-4">
+          {/* CORRECTION 12: Statistiques enrichies Sanctions */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <AlertTriangle className="h-4 w-4 text-destructive" />
+                  Impayées
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-destructive">
+                  {sanctions.filter(s => s.statut === 'impaye').length}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {sanctions.filter(s => s.statut === 'impaye')
+                    .reduce((sum, s) => sum + Number(s.montant), 0).toLocaleString()} FCFA
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-success" />
+                  Payées
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-success">
+                  {sanctions.filter(s => s.statut === 'paye').length}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {sanctions.filter(s => s.statut === 'paye')
+                    .reduce((sum, s) => sum + Number(s.montant), 0).toLocaleString()} FCFA
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">Par Contexte</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-1">
+                  <div className="flex justify-between text-sm">
+                    <span>Sport:</span>
+                    <Badge variant="outline">
+                      {sanctions.filter(s => (s as any).contexte_sanction === 'sport').length}
+                    </Badge>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span>Réunion:</span>
+                    <Badge variant="outline">
+                      {sanctions.filter(s => (s as any).contexte_sanction === 'reunion').length}
+                    </Badge>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+          
+          {/* Liste détaillée */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -583,6 +643,52 @@ export default function MembreFiche() {
         </TabsContent>
 
         <TabsContent value="fondcaisse" className="space-y-4">
+          {/* CORRECTION 12: Statistiques enrichies Fond de Caisse */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">Entrées Totales</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-green-600">
+                  +{fondCaisseOps.filter(o => o.type_operation === 'entree')
+                    .reduce((sum, o) => sum + Number(o.montant), 0).toLocaleString()} FCFA
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {fondCaisseOps.filter(o => o.type_operation === 'entree').length} opération(s)
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">Sorties Totales</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-red-600">
+                  -{fondCaisseOps.filter(o => o.type_operation === 'sortie')
+                    .reduce((sum, o) => sum + Number(o.montant), 0).toLocaleString()} FCFA
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {fondCaisseOps.filter(o => o.type_operation === 'sortie').length} opération(s)
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">Solde Actuel</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className={`text-2xl font-bold ${fondCaisse >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {fondCaisse.toLocaleString()} FCFA
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {fondCaisse >= 0 ? '✓ Positif' : '⚠️ Négatif'}
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+          
+          {/* Liste détaillée */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
