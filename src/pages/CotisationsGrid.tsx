@@ -255,8 +255,17 @@ export default function CotisationsGrid() {
 
     const getStatutBadge = (statut: string, datePaiement: string) => {
       const isPast = new Date(datePaiement) < new Date();
+      const isFuture = new Date(datePaiement) > new Date();
       const opacityClass = isPast ? "opacity-60" : "";
       const pastPrefix = isPast ? "📅 " : "";
+      const futureIndicator = isFuture ? "🔮 " : "";
+      
+      // Montants attendus (futurs) en jaune
+      if (isFuture && statut === 'en_attente') {
+        return <Badge className="bg-yellow-500 text-yellow-950 text-xs">
+          {futureIndicator}Prévu
+        </Badge>;
+      }
       
       switch (statut) {
         case 'paye':
@@ -433,6 +442,10 @@ export default function CotisationsGrid() {
             <div className="flex items-center gap-2">
               <Badge className="opacity-60 text-xs">📅 Passé</Badge>
               <span className="text-xs text-muted-foreground">= Date antérieure</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge className="bg-yellow-500 text-yellow-950 text-xs">🔮 Prévu</Badge>
+              <span className="text-xs text-muted-foreground">= Montant attendu (futur)</span>
             </div>
           </div>
         </CardContent>

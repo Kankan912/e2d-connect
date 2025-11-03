@@ -347,7 +347,9 @@ export default function Sport() {
             </TabsContent>
 
             <TabsContent value="e2d-stats" className="mt-6">
-              <StatsMatchDetaillee />
+              <div className="text-center py-12">
+                <p className="text-muted-foreground">Les statistiques détaillées sont accessibles via le bouton "Stats" sur chaque match</p>
+              </div>
             </TabsContent>
 
             <TabsContent value="e2d-classements" className="mt-6">

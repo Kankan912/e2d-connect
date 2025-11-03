@@ -97,8 +97,18 @@ export default function SanctionForm({ open, onOpenChange, onSuccess, contexte =
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validation
-    if (!formData.membre_id || !formData.type_sanction_id || !formData.montant) {
+    // Validation stricte du type
+    if (!formData.type_sanction_id) {
+      toast({
+        title: "Type de sanction requis",
+        description: "Vous devez sélectionner un type de sanction avant de continuer",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Validation des autres champs
+    if (!formData.membre_id || !formData.montant) {
       toast({
         title: "Erreur",
         description: "Veuillez remplir tous les champs obligatoires",

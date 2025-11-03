@@ -22,6 +22,8 @@ const pretSchema = z.object({
   avaliste_id: z.string().optional(),
   statut: z.enum(['en_cours', 'rembourse', 'en_retard', 'annule']).default('en_cours'),
   notes: z.string().optional(),
+  exercice_id: z.string().optional(),
+  reunion_id: z.string().optional(),
 });
 
 type PretFormData = z.infer<typeof pretSchema>;
@@ -39,11 +41,24 @@ interface Membre {
   prenom: string;
 }
 
+interface Exercice {
+  id: string;
+  nom: string;
+}
+
+interface Reunion {
+  id: string;
+  date_reunion: string;
+  sujet?: string;
+}
+
 export default function PretForm({ open, onOpenChange, onSuccess, initialData }: PretFormProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { withEnsureAdmin } = useEnsureAdmin();
   const [membres, setMembres] = useState<Membre[]>([]);
+  const [exercices, setExercices] = useState<Exercice[]>([]);
+  const [reunions, setReunions] = useState<Reunion[]>([]);
   const [tauxInteretFixe, setTauxInteretFixe] = useState(5);
 
   const form = useForm<PretFormData>({
@@ -57,12 +72,16 @@ export default function PretForm({ open, onOpenChange, onSuccess, initialData }:
       avaliste_id: initialData?.avaliste_id || '',
       statut: initialData?.statut || 'en_cours',
       notes: initialData?.notes || '',
+      exercice_id: initialData?.exercice_id || '',
+      reunion_id: initialData?.reunion_id || '',
     },
   });
 
   useEffect(() => {
     if (open) {
       fetchMembres();
+      fetchExercices();
+      fetchReunions();
       loadTauxInteret();
     }
   }, [open]);
@@ -88,6 +107,34 @@ export default function PretForm({ open, onOpenChange, onSuccess, initialData }:
       setMembres(data || []);
     } catch (error) {
       console.error('Erreur chargement membres:', error);
+    }
+  };
+
+  const fetchExercices = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('exercices')
+        .select('id, nom')
+        .eq('statut', 'actif')
+        .order('date_debut', { ascending: false });
+      if (error) throw error;
+      setExercices(data || []);
+    } catch (error) {
+      console.error('Erreur chargement exercices:', error);
+    }
+  };
+
+  const fetchReunions = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('reunions')
+        .select('id, date_reunion, sujet')
+        .order('date_reunion', { ascending: false })
+        .limit(20);
+      if (error) throw error;
+      setReunions(data || []);
+    } catch (error) {
+      console.error('Erreur chargement réunions:', error);
     }
   };
 
@@ -117,6 +164,8 @@ export default function PretForm({ open, onOpenChange, onSuccess, initialData }:
         statut: data.statut,
         notes: data.notes || null,
         avaliste_id: data.avaliste_id && data.avaliste_id.trim() !== '' ? data.avaliste_id : null,
+        exercice_id: data.exercice_id && data.exercice_id.trim() !== '' ? data.exercice_id : null,
+        reunion_id: data.reunion_id && data.reunion_id.trim() !== '' ? data.reunion_id : null,
       };
 
       if (initialData?.id) {
@@ -275,6 +324,48 @@ export default function PretForm({ open, onOpenChange, onSuccess, initialData }:
                 <SelectItem value="annule">Annulé</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="exercice_id">Exercice (optionnel)</Label>
+              <Select 
+                value={form.watch('exercice_id') || undefined} 
+                onValueChange={(value) => form.setValue('exercice_id', value === 'none' ? '' : value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner un exercice" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Aucun exercice</SelectItem>
+                  {exercices?.map((ex) => (
+                    <SelectItem key={ex.id} value={ex.id}>
+                      {ex.nom}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="reunion_id">Réunion (optionnel)</Label>
+              <Select 
+                value={form.watch('reunion_id') || undefined} 
+                onValueChange={(value) => form.setValue('reunion_id', value === 'none' ? '' : value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner une réunion" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Aucune réunion</SelectItem>
+                  {reunions?.map((reunion) => (
+                    <SelectItem key={reunion.id} value={reunion.id}>
+                      {new Date(reunion.date_reunion).toLocaleDateString()} - {reunion.sujet || 'Sans sujet'}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <div className="space-y-2">

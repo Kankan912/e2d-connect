@@ -1969,6 +1969,7 @@ export type Database = {
           created_at: string
           date_pret: string
           echeance: string
+          exercice_id: string | null
           id: string
           justificatif_url: string | null
           membre_id: string
@@ -1977,6 +1978,7 @@ export type Database = {
           montant_total_du: number | null
           notes: string | null
           reconductions: number | null
+          reunion_id: string | null
           statut: string
           taux_interet: number | null
           updated_at: string
@@ -1986,6 +1988,7 @@ export type Database = {
           created_at?: string
           date_pret?: string
           echeance: string
+          exercice_id?: string | null
           id?: string
           justificatif_url?: string | null
           membre_id: string
@@ -1994,6 +1997,7 @@ export type Database = {
           montant_total_du?: number | null
           notes?: string | null
           reconductions?: number | null
+          reunion_id?: string | null
           statut?: string
           taux_interet?: number | null
           updated_at?: string
@@ -2003,6 +2007,7 @@ export type Database = {
           created_at?: string
           date_pret?: string
           echeance?: string
+          exercice_id?: string | null
           id?: string
           justificatif_url?: string | null
           membre_id?: string
@@ -2011,6 +2016,7 @@ export type Database = {
           montant_total_du?: number | null
           notes?: string | null
           reconductions?: number | null
+          reunion_id?: string | null
           statut?: string
           taux_interet?: number | null
           updated_at?: string
@@ -2028,6 +2034,20 @@ export type Database = {
             columns: ["avaliste_id"]
             isOneToOne: false
             referencedRelation: "membres"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prets_exercice_id_fkey"
+            columns: ["exercice_id"]
+            isOneToOne: false
+            referencedRelation: "exercices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prets_reunion_id_fkey"
+            columns: ["reunion_id"]
+            isOneToOne: false
+            referencedRelation: "reunions"
             referencedColumns: ["id"]
           },
         ]

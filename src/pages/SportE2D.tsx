@@ -194,26 +194,42 @@ export default function SportE2D() {
               {matchs.slice(0, 3).map((match) => (
                 <div 
                   key={match.id} 
-                  className="flex items-center justify-between p-3 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
-                  onClick={() => {
-                    setSelectedMatch(match);
-                    setShowMatchDetails(true);
-                  }}
+                  className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
                 >
-                  <div>
+                  <div 
+                    className="flex-1 cursor-pointer"
+                    onClick={() => {
+                      setSelectedMatch(match);
+                      setShowMatchDetails(true);
+                    }}
+                  >
                     <p className="font-medium">{config?.nom_equipe || 'E2D'} vs {match.equipe_adverse}</p>
                     <p className="text-sm text-muted-foreground">
                       {new Date(match.date_match).toLocaleDateString()}
                     </p>
                   </div>
-                  <div className="text-right">
-                    {match.score_e2d !== null && match.score_adverse !== null ? (
-                      <p className="text-lg font-bold">
-                        {match.score_e2d} - {match.score_adverse}
-                      </p>
-                    ) : (
-                      <Badge variant="outline">{match.statut}</Badge>
-                    )}
+                  <div className="flex items-center gap-3">
+                    <div className="text-right">
+                      {match.score_e2d !== null && match.score_adverse !== null ? (
+                        <p className="text-lg font-bold">
+                          {match.score_e2d} - {match.score_adverse}
+                        </p>
+                      ) : (
+                        <Badge variant="outline">{match.statut}</Badge>
+                      )}
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedMatch(match);
+                        setShowMatchDetails(true);
+                      }}
+                    >
+                      <TrendingUp className="h-4 w-4 mr-1" />
+                      Stats
+                    </Button>
                   </div>
                 </div>
               ))}
