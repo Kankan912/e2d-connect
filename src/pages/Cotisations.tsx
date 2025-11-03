@@ -35,31 +35,9 @@ import BeneficiairesReunion from "@/components/BeneficiairesReunion";
 import LogoHeader from "@/components/LogoHeader";
 import { logger } from "@/lib/logger";
 
-interface Cotisation {
-  id: string;
-  montant: number;
-  date_paiement: string;
-  statut: string;
-  notes: string;
-  reunion_id?: string;
-  exercice_id?: string;
-  membre: {
-    nom: string;
-    prenom: string;
-  };
-  cotisations_types: {
-    nom: string;
-    description: string;
-  };
-}
+import type { CotisationWithRelations, TypeCotisation, StatutCotisation } from '@/lib/types/cotisations';
 
-interface TypeCotisation {
-  id: string;
-  nom: string;
-  description: string;
-  montant_defaut: number;
-  obligatoire: boolean;
-}
+type Cotisation = CotisationWithRelations;
 
 export default function Cotisations() {
 const [cotisations, setCotisations] = useState<Cotisation[]>([]);
@@ -127,8 +105,9 @@ const loadExercices = async () => {
       // Joindre manuellement
       const cotisationsWithDetails = (cotisationsData || []).map(cot => ({
         ...cot,
+        statut: cot.statut as StatutCotisation,
         membre: membresData?.find(m => m.id === cot.membre_id) || { nom: '', prenom: '' },
-        cotisations_types: typesData?.find(t => t.id === cot.type_cotisation_id) || { nom: '', description: '' }
+        cotisations_types: typesData?.find(t => t.id === cot.type_cotisation_id) || { nom: '', description: null }
       }));
 
       setCotisations(cotisationsWithDetails);

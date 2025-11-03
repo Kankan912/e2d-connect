@@ -20,7 +20,7 @@ const cotisationSchema = z.object({
   date_paiement: z.string().optional(),
   exercice_id: z.string().optional(),
   reunion_id: z.string().optional(),
-  statut: z.enum(['en_attente', 'payee', 'en_retard', 'exoneree']).default('en_attente'),
+  statut: z.enum(['en_attente', 'paye', 'en_retard', 'exoneree']).default('en_attente'),
   notes: z.string().optional(),
 });
 
@@ -261,9 +261,9 @@ export default function CotisationForm({ onSuccess, initialData }: CotisationFor
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="en_attente">En attente</SelectItem>
-                <SelectItem value="payee">Payée</SelectItem>
+                <SelectItem value="paye">Payé</SelectItem>
                 <SelectItem value="en_retard">En retard</SelectItem>
-                <SelectItem value="exoneree">Exonérée</SelectItem>
+                <SelectItem value="exoneree">Exonéré</SelectItem>
               </SelectContent>
             </Select>
           </div>

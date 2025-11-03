@@ -29,6 +29,8 @@ import { useToast } from "@/hooks/use-toast";
 import LogoHeader from "@/components/LogoHeader";
 import { logger } from "@/lib/logger";
 
+import type { TypeCotisation, StatutCotisation } from '@/lib/types/cotisations';
+
 interface Membre {
   id: string;
   nom: string;
@@ -36,20 +38,12 @@ interface Membre {
   email: string;
 }
 
-interface TypeCotisation {
-  id: string;
-  nom: string;
-  description: string;
-  montant_defaut: number;
-  obligatoire: boolean;
-}
-
 interface CotisationData {
   id?: string;
   membre_id: string;
   type_cotisation_id: string;
   montant: number;
-  statut: string;
+  statut: StatutCotisation;
   notes?: string;
   date_paiement: string;
 }
@@ -111,7 +105,10 @@ export default function CotisationsGrid() {
       const cotisationsMap: Record<string, CotisationData> = {};
       (cotisationsRes.data || []).forEach(cot => {
         const key = `${cot.membre_id}-${cot.type_cotisation_id}`;
-        cotisationsMap[key] = cot;
+        cotisationsMap[key] = {
+          ...cot,
+          statut: cot.statut as StatutCotisation
+        };
       });
       setCotisations(cotisationsMap);
     } catch (error: any) {

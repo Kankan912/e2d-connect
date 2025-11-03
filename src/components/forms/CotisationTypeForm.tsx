@@ -8,13 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
-interface TypeCotisation {
-  id?: string;
-  nom: string;
-  description: string;
-  montant_defaut: number;
-  obligatoire: boolean;
-}
+import type { TypeCotisation } from '@/lib/types/cotisations';
 
 interface CotisationTypeFormProps {
   open: boolean;
