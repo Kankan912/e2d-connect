@@ -285,6 +285,252 @@ export type Database = {
         }
         Relationships: []
       }
+      cms_events: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          event_date: string
+          event_time: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          is_featured: boolean | null
+          location: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          event_date: string
+          event_time?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          is_featured?: boolean | null
+          location?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          event_date?: string
+          event_time?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          is_featured?: boolean | null
+          location?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      cms_gallery: {
+        Row: {
+          album_name: string
+          created_at: string | null
+          description: string | null
+          id: string
+          image_url: string
+          is_active: boolean | null
+          order_index: number | null
+          thumbnail_url: string | null
+          title: string | null
+        }
+        Insert: {
+          album_name: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url: string
+          is_active?: boolean | null
+          order_index?: number | null
+          thumbnail_url?: string | null
+          title?: string | null
+        }
+        Update: {
+          album_name?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string
+          is_active?: boolean | null
+          order_index?: number | null
+          thumbnail_url?: string | null
+          title?: string | null
+        }
+        Relationships: []
+      }
+      cms_hero_slides: {
+        Row: {
+          background_image: string
+          created_at: string | null
+          cta_link: string | null
+          cta_text: string | null
+          id: string
+          is_active: boolean | null
+          order_index: number | null
+          subtitle: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          background_image: string
+          created_at?: string | null
+          cta_link?: string | null
+          cta_text?: string | null
+          id?: string
+          is_active?: boolean | null
+          order_index?: number | null
+          subtitle?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          background_image?: string
+          created_at?: string | null
+          cta_link?: string | null
+          cta_text?: string | null
+          id?: string
+          is_active?: boolean | null
+          order_index?: number | null
+          subtitle?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      cms_pages: {
+        Row: {
+          content: string | null
+          created_at: string | null
+          id: string
+          meta_description: string | null
+          meta_keywords: string | null
+          page_key: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string | null
+          id?: string
+          meta_description?: string | null
+          meta_keywords?: string | null
+          page_key: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          content?: string | null
+          created_at?: string | null
+          id?: string
+          meta_description?: string | null
+          meta_keywords?: string | null
+          page_key?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      cms_partners: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          logo_url: string
+          name: string
+          order_index: number | null
+          website_url: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          logo_url: string
+          name: string
+          order_index?: number | null
+          website_url?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          logo_url?: string
+          name?: string
+          order_index?: number | null
+          website_url?: string | null
+        }
+        Relationships: []
+      }
+      cms_sections: {
+        Row: {
+          content: string | null
+          created_at: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          order_index: number | null
+          page_key: string
+          subtitle: string | null
+          title: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          order_index?: number | null
+          page_key: string
+          subtitle?: string | null
+          title?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          content?: string | null
+          created_at?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          order_index?: number | null
+          page_key?: string
+          subtitle?: string | null
+          title?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      cms_settings: {
+        Row: {
+          description: string | null
+          key: string
+          label: string | null
+          updated_at: string | null
+          value: string | null
+        }
+        Insert: {
+          description?: string | null
+          key: string
+          label?: string | null
+          updated_at?: string | null
+          value?: string | null
+        }
+        Update: {
+          description?: string | null
+          key?: string
+          label?: string | null
+          updated_at?: string | null
+          value?: string | null
+        }
+        Relationships: []
+      }
       configurations: {
         Row: {
           cle: string
@@ -489,6 +735,42 @@ export type Database = {
           montant_defaut?: number | null
           nom?: string
           obligatoire?: boolean | null
+        }
+        Relationships: []
+      }
+      demandes_adhesion: {
+        Row: {
+          created_at: string | null
+          email: string
+          id: string
+          motivation: string | null
+          nom: string
+          prenom: string
+          statut: string | null
+          telephone: string | null
+          type_adhesion: string
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          id?: string
+          motivation?: string | null
+          nom: string
+          prenom: string
+          statut?: string | null
+          telephone?: string | null
+          type_adhesion: string
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          id?: string
+          motivation?: string | null
+          nom?: string
+          prenom?: string
+          statut?: string | null
+          telephone?: string | null
+          type_adhesion?: string
         }
         Relationships: []
       }
@@ -1126,6 +1408,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      messages_contact: {
+        Row: {
+          created_at: string | null
+          email: string
+          id: string
+          message: string
+          nom: string
+          objet: string
+          statut: string | null
+          telephone: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          id?: string
+          message: string
+          nom: string
+          objet: string
+          statut?: string | null
+          telephone?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          id?: string
+          message?: string
+          nom?: string
+          objet?: string
+          statut?: string | null
+          telephone?: string | null
+        }
+        Relationships: []
       }
       notifications_campagnes: {
         Row: {
