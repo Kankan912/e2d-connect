@@ -86,7 +86,7 @@ const Navbar = () => {
             </Button>
             <Button
               variant="ghost"
-              onClick={() => navigate("/auth")}
+              onClick={() => navigate("/portal")}
               className={isScrolled ? "" : "text-white hover:bg-white/10"}
             >
               Portail Membre
@@ -139,7 +139,7 @@ const Navbar = () => {
                     variant="ghost"
                     className="w-full"
                     onClick={() => {
-                      navigate("/auth");
+                      navigate("/portal");
                       setIsMobileMenuOpen(false);
                     }}
                   >

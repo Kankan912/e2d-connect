@@ -58,9 +58,15 @@ import SiteAbout from "./pages/vitrine/SiteAbout";
 import SiteActivities from "./pages/vitrine/SiteActivities";
 import SiteContact from "./pages/vitrine/SiteContact";
 import SiteAdhesion from "./pages/vitrine/SiteAdhesion";
+import SiteDon from "./pages/vitrine/SiteDon";
+import Portal from "./pages/vitrine/Portal";
 import SiteEvents from "./pages/vitrine/SiteEvents";
 import SiteGallery from "./pages/vitrine/SiteGallery";
 import SitePartners from "./pages/vitrine/SitePartners";
+import DashboardHome from "./pages/DashboardHome";
+
+// Auth Provider
+import { AuthProvider } from "./contexts/AuthContext";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -108,17 +114,25 @@ function App() {
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <HelmetProvider>
-          <Router>
-            <Routes>
-              {/* Routes publiques du site vitrine */}
-              <Route path="/site" element={<SiteHome />} />
-              <Route path="/site/a-propos" element={<SiteAbout />} />
-              <Route path="/site/activites" element={<SiteActivities />} />
-              <Route path="/site/evenements" element={<SiteEvents />} />
-              <Route path="/site/galerie" element={<SiteGallery />} />
-              <Route path="/site/partenaires" element={<SitePartners />} />
-              <Route path="/site/contact" element={<SiteContact />} />
-              <Route path="/site/adhesion" element={<SiteAdhesion />} />
+          <AuthProvider>
+            <Router>
+              <Routes>
+                {/* Routes publiques du site vitrine */}
+                <Route path="/site" element={<SiteHome />} />
+                <Route path="/site/a-propos" element={<SiteAbout />} />
+                <Route path="/site/activites" element={<SiteActivities />} />
+                <Route path="/site/evenements" element={<SiteEvents />} />
+                <Route path="/site/galerie" element={<SiteGallery />} />
+                <Route path="/site/partenaires" element={<SitePartners />} />
+                <Route path="/site/contact" element={<SiteContact />} />
+                <Route path="/site/adhesion" element={<SiteAdhesion />} />
+                <Route path="/site/don" element={<SiteDon />} />
+                
+                {/* Portail Membre */}
+                <Route path="/portal" element={<Portal />} />
+                
+                {/* Dashboard Membre (protégé) */}
+                <Route path="/dashboard/*" element={<DashboardHome />} />
               
               {/* Route d'authentification */}
               <Route path="/auth" element={!session ? <Auth /> : <Navigate to="/" replace />} />
@@ -184,9 +198,10 @@ function App() {
                   </Layout>
                 } />
               )}
-            </Routes>
-          </Router>
-          <Toaster />
+              </Routes>
+            </Router>
+            <Toaster />
+          </AuthProvider>
         </HelmetProvider>
       </QueryClientProvider>
     </ErrorBoundary>
