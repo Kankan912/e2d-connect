@@ -249,12 +249,12 @@ export default function Epargnes() {
     }
     
     // Filtre par membre
-    if (filtres.membreId && epargne.membre_id !== filtres.membreId) {
+    if (filtres.membreId && filtres.membreId !== "all" && epargne.membre_id !== filtres.membreId) {
       return false;
     }
     
     // Filtre par exercice
-    if (filtres.exerciceId && epargne.exercice_id !== filtres.exerciceId) {
+    if (filtres.exerciceId && filtres.exerciceId !== "all" && epargne.exercice_id !== filtres.exerciceId) {
       return false;
     }
     
@@ -382,7 +382,7 @@ export default function Epargnes() {
                   <SelectValue placeholder="Tous les membres" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Tous les membres</SelectItem>
+                  <SelectItem value="all">Tous les membres</SelectItem>
                   {membres.map((membre) => (
                     <SelectItem key={membre.id} value={membre.id}>
                       {membre.prenom} {membre.nom}
@@ -403,7 +403,7 @@ export default function Epargnes() {
                   <SelectValue placeholder="Tous les exercices" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Tous les exercices</SelectItem>
+                  <SelectItem value="all">Tous les exercices</SelectItem>
                   {exercices.map((exercice) => (
                     <SelectItem key={exercice.id} value={exercice.id}>
                       {exercice.nom}
