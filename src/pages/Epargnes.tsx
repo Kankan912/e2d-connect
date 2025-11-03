@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Plus, Edit, TrendingUp, PiggyBank, DollarSign, Calculator, Download, Filter, X, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -266,23 +267,43 @@ export default function Epargnes() {
   const totalEpargnes = epargnes.reduce((sum, epargne) => sum + epargne.montant, 0);
   const epargnesActives = epargnes.filter(e => e.statut === 'actif');
 
-  // Fonction de filtrage avancé
+  // Fonction de filtrage hiérarchique (Exercice → Dates)
   const epargneFiltrees = epargnes.filter(epargne => {
-    // Filtre par date
-    if (filtresAppliques.dateDebut && new Date(epargne.date_depot) < new Date(filtresAppliques.dateDebut)) {
-      return false;
+    // 🎯 NIVEAU 1 : FILTRE PAR EXERCICE (prioritaire)
+    if (filtresAppliques.exerciceId && filtresAppliques.exerciceId !== "all") {
+      const exercice = exercices.find(ex => ex.id === filtresAppliques.exerciceId);
+      if (exercice) {
+        const dateDepot = new Date(epargne.date_depot);
+        const dateDebutExercice = new Date(exercice.date_debut);
+        const dateFinExercice = new Date(exercice.date_fin);
+        
+        // Vérifier que l'épargne est dans la période de l'exercice
+        if (dateDepot < dateDebutExercice || dateDepot > dateFinExercice) {
+          return false;
+        }
+      }
     }
-    if (filtresAppliques.dateFin && new Date(epargne.date_depot) > new Date(filtresAppliques.dateFin)) {
-      return false;
+    
+    // 📅 NIVEAU 2 : FILTRE PAR DATES (précision supplémentaire)
+    // Ces filtres s'appliquent EN PLUS du filtre exercice (si actif)
+    if (filtresAppliques.dateDebut) {
+      const dateDepot = new Date(epargne.date_depot);
+      const dateDebut = new Date(filtresAppliques.dateDebut);
+      if (dateDepot < dateDebut) {
+        return false;
+      }
+    }
+    
+    if (filtresAppliques.dateFin) {
+      const dateDepot = new Date(epargne.date_depot);
+      const dateFin = new Date(filtresAppliques.dateFin);
+      if (dateDepot > dateFin) {
+        return false;
+      }
     }
     
     // Filtre par membre
     if (filtresAppliques.membreId && filtresAppliques.membreId !== "all" && epargne.membre_id !== filtresAppliques.membreId) {
-      return false;
-    }
-    
-    // Filtre par exercice
-    if (filtresAppliques.exerciceId && filtresAppliques.exerciceId !== "all" && epargne.exercice_id !== filtresAppliques.exerciceId) {
       return false;
     }
     
@@ -354,11 +375,25 @@ export default function Epargnes() {
       {/* Panneau de filtres avancés */}
       <Card className="bg-muted/50">
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Filter className="h-4 w-4" />
-              Filtres Avancés
-            </CardTitle>
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Filter className="h-4 w-4" />
+                Filtres Avancés
+              </CardTitle>
+              
+              {/* Indicateurs de niveau de filtre actif */}
+              {filtresAppliques.exerciceId && filtresAppliques.exerciceId !== "all" && (
+                <Badge variant="secondary" className="text-xs">
+                  📊 Niveau 1: Exercice
+                </Badge>
+              )}
+              {(filtresAppliques.dateDebut || filtresAppliques.dateFin) && (
+                <Badge variant="outline" className="text-xs">
+                  📅 Niveau 2: Dates
+                </Badge>
+              )}
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -371,6 +406,12 @@ export default function Epargnes() {
                 type="date"
                 value={filtresTemporaires.dateDebut}
                 onChange={(e) => setFiltresTemporaires(prev => ({ ...prev, dateDebut: e.target.value }))}
+                min={filtresTemporaires.exerciceId !== "all" 
+                  ? exercices.find(ex => ex.id === filtresTemporaires.exerciceId)?.date_debut 
+                  : undefined}
+                max={filtresTemporaires.exerciceId !== "all" 
+                  ? exercices.find(ex => ex.id === filtresTemporaires.exerciceId)?.date_fin 
+                  : undefined}
               />
             </div>
             
@@ -381,6 +422,12 @@ export default function Epargnes() {
                 type="date"
                 value={filtresTemporaires.dateFin}
                 onChange={(e) => setFiltresTemporaires(prev => ({ ...prev, dateFin: e.target.value }))}
+                min={filtresTemporaires.exerciceId !== "all" 
+                  ? exercices.find(ex => ex.id === filtresTemporaires.exerciceId)?.date_debut 
+                  : undefined}
+                max={filtresTemporaires.exerciceId !== "all" 
+                  ? exercices.find(ex => ex.id === filtresTemporaires.exerciceId)?.date_fin 
+                  : undefined}
               />
             </div>
 
@@ -448,6 +495,15 @@ export default function Epargnes() {
                 onChange={(e) => setFiltresTemporaires(prev => ({ ...prev, montantMax: e.target.value }))}
               />
             </div>
+          </div>
+
+          {/* Message d'information sur le filtrage hiérarchique */}
+          <div className="mt-4 p-3 bg-primary/5 border border-primary/20 rounded-md text-sm">
+            <p className="font-semibold mb-1 text-primary">🔍 Filtrage hiérarchique :</p>
+            <ul className="list-disc list-inside space-y-1 text-xs text-muted-foreground">
+              <li><strong>Niveau 1 (Exercice) :</strong> Sélectionnez un exercice pour limiter aux épargnes de sa période</li>
+              <li><strong>Niveau 2 (Dates) :</strong> Affinez avec des dates personnalisées à l'intérieur de l'exercice</li>
+            </ul>
           </div>
 
           {/* Boutons d'action */}
